@@ -22,15 +22,27 @@ struct game {
 struct player {
 	int x;
 	int y;
+	char **seen;
 };
 
 /* Map dimensions */
-#define MAP_ROWS 500
-#define MAP_COLS 500
+#define MAP_ROWS 128
+#define MAP_COLS 128
 #define WIN_ROWS 19
 #define WIN_COLS 19
 #define SPRITE_W 32
 #define SPRITE_H 32
 
-#endif
+/* Screen dimensions values */
+#define WIN_W 1170
+#define WIN_H 640
+#define GAME_X 16
+#define GAME_Y 16
+#define GAME_W 608
+#define GAME_H 608
+#define MAP_X 640
+#define MAP_Y 16
+#define MAP_W 514
+#define MAP_H 514
 
+#endif

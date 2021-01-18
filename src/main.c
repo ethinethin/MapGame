@@ -14,16 +14,13 @@ static void	game_quit(void);
 struct game GAME = {
 	SDL_FALSE,		/* running */
 	/* screen */
-	{ 608, 608, "MapGame", NULL, NULL },
+	{ WIN_W, WIN_H, "MapGame", NULL, NULL },
 	NULL,			/* sprites */
 	SDL_FALSE		/* fullscreen */
 };
 
 /* Global player construct */
-struct player PLAYER = {
-	MAP_COLS/4,			/* x */
-	MAP_ROWS/4			/* y */
-};
+struct player PLAYER;
 
 /* Global map construct */
 struct worldmap MAP;
@@ -36,7 +33,7 @@ main(int argc, char *argv[])
 	game_init();
 
 	/* draw map, player, and render */
-	draw_map(&GAME, &MAP, &PLAYER);
+	draw_game(&GAME, &MAP, &PLAYER);
 
 	/* enter main game loop */
 	SDL_Event event;
@@ -69,7 +66,7 @@ main(int argc, char *argv[])
 			}
 		}
 		/* draw map, player, and render */
-		draw_map(&GAME, &MAP, &PLAYER);
+		draw_game(&GAME, &MAP, &PLAYER);
 	}
 
 	/* quit game and exit normally */
@@ -82,6 +79,8 @@ game_init(void)
 {
 	/* Seed RNG */
 	seed_rng();
+	/* Set up player */
+	player_init(&PLAYER);
 	/* Set up the worldmap */
 	create_map(&MAP, MAP_ROWS, MAP_COLS);
 	/* Populate the worldmap */
@@ -101,4 +100,6 @@ game_quit(void)
 	display_quit(&GAME);
 	/* Free the world map and exit normally */
 	free_map(&MAP);
+	/* Free the player */
+	player_quit(&PLAYER);
 }

@@ -11,9 +11,15 @@ struct win_pos {
 };
 
 /* Function prototypes */
-static void			draw_tile(struct game *cur_game, int x, int y, int w, int h, int sprite_index);
-static void			draw_player(struct game *cur_game, struct player *cur_player, struct win_pos win);
+static void		draw_point(struct game *cur_game, int x, int y, char *col);
+static void		draw_rect(struct game *cur_game, unsigned int x, unsigned int y,
+				  unsigned int w, unsigned int h, SDL_bool fill,
+			  	  char fill_col[3], SDL_bool border, char bord_col[3]);
+static void		draw_tile(struct game *cur_game, int x, int y, int w, int h, int sprite_index);
+static void		draw_player(struct game *cur_game, struct player *cur_player, struct win_pos win);
+static void		draw_map(struct game *cur_game, struct worldmap *map, struct player *cur_player);
 static struct win_pos	find_win_pos(struct worldmap *map, struct player *cur_player);
+static void		update_seen(struct worldmap *map, struct player *cur_player);
 
 void
 display_init(struct game *cur_game)
@@ -47,8 +53,15 @@ display_quit(struct game *cur_game)
 	SDL_Quit();
 }
 
-void
-draw_rect(struct game *cur_game, unsigned int x, unsigned int y, unsigned int w, unsigned int h, SDL_bool fill, int *fill_col, SDL_bool border, int *bord_col)
+static void
+draw_point(struct game *cur_game, int x, int y, char *col)
+{
+	SDL_SetRenderDrawColor(cur_game->screen.renderer, *(col+0), *(col+1), *(col+2), 255);
+	SDL_RenderDrawPoint(cur_game->screen.renderer, x, y);
+}
+
+static void
+draw_rect(struct game *cur_game, unsigned int x, unsigned int y, unsigned int w, unsigned int h, SDL_bool fill, char *fill_col, SDL_bool border, char *bord_col)
 {
 	SDL_Rect coords = { x, y, w, h };
 	SDL_SetRenderDrawColor(cur_game->screen.renderer, fill_col[0], fill_col[1], fill_col[2], 255);
@@ -77,10 +90,11 @@ draw_tile(struct game *cur_game, int x, int y, int w, int h, int sprite_index)
 }
 
 void
-draw_map(struct game *cur_game, struct worldmap *map, struct player *cur_player)
+draw_game(struct game *cur_game, struct worldmap *map, struct player *cur_player)
 {
 	int x, y;
-	int sprite_index;
+	short int sprite_index;
+	char white[3] = { 255, 255, 255 };
 	struct win_pos win;
 
 	/* Update window position */
@@ -91,40 +105,50 @@ draw_map(struct game *cur_game, struct worldmap *map, struct player *cur_player)
 	SDL_RenderClear(cur_game->screen.renderer);
 	for (y = win.y; y < win.y+WIN_ROWS; y++) {
 		for (x = win.x; x < win.x+WIN_COLS; x++) {
-			switch (*(*(map->tile+y)+x)) {
-				case 1:
-					sprite_index = 5;
-					break;
-				case 2:
-					sprite_index = 12;
-					break;
-				case 3:
-					sprite_index = 2;
-					break;
-				case 4:
-					sprite_index = 143;
-					break;
-				case 5:
-					sprite_index = 31;
-					break;
-				default:
-					sprite_index = 0;
-					break;
-			}
-			draw_tile(cur_game, (x - win.x)*SPRITE_W, (y - win.y)*SPRITE_H, SPRITE_W, SPRITE_H, sprite_index); 
+			sprite_index = get_sprite((short int) *(*(map->tile+y)+x));
+			draw_tile(cur_game, (x - win.x) * SPRITE_W + GAME_X, (y - win.y) * SPRITE_H + GAME_Y, SPRITE_W, SPRITE_H, sprite_index); 
 		}
 	}
 	draw_player(cur_game, cur_player, win);
+	draw_map(cur_game, map, cur_player);
+	draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
 	SDL_RenderPresent(cur_game->screen.renderer);
 }
 
 static void
 draw_player(struct game *cur_game, struct player *cur_player, struct win_pos win)
-{
+{	
 	draw_tile(cur_game,
-		  cur_player->x*SPRITE_W - win.x*SPRITE_W,
-		  cur_player->y*SPRITE_H - win.y*SPRITE_H,
+		  cur_player->x*SPRITE_W - win.x*SPRITE_W + GAME_X,
+		  cur_player->y*SPRITE_H - win.y*SPRITE_H + GAME_Y,
 		  SPRITE_W, SPRITE_H, 328); 
+}
+
+static void
+draw_map(struct game *cur_game, struct worldmap *map, struct player *cur_player)
+{
+	int rows, cols;
+	char *tile_col;
+	char red[3] = { 255, 0, 0 };
+	char white[3] = { 255, 255, 255 };
+	
+	/* Update seen */
+	update_seen(map, cur_player);
+	
+	/* Draw map */
+	draw_rect(cur_game, MAP_X, MAP_Y, MAP_W, MAP_H, SDL_FALSE, white, SDL_FALSE, NULL);
+	for (rows = 0; rows < MAP_ROWS; rows++) {
+		for (cols = 0; cols < MAP_COLS; cols++) {
+			if (*(*(cur_player->seen+rows)+cols) == 0) {
+				continue;
+			}
+			tile_col = get_color((short int) *(*(map->tile + rows) + cols));
+			draw_rect(cur_game, MAP_X + cols * 2 + 1, MAP_Y + rows * 2 + 1, 2, 2, SDL_TRUE, tile_col, SDL_FALSE, NULL);
+		}
+	}
+	/* Draw player */
+	draw_point(cur_game, MAP_X + cur_player->x * 2 + 1, MAP_Y + cur_player->y * 2 + 1, red);
+	draw_rect(cur_game, MAP_X + cur_player->x * 2 + 1, MAP_Y + cur_player->y * 2 + 1, 2, 2, SDL_TRUE, red, SDL_FALSE, NULL);
 }
 
 void
@@ -170,4 +194,37 @@ find_win_pos(struct worldmap *map, struct player *cur_player)
 	}
 	
 	return win;
+}
+
+static void
+update_seen(struct worldmap *map, struct player *cur_player)
+{
+	int rows, cols;
+	int rows_i, cols_i, rows_f, cols_f;
+	
+	rows_i = cur_player->y - 9;
+	cols_i = cur_player->x - 9;
+	rows_f = cur_player->y + 9;
+	cols_f = cur_player->x + 9;
+	
+	/* Check boundaries for loop */
+	if (rows_i < 0) {
+		rows_i = 0;
+	}
+	if (cols_i < 0) {
+		cols_i = 0;
+	}
+	if (rows_f > MAP_ROWS - 1) {
+		rows_f = MAP_ROWS - 1;
+	}
+	if (cols_f > MAP_COLS - 1) {
+		cols_f = MAP_COLS - 1;
+	}
+	
+	/* Set all seen values to 1 */
+	for (rows = rows_i ; rows <= rows_f; rows++) {
+		for (cols = cols_i; cols <= cols_f; cols++) {
+			*(*(cur_player->seen+rows)+cols) = 1;
+		}
+	}
 }

@@ -3,19 +3,30 @@
 #include "maps.h"
 #include "rand.h"
 
+/* Colors for tiles */
+char red[3] = { 255, 0, 0 };
+char green[3] = { 0, 255, 0 };
+char blue[3] = { 0, 0, 255 };
+char grey[3] = { 144, 144, 144 };
+char yellow[3] = { 192, 192, 0 };
+char white[3] = { 255, 255, 255 };
+char black[3] = { 26, 26, 26 };
+
 /* Structure for tiles */
 struct tile {
+	short int sprite;
+	char *col;
 	int prob[9];
 } TILES[9] = {
-	{{0, 0, 0, 0, 0, 0, 0, 0, 0}},
-	{{0, 92, 5, 3, 0, 0, 0, 0, 0}},
-	{{0, 23, 75, 0, 2, 0, 0, 0, 0}},
-	{{0, 0, 0, 75, 0, 25, 0, 0, 0}},
-	{{0, 0, 90, 0, 10, 0, 0, 0, 0}},
-	{{0, 45, 0, 35, 0, 20, 0, 0, 0}},
-	{{0, 0, 0, 0, 0, 0, 0, 0, 0}},
-	{{0, 0, 0, 0, 0, 0, 0, 0, 0}},
-	{{0, 0, 0, 0, 0, 0, 0, 0, 0}}
+	{0, black, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+	{5, green, {0, 92, 5, 3, 0, 0, 0, 0, 0}},
+	{12, grey, {0, 23, 75, 0, 2, 0, 0, 0, 0}},
+	{2, blue, {0, 0, 0, 75, 0, 25, 0, 0, 0}},
+	{143, red, {0, 0, 90, 0, 10, 0, 0, 0, 0}},
+	{31, yellow, {0, 45, 0, 35, 0, 20, 0, 0, 0}},
+	{0, black, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+	{0, black, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+	{0, black, {0, 0, 0, 0, 0, 0, 0, 0, 0}}
 };
 
 /* Function prototypes */
@@ -91,6 +102,18 @@ populate_map(struct worldmap *map, int start_tile)
 		free(*(probs+x));
 	}
 	free(probs);
+}
+
+short int
+get_sprite(int tile)
+{
+	return TILES[tile].sprite;
+}
+
+char *
+get_color(int tile)
+{
+	return TILES[tile].col;
 }
 
 static void
