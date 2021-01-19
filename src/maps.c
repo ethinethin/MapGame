@@ -104,47 +104,35 @@ populate_map(struct worldmap *map, int start_tile)
 	free(probs);
 }
 
-short int
-get_sprite(int tile)
-{
-	return TILES[tile].sprite;
-}
-
-char *
-get_color(int tile)
-{
-	return TILES[tile].col;
-}
-
 static void
 calc_probs(struct worldmap *map, struct tile ***probs)
 {
-	int x, y, z;
+	int rows, cols, z;
 	struct tile **prob;
 	
 	/* Dereferencing this to make it easier to work with */
 	prob = *probs;
 	
 	/* Iterate through each tile of map and add probabilities */
-	for (x = 0; x < map->row_size; x++) {
-		for (y = 0; y < map->col_size; y++) {
-			if (*(*(map->tile+x)+y) != 0) {
+	for (rows = 0; rows < map->row_size; rows++) {
+		for (cols = 0; cols < map->col_size; cols++) {
+			if (*(*(map->tile+rows)+cols) != 0) {
 				for (z = 0; z < 9; z++) {
-					if (x > 0) {
+					if (cols > 0) {
 						/* tile to left */
-						(*(*(prob+x-1)+y)).prob[z] = TILES[*(*(map->tile+x)+y)].prob[z];
+						(*(*(prob+rows)+cols-1)).prob[z] += TILES[*(*(map->tile+rows)+cols)].prob[z];
 					}
-					if (x < map->row_size - 1) {
+					if (cols < map->row_size - 1) {
 						/* tile to right */
-						(*(*(prob+x+1)+y)).prob[z] = TILES[*(*(map->tile+x)+y)].prob[z];
+						(*(*(prob+rows)+cols+1)).prob[z] += TILES[*(*(map->tile+rows)+cols)].prob[z];
 					}
-					if (y > 0) {
+					if (rows > 0) {
 						/* tile to up */
-						(*(*(prob+x)+y-1)).prob[z] = TILES[*(*(map->tile+x)+y)].prob[z];
+						(*(*(prob+rows-1)+cols)).prob[z] += TILES[*(*(map->tile+rows)+cols)].prob[z];
 					}
-					if (y < map->col_size - 1) {
+					if (rows < map->col_size - 1) {
 						/* tile to down */
-						(*(*(prob+x)+y+1)).prob[z] = TILES[*(*(map->tile+x)+y)].prob[z];
+						(*(*(prob+rows+1)+cols)).prob[z] += TILES[*(*(map->tile+rows)+cols)].prob[z];
 					}
 				}
 			}
@@ -191,4 +179,16 @@ calc_tiles(struct worldmap *map, struct tile **probs)
 		}
 	}
 	return zero_count;
+}
+
+short int
+get_sprite(int tile)
+{
+	return TILES[tile].sprite;
+}
+
+char *
+get_color(int tile)
+{
+	return TILES[tile].col;
 }

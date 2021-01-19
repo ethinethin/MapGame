@@ -210,15 +210,19 @@ update_seen(struct worldmap *map, struct player *cur_player)
 	/* Check boundaries for loop */
 	if (rows_i < 0) {
 		rows_i = 0;
+		rows_f = WIN_ROWS - 1;
 	}
 	if (cols_i < 0) {
 		cols_i = 0;
+		cols_f = WIN_COLS - 1;
 	}
 	if (rows_f > MAP_ROWS - 1) {
 		rows_f = MAP_ROWS - 1;
+		rows_i = rows_f - WIN_ROWS + 1;
 	}
 	if (cols_f > MAP_COLS - 1) {
 		cols_f = MAP_COLS - 1;
+		cols_i = cols_f - WIN_COLS + 1;
 	}
 	
 	/* Set all seen values to 1 */

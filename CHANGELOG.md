@@ -26,3 +26,6 @@
 - Implemented fog of war on world map
 - Implemented sprite and color logic in tile structure
 
+2021-01-18
+
+- Fixed a bug in the procedural generation, which is now working as intended
