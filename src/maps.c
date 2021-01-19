@@ -36,17 +36,17 @@ static void	calc_probs(struct worldmap *map, struct tile ***probs);
 void
 create_map(struct worldmap *map, int row_size, int col_size)
 {
-	int x, y;
+	int rows, cols;
 	
 	/* Save dimensions to structure */
 	map->col_size = col_size;
 	map->row_size = row_size;
 	/* Allocate space for map and zero out */
 	map->tile = malloc(sizeof(*(map->tile))*row_size);
-	for (x = 0; x < row_size; x++) {
-		*(map->tile+x) = malloc(sizeof(**map->tile)*col_size);
-		for (y = 0; y < col_size; y++) {
-			*(*(map->tile+x)+y) = 0;
+	for (rows = 0; rows < row_size; rows++) {
+		*(map->tile+rows) = malloc(sizeof(**map->tile)*col_size);
+		for (cols = 0; cols < col_size; cols++) {
+			*(*(map->tile+rows)+cols) = 0;
 		}
 	}
 }
@@ -54,11 +54,11 @@ create_map(struct worldmap *map, int row_size, int col_size)
 void
 free_map(struct worldmap *map)
 {
-	int x;
+	int rows;
 	
 	/* Free memory allocated for the map */
-	for (x = 0; x < map->row_size; x++) {
-		free(*(map->tile+x));
+	for (rows = 0; rows < map->row_size; rows++) {
+		free(*(map->tile+rows));
 	}
 	free(map->tile);
 }
@@ -66,24 +66,24 @@ free_map(struct worldmap *map)
 void
 populate_map(struct worldmap *map, int start_tile)
 {
-	int x, y, z;
+	int rows, cols, z;
 	int zero_count;
 	struct tile **probs;
 	
 	
 	/* Set up nine initial tiles, at 1/4, 2/4, and 3/4 vertical and horizontal */
-	for (x = 0; x < 3; x++) {
-		*(*(map->tile+(x+1)*(map->row_size/4))+1*(map->col_size/4)) = start_tile;
-		*(*(map->tile+(x+1)*(map->row_size/4))+2*(map->col_size/4)) = start_tile;
-		*(*(map->tile+(x+1)*(map->row_size/4))+3*(map->col_size/4)) = start_tile;
+	for (z = 0; z < 3; z++) {
+		*(*(map->tile+(z+1)*(map->row_size/4))+1*(map->col_size/4)) = start_tile;
+		*(*(map->tile+(z+1)*(map->row_size/4))+2*(map->col_size/4)) = start_tile;
+		*(*(map->tile+(z+1)*(map->row_size/4))+3*(map->col_size/4)) = start_tile;
 	}
 	/* Allocate memory for probabilities struct and zero out */
 	probs = malloc(sizeof(*probs)*map->row_size);
-	for (x = 0; x < map->row_size; x++) {
-		*(probs+x) = malloc(sizeof(**probs)*map->col_size);
-		for (y = 0; y < map->col_size; y++) {
+	for (rows = 0; rows < map->row_size; rows++) {
+		*(probs+rows) = malloc(sizeof(**probs)*map->col_size);
+		for (cols = 0; cols < map->col_size; cols++) {
 			for (z = 0; z < 9; z++) {
-				(*(*(probs+x)+y)).prob[z] = 0;
+				(*(*(probs+rows)+cols)).prob[z] = 0;
 			}
 		}
 	}
@@ -98,8 +98,8 @@ populate_map(struct worldmap *map, int start_tile)
 		}
 	}
 	/* Free probabilties */
-	for (x = 0; x < map->row_size; x++) {
-		free(*(probs+x));
+	for (rows = 0; rows < map->row_size; rows++) {
+		free(*(probs+rows));
 	}
 	free(probs);
 }
@@ -143,7 +143,7 @@ calc_probs(struct worldmap *map, struct tile ***probs)
 static int
 calc_tiles(struct worldmap *map, struct tile **probs)
 {
-	int x, y, z;
+	int rows, cols, z;
 	int zero_count;
 	int prob_max;
 	int prob_roll;
@@ -151,13 +151,13 @@ calc_tiles(struct worldmap *map, struct tile **probs)
 	/* Assume there are zero "zeroes" */
 	zero_count = 0;
 	/* Iterate through every tile of map, calculate new tile based on probability */
-	for (x = 0; x < map->row_size; x++) {
-		for (y = 0; y < map->col_size; y++) {
-			if (*(*(map->tile+x)+y) == 0) {
+	for (rows = 0; rows < map->row_size; rows++) {
+		for (cols = 0; cols < map->col_size; cols++) {
+			if (*(*(map->tile+rows)+cols) == 0) {
 				/* calculate max probability */
 				prob_max = 0;
 				for (z = 1; z < 9; z++) {
-					prob_max += (*(*(probs+x)+y)).prob[z];
+					prob_max += (*(*(probs+rows)+cols)).prob[z];
 				}
 				if (prob_max == 0) {
 					/* There were no probabilities, this will remain a zero */
@@ -168,12 +168,12 @@ calc_tiles(struct worldmap *map, struct tile **probs)
 					/* Calculate which tile to apply */
 					prob_max = 0;
 					for (z = 1; z < 9; z++) {
-						prob_max += (*(*(probs+x)+y)).prob[z];
+						prob_max += (*(*(probs+rows)+cols)).prob[z];
 						if (prob_roll < prob_max) {
 							break;
 						}
 					}
-					*(*(map->tile+x)+y) = z;
+					*(*(map->tile+rows)+cols) = z;
 				}	
 			}
 		}
