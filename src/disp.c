@@ -182,15 +182,15 @@ find_win_pos(struct worldmap *map, struct player *cur_player)
 	/* correct x value */
 	if (win.x < 0) {
 		win.x = 0;
-	} else if (win.x > MAP_COLS - WIN_COLS) {
-		win.x = MAP_COLS - WIN_COLS;
+	} else if (win.x > map->col_size - WIN_COLS) {
+		win.x = map->col_size - WIN_COLS;
 	}
 	
 	/* correct y value */
 	if (win.y < 0) {
 		win.y = 0;
-	} else if (win.y > MAP_ROWS - WIN_ROWS) {
-		win.y = MAP_ROWS - WIN_ROWS;
+	} else if (win.y > map->row_size - WIN_ROWS) {
+		win.y = map->row_size - WIN_ROWS;
 	}
 	
 	return win;
@@ -216,12 +216,12 @@ update_seen(struct worldmap *map, struct player *cur_player)
 		cols_i = 0;
 		cols_f = WIN_COLS - 1;
 	}
-	if (rows_f > MAP_ROWS - 1) {
-		rows_f = MAP_ROWS - 1;
+	if (rows_f > map->row_size - 1) {
+		rows_f = map->row_size - 1;
 		rows_i = rows_f - WIN_ROWS + 1;
 	}
-	if (cols_f > MAP_COLS - 1) {
-		cols_f = MAP_COLS - 1;
+	if (cols_f > map->col_size - 1) {
+		cols_f = map->col_size - 1;
 		cols_i = cols_f - WIN_COLS + 1;
 	}
 	

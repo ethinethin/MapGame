@@ -26,7 +26,7 @@ struct player PLAYER;
 struct worldmap MAP;
 
 int
-main(int argc, char *argv[])
+main()
 {
 
 	/* initialize game */
@@ -47,19 +47,19 @@ main(int argc, char *argv[])
 					break;
 				case SDLK_UP:
 				case SDLK_w:
-					move_player(&GAME, &MAP, &PLAYER, 0, -1);
+					move_player(&MAP, &PLAYER, 0, -1);
 					break;
 				case SDLK_DOWN:
 				case SDLK_s:
-					move_player(&GAME, &MAP, &PLAYER, 0, 1);
+					move_player(&MAP, &PLAYER, 0, 1);
 					break;
 				case SDLK_LEFT:
 				case SDLK_a:
-					move_player(&GAME, &MAP, &PLAYER, -1, 0);
+					move_player(&MAP, &PLAYER, -1, 0);
 					break;
 				case SDLK_RIGHT:
 				case SDLK_d:
-					move_player(&GAME, &MAP, &PLAYER, 1, 0);
+					move_player(&MAP, &PLAYER, 1, 0);
 					break;
 				default:
 					break;

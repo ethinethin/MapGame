@@ -34,7 +34,7 @@ player_quit(struct player *cur_player)
 }
 
 void
-move_player(struct game *cur_game, struct worldmap *map, struct player *cur_player, int x, int y)
+move_player(struct worldmap *map, struct player *cur_player, int x, int y)
 {
 	/* move player */
 	cur_player->x += x;
