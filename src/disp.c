@@ -105,7 +105,8 @@ draw_game(struct game *cur_game, struct worldmap *map, struct player *cur_player
 	SDL_RenderClear(cur_game->screen.renderer);
 	for (y = win.y; y < win.y+WIN_ROWS; y++) {
 		for (x = win.x; x < win.x+WIN_COLS; x++) {
-			sprite_index = get_sprite((short int) *(*(map->tile+y)+x));
+			sprite_index = get_sprite(*(*(map->tile+y)+x),
+						  *(*(map->biome+y)+x));
 			draw_tile(cur_game, (x - win.x) * SPRITE_W + GAME_X, (y - win.y) * SPRITE_H + GAME_Y, SPRITE_W, SPRITE_H, sprite_index); 
 		}
 	}
@@ -134,7 +135,6 @@ draw_map(struct game *cur_game, struct worldmap *map, struct player *cur_player)
 	
 	/* Update seen */
 	update_seen(map, cur_player);
-	
 	/* Draw map */
 	draw_rect(cur_game, MAP_X, MAP_Y, MAP_W, MAP_H, SDL_FALSE, white, SDL_FALSE, NULL);
 	for (rows = 0; rows < MAP_ROWS; rows++) {
@@ -142,7 +142,8 @@ draw_map(struct game *cur_game, struct worldmap *map, struct player *cur_player)
 			if (*(*(cur_player->seen+rows)+cols) == 0) {
 				continue;
 			}
-			tile_col = get_color((short int) *(*(map->tile + rows) + cols));
+			tile_col = get_color(*(*(map->tile + rows) + cols),
+					     *(*(map->biome + rows) + cols));
 			draw_rect(cur_game, MAP_X + cols * 2 + 1, MAP_Y + rows * 2 + 1, 2, 2, SDL_TRUE, tile_col, SDL_FALSE, NULL);
 		}
 	}

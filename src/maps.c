@@ -9,29 +9,59 @@ char green[3] = { 0, 255, 0 };
 char blue[3] = { 0, 0, 255 };
 char grey[3] = { 144, 144, 144 };
 char yellow[3] = { 192, 192, 0 };
+char cyan[3] = { 0, 255, 255 };
 char white[3] = { 255, 255, 255 };
 char black[3] = { 26, 26, 26 };
 
 /* Structure for tiles */
-struct tile {
-	short int sprite;
-	char *col;
-	int prob[9];
-} TILES[9] = {
-	{0, black, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-	{5, green, {0, 92, 5, 3, 0, 0, 0, 0, 0}},
-	{12, grey, {0, 23, 75, 0, 2, 0, 0, 0, 0}},
-	{2, blue, {0, 0, 0, 75, 0, 25, 0, 0, 0}},
-	{143, red, {0, 0, 90, 0, 10, 0, 0, 0, 0}},
-	{31, yellow, {0, 45, 0, 35, 0, 20, 0, 0, 0}},
-	{0, black, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-	{0, black, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-	{0, black, {0, 0, 0, 0, 0, 0, 0, 0, 0}}
+struct biome {
+	char *name;
+	struct tile {
+		char *name;
+		short int sprite;
+		char *col;
+		char passable;
+		short int prob[9];
+	} tiles[9];
+};
+
+/* Biomes */
+#define IMPASSABLE 0
+#define PASSABLE 1
+struct biome BIOMES[2] = {{
+	"grassland",
+	{
+	{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+	{"grass", 5, green, PASSABLE, {0, 92, 5, 3, 0, 0, 0, 0, 0}},
+	{"mountain", 12, grey, IMPASSABLE, {0, 23, 75, 0, 2, 0, 0, 0, 0}},
+	{"water", 2, blue, IMPASSABLE, {0, 0, 0, 75, 0, 25, 0, 0, 0}},
+	{"lava", 143, red, IMPASSABLE, {0, 0, 90, 0, 10, 0, 0, 0, 0}},
+	{"sand", 31, yellow, PASSABLE, {0, 45, 0, 35, 0, 20, 0, 0, 0}},
+	{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+	{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+	{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}}
+	}},
+	{"tundra",
+	{
+	{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+	{"snow", 77, white, PASSABLE, {0, 92, 5, 1, 2, 0, 0, 0, 0}},
+	{"mountain", 13, grey, IMPASSABLE, {0, 25, 75, 0, 0, 0, 0, 0, 0}},
+	{"water", 2, blue, IMPASSABLE, {0, 10, 0, 25, 65, 0, 0, 0, 0}},
+	{"ice", 3, cyan, PASSABLE, {0, 10, 0, 25, 65, 0, 0, 0, 0}},
+	{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+	{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+	{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+	{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}}
+	}}
+};
+
+struct tile_prob {
+	short int prob[9];
 };
 
 /* Function prototypes */
-static int	calc_tiles(struct worldmap *map, struct tile **probs);
-static void	calc_probs(struct worldmap *map, struct tile ***probs);
+static void	calc_probs(struct worldmap *map, struct tile_prob ***probs, short int biome);
+static int	calc_tiles(struct worldmap *map, struct tile_prob **probs);
 
 void
 create_map(struct worldmap *map, int row_size, int col_size)
@@ -43,10 +73,13 @@ create_map(struct worldmap *map, int row_size, int col_size)
 	map->row_size = row_size;
 	/* Allocate space for map and zero out */
 	map->tile = malloc(sizeof(*(map->tile))*row_size);
+	map->biome = malloc(sizeof(*(map->biome))*row_size);
 	for (rows = 0; rows < row_size; rows++) {
 		*(map->tile+rows) = malloc(sizeof(**map->tile)*col_size);
+		*(map->biome+rows) = malloc(sizeof(**map->biome)*col_size);
 		for (cols = 0; cols < col_size; cols++) {
 			*(*(map->tile+rows)+cols) = 0;
+			*(*(map->biome+rows)+cols) = 0;
 		}
 	}
 }
@@ -59,17 +92,25 @@ free_map(struct worldmap *map)
 	/* Free memory allocated for the map */
 	for (rows = 0; rows < map->row_size; rows++) {
 		free(*(map->tile+rows));
+		free(*(map->biome+rows));
 	}
 	free(map->tile);
+	free(map->biome);
 }
 
 void
-populate_map(struct worldmap *map, int start_tile)
+populate_map(struct worldmap *map, int start_tile, short int biome)
 {
 	int rows, cols, z;
 	int zero_count;
-	struct tile **probs;
+	struct tile_prob **probs;
 	
+	/* Set biome equal to given value */
+	for (rows = 0; rows < map->row_size; rows++) {
+		for (cols = 0; cols < map->col_size; cols++) {
+			*(*(map->biome+rows)+cols) = biome;
+		}
+	}
 	
 	/* Set up nine initial tiles, at 1/4, 2/4, and 3/4 vertical and horizontal */
 	for (z = 0; z < 3; z++) {
@@ -78,19 +119,19 @@ populate_map(struct worldmap *map, int start_tile)
 		*(*(map->tile+(z+1)*(map->row_size/4))+3*(map->col_size/4)) = start_tile;
 	}
 	/* Allocate memory for probabilities struct and zero out */
-	probs = malloc(sizeof(*probs)*map->row_size);
+	probs = malloc(sizeof(*probs) * map->row_size);
 	for (rows = 0; rows < map->row_size; rows++) {
-		*(probs+rows) = malloc(sizeof(**probs)*map->col_size);
+		*(probs+rows) = malloc(sizeof(**probs) * map->col_size);
 		for (cols = 0; cols < map->col_size; cols++) {
 			for (z = 0; z < 9; z++) {
 				(*(*(probs+rows)+cols)).prob[z] = 0;
 			}
 		}
 	}
-	
+
 	while(1) {
 		/* Calculate all probabilities */
-		calc_probs(map, &probs);
+		calc_probs(map, &probs, biome);
 		/* Apply all probabilities */
 		zero_count = calc_tiles(map, probs);
 		if (zero_count == 0) {
@@ -105,10 +146,10 @@ populate_map(struct worldmap *map, int start_tile)
 }
 
 static void
-calc_probs(struct worldmap *map, struct tile ***probs)
+calc_probs(struct worldmap *map, struct tile_prob ***probs, short int biome)
 {
 	int rows, cols, z;
-	struct tile **prob;
+	struct tile_prob **prob;
 	
 	/* Dereferencing this to make it easier to work with */
 	prob = *probs;
@@ -120,19 +161,19 @@ calc_probs(struct worldmap *map, struct tile ***probs)
 				for (z = 0; z < 9; z++) {
 					if (cols > 0) {
 						/* tile to left */
-						(*(*(prob+rows)+cols-1)).prob[z] += TILES[*(*(map->tile+rows)+cols)].prob[z];
+						(*(*(prob+rows)+cols-1)).prob[z] += BIOMES[biome].tiles[*(*(map->tile+rows)+cols)].prob[z];
 					}
 					if (cols < map->row_size - 1) {
 						/* tile to right */
-						(*(*(prob+rows)+cols+1)).prob[z] += TILES[*(*(map->tile+rows)+cols)].prob[z];
+						(*(*(prob+rows)+cols+1)).prob[z] += BIOMES[biome].tiles[*(*(map->tile+rows)+cols)].prob[z];
 					}
 					if (rows > 0) {
 						/* tile to up */
-						(*(*(prob+rows-1)+cols)).prob[z] += TILES[*(*(map->tile+rows)+cols)].prob[z];
+						(*(*(prob+rows-1)+cols)).prob[z] += BIOMES[biome].tiles[*(*(map->tile+rows)+cols)].prob[z];
 					}
 					if (rows < map->col_size - 1) {
 						/* tile to down */
-						(*(*(prob+rows+1)+cols)).prob[z] += TILES[*(*(map->tile+rows)+cols)].prob[z];
+						(*(*(prob+rows+1)+cols)).prob[z] += BIOMES[biome].tiles[*(*(map->tile+rows)+cols)].prob[z];
 					}
 				}
 			}
@@ -141,7 +182,7 @@ calc_probs(struct worldmap *map, struct tile ***probs)
 }
 
 static int
-calc_tiles(struct worldmap *map, struct tile **probs)
+calc_tiles(struct worldmap *map, struct tile_prob **probs)
 {
 	int rows, cols, z;
 	int zero_count;
@@ -167,6 +208,7 @@ calc_tiles(struct worldmap *map, struct tile **probs)
 					prob_roll = rand_num(0, prob_max - 1);
 					/* Calculate which tile to apply */
 					prob_max = 0;
+					
 					for (z = 1; z < 9; z++) {
 						prob_max += (*(*(probs+rows)+cols)).prob[z];
 						if (prob_roll < prob_max) {
@@ -182,13 +224,19 @@ calc_tiles(struct worldmap *map, struct tile **probs)
 }
 
 short int
-get_sprite(int tile)
+get_sprite(int tile, short int biome)
 {
-	return TILES[tile].sprite;
+	return BIOMES[biome].tiles[tile].sprite;
 }
 
 char *
-get_color(int tile)
+get_color(int tile, short int biome)
 {
-	return TILES[tile].col;
+	return BIOMES[biome].tiles[tile].col;
+}
+
+char
+is_passable(int tile, short int biome)
+{
+	return BIOMES[biome].tiles[tile].passable;
 }

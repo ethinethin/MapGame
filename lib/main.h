@@ -26,8 +26,8 @@ struct player {
 };
 
 /* Map dimensions */
-#define MAP_ROWS 128
-#define MAP_COLS 128
+#define MAP_ROWS 256
+#define MAP_COLS 256
 #define WIN_ROWS 19
 #define WIN_COLS 19
 #define SPRITE_W 32

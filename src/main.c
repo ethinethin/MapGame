@@ -31,10 +31,8 @@ main()
 
 	/* initialize game */
 	game_init();
-
 	/* draw map, player, and render */
 	draw_game(&GAME, &MAP, &PLAYER);
-
 	/* enter main game loop */
 	SDL_Event event;
 	while(GAME.running && SDL_WaitEvent(&event)) {
@@ -84,7 +82,7 @@ game_init(void)
 	/* Set up the worldmap */
 	create_map(&MAP, MAP_ROWS, MAP_COLS);
 	/* Populate the worldmap */
-	populate_map(&MAP, 1);
+	populate_map(&MAP, 1, 1);
 	/* Initialize the game */
 	display_init(&GAME);
 	/* Load sprites */

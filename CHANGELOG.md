@@ -1,5 +1,9 @@
 # Changelog
 
+2020-01-22
+
+- Implemented multiple biomes
+
 2020-01-20
 
 - Added flags for more strict warnings to Makefile
