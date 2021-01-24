@@ -70,7 +70,6 @@ main()
 		/* draw map, player, and render */
 		draw_all(&GAME, &MAP, &PLAYER);
 	}
-
 	/* quit game and exit normally */
 	game_quit();
 	return 0;

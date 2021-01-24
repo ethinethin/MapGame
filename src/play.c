@@ -16,7 +16,7 @@ player_init(struct player *cur_player)
 	for (rows = 0; rows < MAP_ROWS; rows++) {
 		*(cur_player->seen+rows) = malloc(sizeof(**cur_player->seen)*MAP_COLS);
 		for (cols = 0; cols < MAP_COLS; cols++) {
-			*(*(cur_player->seen+rows)+cols) = 0;
+			*(*(cur_player->seen+rows)+cols) = 1;
 		}
 	}
 }
