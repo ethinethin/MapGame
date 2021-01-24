@@ -1,10 +1,17 @@
 # Changelog
 
-2020-01-22
+2021-01-23
+- Added map loading in smaller pieces called "farts"
+- Added desert and forest biomes
+- Removed mini-map and added a callable map function
+- Settled on final map size of 1024x512
+- Individual "farts" loaded as 128x128, not necessarily final size
+
+2021-01-22
 
 - Implemented multiple biomes
 
-2020-01-20
+2021-01-20
 
 - Added flags for more strict warnings to Makefile
 - Cleaned up all excessive warnings
