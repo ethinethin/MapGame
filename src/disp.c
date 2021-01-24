@@ -16,6 +16,7 @@ static void		draw_rect(struct game *cur_game, unsigned int x, unsigned int y,
 				  unsigned int w, unsigned int h, SDL_bool fill,
 			  	  char fill_col[3], SDL_bool border, char bord_col[3]);
 static void		draw_tile(struct game *cur_game, int x, int y, int w, int h, int sprite_index);
+static void		draw_game(struct game *cur_game, struct worldmap *map, struct player *cur_player);
 static void		draw_player(struct game *cur_game, struct player *cur_player, struct win_pos win);
 static void		draw_map(struct game *cur_game, struct worldmap *map, struct player *cur_player);
 static struct win_pos	find_win_pos(struct worldmap *map, struct player *cur_player);
@@ -90,30 +91,38 @@ draw_tile(struct game *cur_game, int x, int y, int w, int h, int sprite_index)
 }
 
 void
+draw_all(struct game *cur_game, struct worldmap *map, struct player *cur_player)
+{
+	draw_game(cur_game, map, cur_player);
+	SDL_RenderPresent(cur_game->screen.renderer);
+}
+
+static void
 draw_game(struct game *cur_game, struct worldmap *map, struct player *cur_player)
 {
-	int x, y;
+	int rows, cols;
 	short int sprite_index;
 	char white[3] = { 255, 255, 255 };
 	struct win_pos win;
-
+	
 	/* Update window position */
 	win = find_win_pos(map, cur_player);
+
+	/* Update seen */
+	update_seen(map, cur_player);
 	
 	/* draw map */
 	SDL_SetRenderDrawColor(cur_game->screen.renderer, 0, 0, 0, 255);
 	SDL_RenderClear(cur_game->screen.renderer);
-	for (y = win.y; y < win.y+WIN_ROWS; y++) {
-		for (x = win.x; x < win.x+WIN_COLS; x++) {
-			sprite_index = get_sprite(*(*(map->tile+y)+x),
-						  *(*(map->biome+y)+x));
-			draw_tile(cur_game, (x - win.x) * SPRITE_W + GAME_X, (y - win.y) * SPRITE_H + GAME_Y, SPRITE_W, SPRITE_H, sprite_index); 
+	for (rows = win.y; rows < win.y+WIN_ROWS; rows++) {
+		for (cols = win.x; cols < win.x+WIN_COLS; cols++) {
+			sprite_index = get_sprite(*(*(map->tile+rows)+cols),
+						  *(*(map->biome+rows)+cols));
+			draw_tile(cur_game, (cols - win.x) * SPRITE_W + GAME_X, (rows - win.y) * SPRITE_H + GAME_Y, SPRITE_W, SPRITE_H, sprite_index); 
 		}
 	}
 	draw_player(cur_game, cur_player, win);
-	draw_map(cur_game, map, cur_player);
 	draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
-	SDL_RenderPresent(cur_game->screen.renderer);
 }
 
 static void
@@ -132,11 +141,10 @@ draw_map(struct game *cur_game, struct worldmap *map, struct player *cur_player)
 	char *tile_col;
 	char red[3] = { 255, 0, 0 };
 	char white[3] = { 255, 255, 255 };
+	char black[3] = { 0, 0, 0 };
 	
-	/* Update seen */
-	update_seen(map, cur_player);
 	/* Draw map */
-	draw_rect(cur_game, MAP_X, MAP_Y, MAP_W, MAP_H, SDL_FALSE, white, SDL_FALSE, NULL);
+	draw_rect(cur_game, MAP_X, MAP_Y, MAP_W, MAP_H, SDL_TRUE, black, SDL_TRUE, white);
 	for (rows = 0; rows < MAP_ROWS; rows++) {
 		for (cols = 0; cols < MAP_COLS; cols++) {
 			if (*(*(cur_player->seen+rows)+cols) == 0) {
@@ -144,12 +152,14 @@ draw_map(struct game *cur_game, struct worldmap *map, struct player *cur_player)
 			}
 			tile_col = get_color(*(*(map->tile + rows) + cols),
 					     *(*(map->biome + rows) + cols));
-			draw_rect(cur_game, MAP_X + cols * 2 + 1, MAP_Y + rows * 2 + 1, 2, 2, SDL_TRUE, tile_col, SDL_FALSE, NULL);
+			//draw_rect(cur_game, MAP_X + cols * 2 + 1, MAP_Y + rows * 2 + 1, 2, 2, SDL_TRUE, tile_col, SDL_FALSE, NULL);
+			draw_point(cur_game, MAP_X + cols, MAP_Y + rows, tile_col);
 		}
 	}
 	/* Draw player */
-	draw_point(cur_game, MAP_X + cur_player->x * 2 + 1, MAP_Y + cur_player->y * 2 + 1, red);
-	draw_rect(cur_game, MAP_X + cur_player->x * 2 + 1, MAP_Y + cur_player->y * 2 + 1, 2, 2, SDL_TRUE, red, SDL_FALSE, NULL);
+	draw_point(cur_game, MAP_X + cur_player->x, MAP_Y + cur_player->y, red);
+	draw_rect(cur_game, MAP_X, MAP_Y, MAP_W, MAP_H, SDL_FALSE, white, SDL_FALSE, NULL);
+
 }
 
 void
@@ -204,9 +214,9 @@ update_seen(struct worldmap *map, struct player *cur_player)
 	int rows_i, cols_i, rows_f, cols_f;
 	
 	rows_i = cur_player->y - 9;
-	cols_i = cur_player->x - 9;
+	cols_i = cur_player->x - 19;
 	rows_f = cur_player->y + 9;
-	cols_f = cur_player->x + 9;
+	cols_f = cur_player->x + 19;
 	
 	/* Check boundaries for loop */
 	if (rows_i < 0) {
@@ -230,6 +240,24 @@ update_seen(struct worldmap *map, struct player *cur_player)
 	for (rows = rows_i ; rows <= rows_f; rows++) {
 		for (cols = cols_i; cols <= cols_f; cols++) {
 			*(*(cur_player->seen+rows)+cols) = 1;
+		}
+	}
+}
+
+void
+worldmap(struct game *cur_game, struct worldmap *map, struct player *cur_player)
+{
+	/* Redraw screen */
+	draw_game(cur_game, map, cur_player);
+	/* Draw map */
+	draw_map(cur_game, map, cur_player);
+	/* Render */
+	SDL_RenderPresent(cur_game->screen.renderer);
+	/* Wait for user input */
+	SDL_Event event;
+	while(SDL_WaitEvent(&event)) {
+		if (event.type == SDL_KEYDOWN) {
+			return;
 		}
 	}
 }

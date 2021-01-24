@@ -1,6 +1,10 @@
 #ifndef MAPS_H
 #define MAPS_H
 
+/* Defines for map properties */
+#define IMPASSABLE 0
+#define PASSABLE 1
+
 /* Structure for map */
 struct worldmap {
 	int row_size;

@@ -26,23 +26,23 @@ struct player {
 };
 
 /* Map dimensions */
-#define MAP_ROWS 256
-#define MAP_COLS 256
-#define WIN_ROWS 19
-#define WIN_COLS 19
+#define MAP_ROWS 512
+#define MAP_COLS 1024
+#define WIN_ROWS 21
+#define WIN_COLS 39
 #define SPRITE_W 32
 #define SPRITE_H 32
 
 /* Screen dimensions values */
-#define WIN_W 1170
-#define WIN_H 640
+#define WIN_W 1280
+#define WIN_H 720
 #define GAME_X 16
-#define GAME_Y 16
-#define GAME_W 608
-#define GAME_H 608
-#define MAP_X 640
-#define MAP_Y 16
-#define MAP_W 514
-#define MAP_H 514
+#define GAME_Y 24
+#define GAME_W 1248
+#define GAME_H 672
+#define MAP_X 128
+#define MAP_Y 104
+#define MAP_W 1024
+#define MAP_H 512
 
 #endif

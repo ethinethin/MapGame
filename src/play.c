@@ -45,7 +45,7 @@ move_player(struct worldmap *map, struct player *cur_player, int x, int y)
 	/* check if tile is impassable */
 	passable = is_passable(*(*(map->tile+cur_player->y)+cur_player->x),
 	                       *(*(map->biome+cur_player->y)+cur_player->x));
-	if (passable == 0) {
+	if (passable == IMPASSABLE) {
 		/* unmove player */
 		cur_player->x -= x;
 		cur_player->y -= y;

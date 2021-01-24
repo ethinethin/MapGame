@@ -9,6 +9,8 @@
 /* Function prototypes */
 static void	game_init(void);
 static void	game_quit(void);
+static void	generate_farts(struct worldmap *main_map);
+static void	copy_fart(struct worldmap *main_map, struct worldmap *fart, int row, int col);
 
 /* Global game construct */
 struct game GAME = {
@@ -32,7 +34,7 @@ main()
 	/* initialize game */
 	game_init();
 	/* draw map, player, and render */
-	draw_game(&GAME, &MAP, &PLAYER);
+	draw_all(&GAME, &MAP, &PLAYER);
 	/* enter main game loop */
 	SDL_Event event;
 	while(GAME.running && SDL_WaitEvent(&event)) {
@@ -59,12 +61,14 @@ main()
 				case SDLK_d:
 					move_player(&MAP, &PLAYER, 1, 0);
 					break;
+				case SDLK_m:
+					worldmap(&GAME, &MAP, &PLAYER);
 				default:
 					break;
 			}
 		}
 		/* draw map, player, and render */
-		draw_game(&GAME, &MAP, &PLAYER);
+		draw_all(&GAME, &MAP, &PLAYER);
 	}
 
 	/* quit game and exit normally */
@@ -81,8 +85,8 @@ game_init(void)
 	player_init(&PLAYER);
 	/* Set up the worldmap */
 	create_map(&MAP, MAP_ROWS, MAP_COLS);
-	/* Populate the worldmap */
-	populate_map(&MAP, 1, 1);
+	/* Generate farts and copy to worldmap */
+	generate_farts(&MAP);
 	/* Initialize the game */
 	display_init(&GAME);
 	/* Load sprites */
@@ -100,4 +104,41 @@ game_quit(void)
 	free_map(&MAP);
 	/* Free the player */
 	player_quit(&PLAYER);
+}
+
+static void
+generate_farts(struct worldmap *main_map)
+{
+	int i;
+	int rows[32] =       {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3}; 
+	int cols[32] =       {0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7};
+	int biomes[32] =     {1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 3, 3, 3};
+	int start_tile[32] = {4, 4, 1, 1, 1, 1, 4, 4, 1, 1, 1, 1, 1, 4, 3, 1, 1, 1, 1, 1, 1, 2, 2, 1, 1, 2, 1, 2, 2, 1, 1, 2};
+	
+	struct worldmap fart;
+
+	/* Create 4 fart */
+	for (i = 0; i < 32; i++) {
+		/* Create a fart */
+		create_map(&fart, 128, 128);
+		/* Populate with a grassland */
+		populate_map(&fart, start_tile[i], biomes[i]);
+		/* copy_fart */
+		copy_fart(main_map, &fart, rows[i] * 128, cols[i] * 128);
+		/* free_map */
+		free_map(&fart);
+	}
+}
+
+static void
+copy_fart(struct worldmap *main_map, struct worldmap *fart, int row, int col)
+{
+	int rows, cols;
+	
+	for (rows = 0; rows < fart->row_size; rows++) {
+		for (cols = 0; cols < fart->col_size; cols++) {
+			*(*(main_map->tile+rows+row)+cols+col) = *(*(fart->tile+rows)+cols);
+			*(*(main_map->biome+rows+row)+cols+col) = *(*(fart->biome+rows)+cols);
+		}
+	}
 }

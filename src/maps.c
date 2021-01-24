@@ -5,10 +5,15 @@
 
 /* Colors for tiles */
 char red[3] = { 255, 0, 0 };
-char green[3] = { 0, 255, 0 };
+char green[3] = { 0, 192, 0 };
+char lightgreen[3] = { 0, 255, 0 };
+char medgreen[3] = { 0, 144, 0 };
+char darkgreen[3] = { 0, 64, 0 };
 char blue[3] = { 0, 0, 255 };
+char darkblue[3] = { 0, 0, 128 };
 char grey[3] = { 144, 144, 144 };
 char yellow[3] = { 192, 192, 0 };
+char khaki[3] = { 240, 230, 140 };
 char cyan[3] = { 0, 255, 255 };
 char white[3] = { 255, 255, 255 };
 char black[3] = { 26, 26, 26 };
@@ -26,32 +31,66 @@ struct biome {
 };
 
 /* Biomes */
-#define IMPASSABLE 0
-#define PASSABLE 1
-struct biome BIOMES[2] = {{
+struct biome BIOMES[5] = {{
 	"grassland",
 	{
-	{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-	{"grass", 5, green, PASSABLE, {0, 92, 5, 3, 0, 0, 0, 0, 0}},
-	{"mountain", 12, grey, IMPASSABLE, {0, 23, 75, 0, 2, 0, 0, 0, 0}},
-	{"water", 2, blue, IMPASSABLE, {0, 0, 0, 75, 0, 25, 0, 0, 0}},
-	{"lava", 143, red, IMPASSABLE, {0, 0, 90, 0, 10, 0, 0, 0, 0}},
-	{"sand", 31, yellow, PASSABLE, {0, 45, 0, 35, 0, 20, 0, 0, 0}},
-	{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-	{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-	{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}}
+		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{"grass", 5, lightgreen, PASSABLE, {0, 92, 5, 3, 0, 0, 0, 0, 0}},
+		{"mountain", 12, grey, IMPASSABLE, {0, 23, 75, 0, 2, 0, 0, 0, 0}},
+		{"water", 2, blue, IMPASSABLE, {0, 0, 0, 75, 0, 25, 0, 0, 0}},
+		{"lava", 143, red, IMPASSABLE, {0, 0, 90, 0, 10, 0, 0, 0, 0}},
+		{"sand", 31, yellow, PASSABLE, {0, 45, 0, 35, 0, 20, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}}
 	}},
 	{"tundra",
 	{
-	{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-	{"snow", 77, white, PASSABLE, {0, 92, 5, 1, 2, 0, 0, 0, 0}},
-	{"mountain", 13, grey, IMPASSABLE, {0, 25, 75, 0, 0, 0, 0, 0, 0}},
-	{"water", 2, blue, IMPASSABLE, {0, 10, 0, 25, 65, 0, 0, 0, 0}},
-	{"ice", 3, cyan, PASSABLE, {0, 10, 0, 25, 65, 0, 0, 0, 0}},
-	{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-	{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-	{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-	{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}}
+		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{"snow", 77, white, PASSABLE, {0, 92, 5, 1, 2, 0, 0, 0, 0}},
+		{"mountain", 13, grey, IMPASSABLE, {0, 25, 75, 0, 0, 0, 0, 0, 0}},
+		{"water", 2, blue, IMPASSABLE, {0, 10, 0, 25, 65, 0, 0, 0, 0}},
+		{"ice", 3, cyan, PASSABLE, {0, 10, 0, 25, 65, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}}
+	}},
+	{"desert",
+	{
+		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{"sand 1", 30, yellow, PASSABLE, {0, 160, 30, 8, 1, 0, 0, 0, 0}},
+		{"sand 2", 31, khaki, PASSABLE, {0, 30, 160, 8, 1, 0, 0, 0, 0}},
+		{"cactus", 47, green, IMPASSABLE, {0, 47, 47, 3, 1, 0, 0, 0, 0}},
+		{"water", 2, blue, IMPASSABLE, {0, 5, 5, 0, 70, 20, 0, 0, 0}},
+		{"tree", 46, darkgreen, IMPASSABLE, {0, 30, 30, 30, 5, 5, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}}
+	}},
+	{"forest",
+	{
+		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{"grass", 6, lightgreen, PASSABLE, {0, 20, 50, 15, 0, 0, 15, 0, 0}},
+		{"underbrush", 8, green, PASSABLE, {0, 10, 40, 20, 20, 0, 10, 0, 0}},
+		{"light trees", 9, medgreen, PASSABLE, {0, 10, 30, 30, 30, 0, 0, 0, 0}},
+		{"heavy trees", 10, darkgreen, IMPASSABLE, {0, 0, 10, 40, 50, 0, 0, 0, 0}},
+		{"shallow water", 4, blue, PASSABLE, {0, 50, 20, 0, 0, 20, 10, 0, 0}},
+		{"deep water", 2, darkblue, IMPASSABLE, {0, 20, 0, 0, 0, 70, 10, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}}
+	}},
+	{"ocean",
+	{
+		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}}
 	}}
 };
 
