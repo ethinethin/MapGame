@@ -10,7 +10,7 @@ clean:
 	rm -f $(TARGET)
 debug:
 	$(CC) $(CFLAGS) -o $(TARGET) -g $(CFILES)
-	valgrind --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes ./mapgame
+	#valgrind --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes ./mapgame
 run: default
 	./$(TARGET)
 all: default

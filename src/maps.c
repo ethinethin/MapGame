@@ -31,7 +31,7 @@ struct biome {
 };
 
 /* Biomes */
-struct biome BIOMES[5] = {{
+struct biome BIOMES[6] = {{
 	"grassland",
 	{
 		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
@@ -87,6 +87,18 @@ struct biome BIOMES[5] = {{
 		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
 		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
 		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}}
+	}},
+	{"map_generator",
+	{
+		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{"grassland", 0, black, IMPASSABLE, {0, 90, 2, 2, 6, 0, 0, 0, 0}},
+		{"tundra", 0, black, IMPASSABLE, {0, 5, 90, 0, 5, 0, 0, 0, 0}},
+		{"desert", 0, black, IMPASSABLE, {0, 10, 0, 90, 0, 0, 0, 0, 0}},
+		{"forest", 0, black, IMPASSABLE, {0, 5, 5, 0, 90, 0, 0, 0, 0}},
 		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
 		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
 		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
@@ -202,7 +214,7 @@ calc_probs(struct worldmap *map, struct tile_prob ***probs, short int biome)
 						/* tile to left */
 						(*(*(prob+rows)+cols-1)).prob[z] += BIOMES[biome].tiles[*(*(map->tile+rows)+cols)].prob[z];
 					}
-					if (cols < map->row_size - 1) {
+					if (cols < map->col_size - 1) {
 						/* tile to right */
 						(*(*(prob+rows)+cols+1)).prob[z] += BIOMES[biome].tiles[*(*(map->tile+rows)+cols)].prob[z];
 					}
@@ -210,7 +222,7 @@ calc_probs(struct worldmap *map, struct tile_prob ***probs, short int biome)
 						/* tile to up */
 						(*(*(prob+rows-1)+cols)).prob[z] += BIOMES[biome].tiles[*(*(map->tile+rows)+cols)].prob[z];
 					}
-					if (rows < map->col_size - 1) {
+					if (rows < map->row_size - 1) {
 						/* tile to down */
 						(*(*(prob+rows+1)+cols)).prob[z] += BIOMES[biome].tiles[*(*(map->tile+rows)+cols)].prob[z];
 					}

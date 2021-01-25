@@ -9,7 +9,7 @@
 /* Function prototypes */
 static void	game_init(void);
 static void	game_quit(void);
-static void	generate_farts(struct worldmap *main_map);
+static void	generate_farts(struct game *cur_game, struct worldmap *main_map);
 static void	copy_fart(struct worldmap *main_map, struct worldmap *fart, int row, int col);
 
 /* Global game construct */
@@ -18,6 +18,7 @@ struct game GAME = {
 	/* screen */
 	{ WIN_W, WIN_H, "MapGame", NULL, NULL },
 	NULL,			/* sprites */
+	NULL,			/* font */
 	SDL_FALSE		/* fullscreen */
 };
 
@@ -78,6 +79,8 @@ main()
 static void
 game_init(void)
 {
+	/* Initialize the game */
+	display_init(&GAME);
 	/* Seed RNG */
 	seed_rng();
 	/* Set up player */
@@ -85,11 +88,7 @@ game_init(void)
 	/* Set up the worldmap */
 	create_map(&MAP, MAP_ROWS, MAP_COLS);
 	/* Generate farts and copy to worldmap */
-	generate_farts(&MAP);
-	/* Initialize the game */
-	display_init(&GAME);
-	/* Load sprites */
-	load_sprites(&GAME);
+	generate_farts(&GAME, &MAP);
 	/* The window is now up and running */
 	GAME.running = SDL_TRUE;
 }
@@ -106,27 +105,33 @@ game_quit(void)
 }
 
 static void
-generate_farts(struct worldmap *main_map)
+generate_farts(struct game *cur_game, struct worldmap *main_map)
 {
-	int i;
-	int rows[32] =       {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3}; 
-	int cols[32] =       {0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7, 0, 1, 2, 3, 4, 5, 6, 7};
-	int biomes[32] =     {1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 1, 1, 0, 0, 0, 0, 0, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 3, 3, 3};
-	int start_tile[32] = {4, 4, 1, 1, 1, 1, 4, 4, 1, 1, 1, 1, 1, 4, 3, 1, 1, 1, 1, 1, 1, 2, 2, 1, 1, 2, 1, 2, 2, 1, 1, 2};
-	
+	int rows, cols;
+	struct worldmap biomes;
 	struct worldmap fart;
 
+	/* Pick random biomes */
+	create_map(&biomes, 32, 64);
+	populate_map(&biomes, 3, 5);
+	
 	/* Create 4 fart */
-	for (i = 0; i < 32; i++) {
-		/* Create a fart */
-		create_map(&fart, 128, 128);
-		/* Populate with a grassland */
-		populate_map(&fart, start_tile[i], biomes[i]);
-		/* copy_fart */
-		copy_fart(main_map, &fart, rows[i] * 128, cols[i] * 128);
-		/* free_map */
-		free_map(&fart);
+	for (rows = 0; rows < 32; rows++) {
+		/* Loading bar */
+		loading_bar(cur_game, "Generating maps", 100*rows/32);
+		for (cols = 0; cols < 64; cols++) {
+			/* Create a fart */
+			create_map(&fart, 16, 16);
+			/* Populate with a random biome */
+			populate_map(&fart, 1, *(*(biomes.tile+rows)+cols) - 1);
+			/* copy_fart */
+			copy_fart(main_map, &fart, rows * 16, cols * 16);
+			/* free_map */
+			free_map(&fart);
+		}
 	}
+	/* Free the biome plan */
+	free_map(&biomes);
 }
 
 static void

@@ -15,6 +15,7 @@ struct game {
 		SDL_Renderer *renderer;
 	} screen;
 	SDL_Surface **sprites;
+	SDL_Surface **font;
 	SDL_bool fullscreen;
 };
 

@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 #include <SDL2/SDL.h>
 #include "disp.h"
 #include "main.h"
@@ -21,6 +22,12 @@ static void		draw_player(struct game *cur_game, struct player *cur_player, struc
 static void		draw_map(struct game *cur_game, struct worldmap *map, struct player *cur_player);
 static struct win_pos	find_win_pos(struct worldmap *map, struct player *cur_player);
 static void		update_seen(struct worldmap *map, struct player *cur_player);
+static void		draw_char(struct game *cur_game, int x, int y, int letter);
+static void		load_sprites(struct game *cur_game);
+static void		unload_sprites(struct game *cur_game);
+static void		load_font(struct game *cur_game);
+static void		unload_font(struct game *cur_game);
+
 
 void
 display_init(struct game *cur_game)
@@ -42,15 +49,31 @@ display_init(struct game *cur_game)
 		cur_game->screen.window, -1,
 		SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC
 	);
+	
+	/* Load sprites and font */
+	load_sprites(cur_game);
+	load_font(cur_game);
+	
+	/* Clear screen */
+	SDL_SetRenderDrawColor(cur_game->screen.renderer, 0, 0, 0, 255);
+	SDL_RenderClear(cur_game->screen.renderer);
+	SDL_RenderPresent(cur_game->screen.renderer);
+	SDL_Event event;
+	SDL_WaitEvent(&event);
 }
 
 void
 display_quit(struct game *cur_game)
 {	
+	/* Destroy renderer and window */
 	SDL_DestroyRenderer(cur_game->screen.renderer);
 	cur_game->screen.renderer = NULL;
 	SDL_DestroyWindow(cur_game->screen.window);
 	cur_game->screen.window = NULL;
+	/* Unload sprites and font */
+	unload_sprites(cur_game);
+	unload_font(cur_game);
+	/* SDL quit */
 	SDL_Quit();
 }
 
@@ -162,27 +185,6 @@ draw_map(struct game *cur_game, struct worldmap *map, struct player *cur_player)
 
 }
 
-void
-load_sprites(struct game *cur_game)
-{
-	/* Load the map arrow sprites */
-	SDL_Surface* surface = SDL_LoadBMP("art/sprites.bmp");
-	cur_game->sprites = (SDL_Surface**) malloc(sizeof(SDL_Surface*)*512);
-	int i, j;
-	SDL_Rect rect = {0, 0, SPRITE_W, SPRITE_H};
-	for (i = 0; i < 16; i++) {
-		for (j = 0; j < 32; j++) {
-			cur_game->sprites[(i*32)+j] = SDL_CreateRGBSurface(0, SPRITE_W, SPRITE_H, 24, 0x00, 0x00, 0x00, 0x00);
-			SDL_SetColorKey(cur_game->sprites[(i*32)+j], 1, 0x000000);
-			SDL_FillRect(cur_game->sprites[(i*32)+j], 0, 0x000000);
-			rect.x = j * 32;
-			rect.y = i * 32;
-			SDL_BlitSurface(surface, &rect, cur_game->sprites[(i*32)+j], NULL);
-		}
-	}
-	SDL_FreeSurface(surface);
-}
-
 static struct win_pos
 find_win_pos(struct worldmap *map, struct player *cur_player)
 {
@@ -247,10 +249,16 @@ update_seen(struct worldmap *map, struct player *cur_player)
 void
 worldmap(struct game *cur_game, struct worldmap *map, struct player *cur_player)
 {
+	char black[3] = { 0, 0, 0 };
+	char white[3] = { 255, 255, 255 };
+	
 	/* Redraw screen */
 	draw_game(cur_game, map, cur_player);
 	/* Draw map */
 	draw_map(cur_game, map, cur_player);
+	/* Write "Map" at the top of the screen */
+	draw_rect(cur_game, MAP_X, MAP_Y-20, 28*9+2, 18+2, SDL_TRUE, black, SDL_TRUE, white);
+	draw_sentence(cur_game, MAP_X+1, MAP_Y-19, "World Map");
 	/* Render */
 	SDL_RenderPresent(cur_game->screen.renderer);
 	/* Wait for user input */
@@ -260,4 +268,126 @@ worldmap(struct game *cur_game, struct worldmap *map, struct player *cur_player)
 			return;
 		}
 	}
+}
+
+static void
+draw_char(struct game *cur_game, int x, int y, int letter)
+{
+	SDL_Rect rect = {x, y, 28, 18};
+	SDL_Texture* texture = SDL_CreateTextureFromSurface(cur_game->screen.renderer, cur_game->font[letter]);
+	SDL_RenderCopyEx(cur_game->screen.renderer, texture, NULL, &rect, 0, NULL, 0);
+	SDL_DestroyTexture(texture);
+}
+
+void
+draw_sentence(struct game *cur_game, int start_x, int start_y, const char *sentence)
+{
+	int i;
+	int len;
+	int x = start_x;
+	int y = start_y;
+
+	for (i = 0, len = strlen(sentence); i < len; i++) {
+		draw_char(cur_game, x, y, sentence[i] - 32);
+		x += 28;
+		if (x >= 1270) {
+			x = start_x;
+			y = y + 18;
+		}
+	}
+
+}
+
+static void
+load_sprites(struct game *cur_game)
+{
+	/* Load the map arrow sprites */
+	SDL_Surface* surface = SDL_LoadBMP("art/sprites.bmp");
+	cur_game->sprites = (SDL_Surface**) malloc(sizeof(SDL_Surface*)*512);
+	int i, j;
+	SDL_Rect rect = {0, 0, SPRITE_W, SPRITE_H};
+	for (i = 0; i < 16; i++) {
+		for (j = 0; j < 32; j++) {
+			cur_game->sprites[(i*32)+j] = SDL_CreateRGBSurface(0, SPRITE_W, SPRITE_H, 24, 0x00, 0x00, 0x00, 0x00);
+			SDL_SetColorKey(cur_game->sprites[(i*32)+j], 1, 0x000000);
+			SDL_FillRect(cur_game->sprites[(i*32)+j], 0, 0x000000);
+			rect.x = j * 32;
+			rect.y = i * 32;
+			SDL_BlitSurface(surface, &rect, cur_game->sprites[(i*32)+j], NULL);
+		}
+	}
+	SDL_FreeSurface(surface);
+}
+
+static void
+unload_sprites(struct game *cur_game)
+{
+	int i;
+
+	/* Free all sprites */
+	for (i = 0; i < 512; i++) {
+		SDL_FreeSurface(cur_game->sprites[i]);
+	}
+	free(cur_game->sprites);
+}
+
+static void
+load_font(struct game *cur_game)
+{
+	int i, j;
+	int count = 0;
+	SDL_Surface* surface;
+	SDL_Rect rect = {1, 1, 28, 18};
+
+	/* Allocate memory for 96 font characters */
+	cur_game->font = (SDL_Surface**) malloc(sizeof(SDL_Surface*)*96);
+	/* Load sprite sheet */
+	surface = SDL_LoadBMP("art/font.bmp");
+	/* Load all sprites */
+	for (i = 0; i < 6; i++) {
+		for (j = 0; j < 16; j++) {
+			rect.x = i*28 + i + 1;
+			rect.y = j*18 + j + 1;
+			cur_game->font[count] = SDL_CreateRGBSurface(0, 28, 18, 24, 0, 0, 0, 0);
+			SDL_BlitSurface(surface, &rect, cur_game->font[count], NULL);
+			count++;
+		}
+	}
+	SDL_FreeSurface(surface);
+}
+
+static void
+unload_font(struct game *cur_game)
+{
+	int i;
+
+	/* Free all font characters */
+	for (i = 0; i < 96; i++) {
+		SDL_FreeSurface(cur_game->font[i]);
+	}
+	free(cur_game->font);
+}
+
+int LAST = 0;
+void
+loading_bar(struct game *cur_game, char *title, int percentage)
+{
+	char black[3] = { 0, 0, 0 };
+	char white[3] = { 255, 255, 255 };
+	char blue[3] = { 0, 0, 255 };
+	
+	/* Should I even draw the loading bar? */
+	if (percentage == LAST) return;
+	/* Yes */
+	LAST = percentage;
+	
+	/* Clear screen */
+	SDL_SetRenderDrawColor(cur_game->screen.renderer, 0, 0, 0, 255);
+	SDL_RenderClear(cur_game->screen.renderer);
+	/* Write title to screen */
+	draw_sentence(cur_game, 0, 0, title);
+	/* Draw percentage bar */
+	draw_rect(cur_game, 20, 30, 1000, 40, SDL_TRUE, black, SDL_TRUE, white);
+	draw_rect(cur_game, 21, 31, percentage*10-2, 38, SDL_TRUE, blue, SDL_FALSE, NULL);
+	SDL_RenderPresent(cur_game->screen.renderer);
 }
