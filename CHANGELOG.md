@@ -1,5 +1,11 @@
 # Changelog
 
+2021-01-24
+- Added font
+- Added random world generation via map generation functions
+- Re-ordered loading process
+- Added loading bar
+
 2021-01-23
 - Added map loading in smaller pieces called "farts"
 - Added desert and forest biomes
