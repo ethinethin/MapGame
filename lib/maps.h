@@ -11,6 +11,7 @@ struct worldmap {
 	int col_size;
 	int **tile;
 	short int **biome;
+	unsigned short int **loot;
 };
 
 extern void		 create_map(struct worldmap *map, int row_size, int col_size);
@@ -19,6 +20,7 @@ extern void		 populate_map(struct worldmap *map, int start_tile, short int biome
 extern short int	 get_sprite(int tile, short int biome);
 extern char		*get_color(int tile, short int biome);
 extern char		 is_passable(int tile, short int biome);
+extern char 		*get_tile_name(int tile, short int biome);
 
 #endif
 

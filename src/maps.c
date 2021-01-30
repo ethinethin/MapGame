@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "loot.h"
 #include "maps.h"
 #include "rand.h"
 
@@ -125,12 +126,15 @@ create_map(struct worldmap *map, int row_size, int col_size)
 	/* Allocate space for map and zero out */
 	map->tile = malloc(sizeof(*(map->tile))*row_size);
 	map->biome = malloc(sizeof(*(map->biome))*row_size);
+	map->loot = malloc(sizeof(*(map->loot))*row_size);
 	for (rows = 0; rows < row_size; rows++) {
 		*(map->tile+rows) = malloc(sizeof(**map->tile)*col_size);
 		*(map->biome+rows) = malloc(sizeof(**map->biome)*col_size);
+		*(map->loot+rows) = malloc(sizeof(**map->loot)*col_size);
 		for (cols = 0; cols < col_size; cols++) {
 			*(*(map->tile+rows)+cols) = 0;
 			*(*(map->biome+rows)+cols) = 0;
+			*(*(map->loot+rows)+cols) = 0;
 		}
 	}
 }
@@ -290,4 +294,10 @@ char
 is_passable(int tile, short int biome)
 {
 	return BIOMES[biome].tiles[tile].passable;
+}
+
+char *
+get_tile_name(int tile, short int biome)
+{
+	return BIOMES[biome].tiles[tile].name;
 }

@@ -1,5 +1,7 @@
+#include "loot.h"
 #include "main.h"
 #include "maps.h"
+#include "play.h"
 
 /* Function prototypes */
 static void	pacman_player(struct worldmap *map, struct player *cur_player);
@@ -19,6 +21,11 @@ player_init(struct player *cur_player)
 			*(*(cur_player->seen+rows)+cols) = 1;
 		}
 	}
+	/* Initialize the inventory */
+	for (rows = 0; rows < MAX_INV; rows++) {
+		cur_player->loot[rows] = 0;
+		cur_player->quantity[rows] = 0;
+	}
 }
 
 void
@@ -36,7 +43,9 @@ player_quit(struct player *cur_player)
 void
 move_player(struct worldmap *map, struct player *cur_player, int x, int y)
 {
+	short int item_num;
 	char passable;
+	int i;
 	/* move player */
 	cur_player->x += x;
 	cur_player->y += y;
@@ -52,6 +61,28 @@ move_player(struct worldmap *map, struct player *cur_player, int x, int y)
 		/* un-pacman player */
 		pacman_player(map, cur_player);
 	}
+	/* check for loot */
+	item_num = *(*(map->loot+cur_player->y)+cur_player->x);
+	if (item_num != 0) {
+		/* add to inventory */
+		if (is_loot_stackable(item_num) == STACKABLE) {
+			for (i = 0; i < 32; i++) {
+				if (cur_player->loot[i] == item_num && cur_player->quantity[i] < 255) {
+					cur_player->quantity[i] += 1;
+					*(*(map->loot+cur_player->y)+cur_player->x) = 0;
+					return;
+				}
+			}
+		}
+		for (i = 0; i < 32; i++) {
+			if (cur_player->loot[i] == 0) {
+				cur_player->loot[i] = item_num;
+				cur_player->quantity[i] = 1;
+				*(*(map->loot+cur_player->y)+cur_player->x) = 0;
+				return;
+			}
+		}	
+	}	
 }
 
 static void

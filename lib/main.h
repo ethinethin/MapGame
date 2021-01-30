@@ -19,13 +19,6 @@ struct game {
 	SDL_bool fullscreen;
 };
 
-/* Main player structure */
-struct player {
-	int x;
-	int y;
-	char **seen;
-};
-
 /* Map dimensions */
 #define MAP_ROWS 512
 #define MAP_COLS 1024

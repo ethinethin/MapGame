@@ -2,8 +2,11 @@
 #include <string.h>
 #include <SDL2/SDL.h>
 #include "disp.h"
+#include "font.h"
+#include "loot.h"
 #include "main.h"
 #include "maps.h"
+#include "play.h"
 
 /* Structure for window position */
 struct win_pos {
@@ -13,21 +16,19 @@ struct win_pos {
 
 /* Function prototypes */
 static void		draw_point(struct game *cur_game, int x, int y, char *col);
+static void		draw_line(struct game *cur_game, int x1, int y1, int x2, int y2, char *col);
 static void		draw_rect(struct game *cur_game, unsigned int x, unsigned int y,
 				  unsigned int w, unsigned int h, SDL_bool fill,
 			  	  char fill_col[3], SDL_bool border, char bord_col[3]);
 static void		draw_tile(struct game *cur_game, int x, int y, int w, int h, int sprite_index);
 static void		draw_game(struct game *cur_game, struct worldmap *map, struct player *cur_player);
 static void		draw_player(struct game *cur_game, struct player *cur_player, struct win_pos win);
+static void		draw_inv(struct game *cur_game, struct player *cur_player);
 static void		draw_map(struct game *cur_game, struct worldmap *map, struct player *cur_player);
 static struct win_pos	find_win_pos(struct worldmap *map, struct player *cur_player);
 static void		update_seen(struct worldmap *map, struct player *cur_player);
-static void		draw_char(struct game *cur_game, int x, int y, int letter);
 static void		load_sprites(struct game *cur_game);
 static void		unload_sprites(struct game *cur_game);
-static void		load_font(struct game *cur_game);
-static void		unload_font(struct game *cur_game);
-
 
 void
 display_init(struct game *cur_game)
@@ -85,6 +86,13 @@ draw_point(struct game *cur_game, int x, int y, char *col)
 }
 
 static void
+draw_line(struct game *cur_game, int x1, int y1, int x2, int y2, char *col)
+{
+	SDL_SetRenderDrawColor(cur_game->screen.renderer, *(col+0), *(col+1), *(col+2), 255);
+	SDL_RenderDrawLine(cur_game->screen.renderer, x1, y1, x2, y2);
+}
+
+static void
 draw_rect(struct game *cur_game, unsigned int x, unsigned int y, unsigned int w, unsigned int h, SDL_bool fill, char *fill_col, SDL_bool border, char *bord_col)
 {
 	SDL_Rect coords = { x, y, w, h };
@@ -116,7 +124,11 @@ draw_tile(struct game *cur_game, int x, int y, int w, int h, int sprite_index)
 void
 draw_all(struct game *cur_game, struct worldmap *map, struct player *cur_player)
 {
+	char white[3] = { 255, 255, 255 };
+
 	draw_game(cur_game, map, cur_player);
+	draw_inv(cur_game, cur_player);
+	draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
 	SDL_RenderPresent(cur_game->screen.renderer);
 }
 
@@ -125,7 +137,6 @@ draw_game(struct game *cur_game, struct worldmap *map, struct player *cur_player
 {
 	int rows, cols;
 	short int sprite_index;
-	char white[3] = { 255, 255, 255 };
 	struct win_pos win;
 	
 	/* Update window position */
@@ -142,10 +153,15 @@ draw_game(struct game *cur_game, struct worldmap *map, struct player *cur_player
 			sprite_index = get_sprite(*(*(map->tile+rows)+cols),
 						  *(*(map->biome+rows)+cols));
 			draw_tile(cur_game, (cols - win.x) * SPRITE_W + GAME_X, (rows - win.y) * SPRITE_H + GAME_Y, SPRITE_W, SPRITE_H, sprite_index); 
+			/* check if there's loot */
+			if (*(*(map->loot+rows)+cols) != 0) {
+				sprite_index = get_loot_sprite(*(*(map->loot+rows)+cols));
+				draw_tile(cur_game, (cols - win.x) * SPRITE_W + GAME_X, (rows - win.y) * SPRITE_H + GAME_Y, SPRITE_W, SPRITE_H, sprite_index); 
+			}
+				
 		}
 	}
 	draw_player(cur_game, cur_player, win);
-	draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
 }
 
 static void
@@ -154,7 +170,61 @@ draw_player(struct game *cur_game, struct player *cur_player, struct win_pos win
 	draw_tile(cur_game,
 		  cur_player->x*SPRITE_W - win.x*SPRITE_W + GAME_X,
 		  cur_player->y*SPRITE_H - win.y*SPRITE_H + GAME_Y,
-		  SPRITE_W, SPRITE_H, 328); 
+		  SPRITE_W, SPRITE_H, 334); 
+}
+
+static void
+draw_inv(struct game *cur_game, struct player *cur_player)
+{
+	int i, j;
+	short int sprite_index;
+	char stackable;
+	char white[3] = { 255, 255, 255 };
+	char black[3] = { 0, 0, 0 };
+	char quantity[4];
+	
+	/* Draw inventory rectangle */
+	draw_rect(cur_game, WIN_W - GAME_X - 16 - 192, 0 + GAME_Y + 16 + 18, 48*4, 60*8, SDL_TRUE, black, SDL_TRUE, white);
+	
+	/* Draw "Items" text box */
+	draw_rect(cur_game, WIN_W - GAME_X - 16 - 192, 0 + GAME_Y + 16, 48 * 4, 18, SDL_TRUE, black, SDL_TRUE, white);
+	draw_small_sentence(cur_game, WIN_W - GAME_X - 16 - 192 + 2, 0 + GAME_Y + 16 + 2, "Inventory");
+	
+	/* Draw grid */
+	for (i = 0; i < 8; i++) {
+		draw_line(cur_game,
+			  WIN_W - GAME_X - 16 - 192, GAME_Y + 16 + 18 + 60 * i,
+			  WIN_W - GAME_X - 16, GAME_Y + 16 + 18 + 60 * i, white);
+	}
+	for (i = 1; i < 4; i++) {
+		draw_line(cur_game,
+			  WIN_W - GAME_X - 16 - 192 + i * 48, GAME_Y + 16 + 18,
+			  WIN_W - GAME_X - 16 - 192 + i * 48, GAME_Y + 16 + 18 + 480, white);
+	}
+	
+	/* Draw items */
+	for (i = 0; i < 4; i++) {
+		for (j = 0; j < 8; j++) {
+			if (cur_player->loot[j+i*8] != 0) {
+				sprite_index = get_loot_sprite(cur_player->loot[j+i*8]);
+				draw_tile(cur_game,
+					  WIN_W - GAME_X - 16 - 192 + 48 * i,
+					  0 + GAME_Y + 16 + 18 + 60 * j, 
+					  SPRITE_W * 1.5, SPRITE_H * 1.5,
+					  sprite_index);
+				stackable = is_loot_stackable(cur_player->loot[j+i*8]);
+				if (stackable == STACKABLE && cur_player->quantity[j+i*8] > 1) {
+					sprintf(quantity, "%03d", cur_player->quantity[j+i*8]);
+					if (quantity[0] == '0') quantity[0] = ' ';
+					if (quantity[0] == ' ' && quantity[1] == '0') quantity[1] = ' ';
+					draw_small_sentence(cur_game,
+							    WIN_W - GAME_X - 16 - 192 + 48 * i + 1,
+							    0 + GAME_Y + 16 + 18 + 60 * j + 48,
+							    quantity);
+				}
+			}
+		}
+	}
 }
 
 static void
@@ -271,34 +341,6 @@ worldmap(struct game *cur_game, struct worldmap *map, struct player *cur_player)
 }
 
 static void
-draw_char(struct game *cur_game, int x, int y, int letter)
-{
-	SDL_Rect rect = {x, y, 28, 18};
-	SDL_Texture* texture = SDL_CreateTextureFromSurface(cur_game->screen.renderer, cur_game->font[letter]);
-	SDL_RenderCopyEx(cur_game->screen.renderer, texture, NULL, &rect, 0, NULL, 0);
-	SDL_DestroyTexture(texture);
-}
-
-void
-draw_sentence(struct game *cur_game, int start_x, int start_y, const char *sentence)
-{
-	int i;
-	int len;
-	int x = start_x;
-	int y = start_y;
-
-	for (i = 0, len = strlen(sentence); i < len; i++) {
-		draw_char(cur_game, x, y, sentence[i] - 32);
-		x += 28;
-		if (x >= 1270) {
-			x = start_x;
-			y = y + 18;
-		}
-	}
-
-}
-
-static void
 load_sprites(struct game *cur_game)
 {
 	/* Load the map arrow sprites */
@@ -329,43 +371,6 @@ unload_sprites(struct game *cur_game)
 		SDL_FreeSurface(cur_game->sprites[i]);
 	}
 	free(cur_game->sprites);
-}
-
-static void
-load_font(struct game *cur_game)
-{
-	int i, j;
-	int count = 0;
-	SDL_Surface* surface;
-	SDL_Rect rect = {1, 1, 28, 18};
-
-	/* Allocate memory for 96 font characters */
-	cur_game->font = (SDL_Surface**) malloc(sizeof(SDL_Surface*)*96);
-	/* Load sprite sheet */
-	surface = SDL_LoadBMP("art/font.bmp");
-	/* Load all sprites */
-	for (i = 0; i < 6; i++) {
-		for (j = 0; j < 16; j++) {
-			rect.x = i*28 + i + 1;
-			rect.y = j*18 + j + 1;
-			cur_game->font[count] = SDL_CreateRGBSurface(0, 28, 18, 24, 0, 0, 0, 0);
-			SDL_BlitSurface(surface, &rect, cur_game->font[count], NULL);
-			count++;
-		}
-	}
-	SDL_FreeSurface(surface);
-}
-
-static void
-unload_font(struct game *cur_game)
-{
-	int i;
-
-	/* Free all font characters */
-	for (i = 0; i < 96; i++) {
-		SDL_FreeSurface(cur_game->font[i]);
-	}
-	free(cur_game->font);
 }
 
 int LAST = 0;

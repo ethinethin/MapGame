@@ -34,8 +34,19 @@ main()
 
 	/* initialize game */
 	game_init();
+	
+	MAP.loot[PLAYER.y + 1][PLAYER.x + 1] = 1;
+	MAP.loot[PLAYER.y + 1][PLAYER.x + 2] = 2;
+	MAP.loot[PLAYER.y + 1][PLAYER.x + 3] = 3;
+	MAP.loot[PLAYER.y + 1][PLAYER.x + 4] = 4;
+	MAP.loot[PLAYER.y + 2][PLAYER.x + 4] = 4;
+	MAP.loot[PLAYER.y + 3][PLAYER.x + 4] = 4;
+	MAP.loot[PLAYER.y + 4][PLAYER.x + 4] = 4;
+	MAP.loot[PLAYER.y + 5][PLAYER.x + 4] = 4;
+	
 	/* draw map, player, and render */
 	draw_all(&GAME, &MAP, &PLAYER);
+		
 	/* enter main game loop */
 	SDL_Event event;
 	while(GAME.running && SDL_WaitEvent(&event)) {
@@ -113,7 +124,7 @@ generate_farts(struct game *cur_game, struct worldmap *main_map)
 
 	/* Pick random biomes */
 	create_map(&biomes, 32, 64);
-	populate_map(&biomes, 3, 5);
+	populate_map(&biomes, 1, 5);
 	
 	/* Create 4 fart */
 	for (rows = 0; rows < 32; rows++) {

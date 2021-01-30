@@ -4,6 +4,7 @@
 #include <SDL2/SDL.h>
 #include "main.h"
 #include "maps.h"
+#include "play.h"
 
 extern void	display_init(struct game *cur_game);
 extern void	display_quit(struct game *cur_game);
