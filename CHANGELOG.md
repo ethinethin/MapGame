@@ -1,7 +1,16 @@
 Changelog
 -
 
-2020-01-29
+2021-01-30
+-
+
+- Improved player movement
+- Tested inventory system (stacking, etc.)
+- Added quickbar
+- Added cursor for quickbar with keyboard and mouse controls
+- Implemented items blocking movement
+
+2021-01-29
 -
 
 - Added inventory system

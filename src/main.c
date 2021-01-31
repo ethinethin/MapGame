@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <SDL2/SDL.h>
 #include "disp.h"
+#include "loot.h"
 #include "main.h"
 #include "maps.h"
 #include "play.h"
@@ -11,6 +12,8 @@ static void	game_init(void);
 static void	game_quit(void);
 static void	generate_farts(struct game *cur_game, struct worldmap *main_map);
 static void	copy_fart(struct worldmap *main_map, struct worldmap *fart, int row, int col);
+static void	mouse_click(struct game *cur_game, int x, int y);
+
 
 /* Global game construct */
 struct game GAME = {
@@ -19,6 +22,8 @@ struct game GAME = {
 	{ WIN_W, WIN_H, "MapGame", NULL, NULL },
 	NULL,			/* sprites */
 	NULL,			/* font */
+	0,			/* cursor */
+	SDL_FALSE,		/* inventory */
 	SDL_FALSE		/* fullscreen */
 };
 
@@ -34,15 +39,6 @@ main()
 
 	/* initialize game */
 	game_init();
-	
-	MAP.loot[PLAYER.y + 1][PLAYER.x + 1] = 1;
-	MAP.loot[PLAYER.y + 1][PLAYER.x + 2] = 2;
-	MAP.loot[PLAYER.y + 1][PLAYER.x + 3] = 3;
-	MAP.loot[PLAYER.y + 1][PLAYER.x + 4] = 4;
-	MAP.loot[PLAYER.y + 2][PLAYER.x + 4] = 4;
-	MAP.loot[PLAYER.y + 3][PLAYER.x + 4] = 4;
-	MAP.loot[PLAYER.y + 4][PLAYER.x + 4] = 4;
-	MAP.loot[PLAYER.y + 5][PLAYER.x + 4] = 4;
 	
 	/* draw map, player, and render */
 	draw_all(&GAME, &MAP, &PLAYER);
@@ -75,9 +71,21 @@ main()
 					break;
 				case SDLK_m:
 					worldmap(&GAME, &MAP, &PLAYER);
+					break;
+				case SDLK_i:
+					toggle_inv(&GAME);
+					break;
+				case SDLK_q:
+					move_cursor(&GAME, -1);
+					break;
+				case SDLK_e:
+					move_cursor(&GAME, 1);
+					break;
 				default:
 					break;
 			}
+		} else if (event.type == SDL_MOUSEBUTTONDOWN) {
+			mouse_click(&GAME, event.button.x, event.button.y);
 		}
 		/* draw map, player, and render */
 		draw_all(&GAME, &MAP, &PLAYER);
@@ -154,6 +162,21 @@ copy_fart(struct worldmap *main_map, struct worldmap *fart, int row, int col)
 		for (cols = 0; cols < fart->col_size; cols++) {
 			*(*(main_map->tile+rows+row)+cols+col) = *(*(fart->tile+rows)+cols);
 			*(*(main_map->biome+rows+row)+cols+col) = *(*(fart->biome+rows)+cols);
+			// Add a bunch of random items
+			// Remove later
+			if (rand_num(1, 100) > 90) {
+				*(*(main_map->loot+rows+row)+cols+col) = rand_num(1, 8);
+				*(*(main_map->loot+rows+row)+cols+col) = 1;
+			}
 		}
 	}
+}
+
+static void
+mouse_click(struct game *cur_game, int x, int y)
+{
+	if (x >= QB_X && x <= QB_X + QB_W &&
+	    y >= QB_Y && y <= QB_Y + QB_H) {
+	    	move_cursor_click(cur_game, x - QB_X);
+	}    	
 }

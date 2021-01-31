@@ -16,6 +16,8 @@ struct game {
 	} screen;
 	SDL_Surface **sprites;
 	SDL_Surface **font;
+	char cursor;
+	SDL_bool inventory;
 	SDL_bool fullscreen;
 };
 
@@ -38,5 +40,16 @@ struct game {
 #define MAP_Y 104
 #define MAP_W 1024
 #define MAP_H 512
+
+/* Constants for inventory and quickbar */
+#define INV_X 0
+#define INV_Y 0
+#define INV_W 0
+#define INV_H 0
+#define QB_X (WIN_W/2 - 48*8/2)
+#define QB_Y (WIN_H - GAME_Y - 60 - 16)
+#define QB_W (48*8)
+#define QB_H 60
+
 
 #endif

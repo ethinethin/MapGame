@@ -3,9 +3,6 @@
 #include "maps.h"
 #include "play.h"
 
-/* Function prototypes */
-static void	pacman_player(struct worldmap *map, struct player *cur_player);
-
 void
 player_init(struct player *cur_player)
 {
@@ -18,7 +15,7 @@ player_init(struct player *cur_player)
 	for (rows = 0; rows < MAP_ROWS; rows++) {
 		*(cur_player->seen+rows) = malloc(sizeof(**cur_player->seen)*MAP_COLS);
 		for (cols = 0; cols < MAP_COLS; cols++) {
-			*(*(cur_player->seen+rows)+cols) = 1;
+			*(*(cur_player->seen+rows)+cols) = 0;
 		}
 	}
 	/* Initialize the inventory */
@@ -43,58 +40,33 @@ player_quit(struct player *cur_player)
 void
 move_player(struct worldmap *map, struct player *cur_player, int x, int y)
 {
-	short int item_num;
-	char passable;
-	int i;
-	/* move player */
-	cur_player->x += x;
-	cur_player->y += y;
-	/* pacman player */
-	pacman_player(map, cur_player);
+	int new_x, new_y;
+	
+	/* Determine new coordinates */
+	new_x = cur_player->x + x;
+	new_y = cur_player->y + y;
+	/* Pac-man the player */
+	if(new_x < 0) new_x = map->col_size - 1;
+	else if(new_x > map->col_size - 1) new_x = 0;
+	if(new_y < 0) new_y = map->row_size - 1;
+	else if(new_y > map->row_size - 1) new_y = 0;	
 	/* check if tile is impassable */
-	passable = is_passable(*(*(map->tile+cur_player->y)+cur_player->x),
-	                       *(*(map->biome+cur_player->y)+cur_player->x));
-	if (passable == IMPASSABLE) {
-		/* unmove player */
-		cur_player->x -= x;
-		cur_player->y -= y;
-		/* un-pacman player */
-		pacman_player(map, cur_player);
+	if (is_passable(*(*(map->tile+new_y)+new_x),
+	                *(*(map->biome+new_y)+new_x)) == IMPASSABLE ||
+	    is_loot_passable(*(*(map->loot+new_y)+new_x)) == IMPASSABLE) {
+	    	return;
 	}
+	/* move player */
+	cur_player->x = new_x;
+	cur_player->y = new_y;
 	/* check for loot */
-	item_num = *(*(map->loot+cur_player->y)+cur_player->x);
-	if (item_num != 0) {
-		/* add to inventory */
-		if (is_loot_stackable(item_num) == STACKABLE) {
-			for (i = 0; i < 32; i++) {
-				if (cur_player->loot[i] == item_num && cur_player->quantity[i] < 255) {
-					cur_player->quantity[i] += 1;
-					*(*(map->loot+cur_player->y)+cur_player->x) = 0;
-					return;
-				}
-			}
-		}
-		for (i = 0; i < 32; i++) {
-			if (cur_player->loot[i] == 0) {
-				cur_player->loot[i] = item_num;
-				cur_player->quantity[i] = 1;
-				*(*(map->loot+cur_player->y)+cur_player->x) = 0;
-				return;
-			}
-		}	
-	}	
+	if (*(*(map->loot+cur_player->y)+cur_player->x) != 0) {
+		pickup_item(map, cur_player);
+	}
 }
 
-static void
-pacman_player(struct worldmap *map, struct player *cur_player)
+void
+toggle_inv(struct game *cur_game)
 {
-	if (cur_player->x < 0) {
-		cur_player->x = map->col_size - 1;
-	} else if (cur_player->x > map->col_size - 1) {
-		cur_player->x = 0;
-	} else if (cur_player->y < 0) {
-		cur_player->y = map->row_size - 1;
-	} else if (cur_player->y > map->row_size - 1) {
-		cur_player->y = 0;
-	}
+	cur_game->inventory = !cur_game->inventory;
 }

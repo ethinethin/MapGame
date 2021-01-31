@@ -158,7 +158,6 @@ draw_game(struct game *cur_game, struct worldmap *map, struct player *cur_player
 				sprite_index = get_loot_sprite(*(*(map->loot+rows)+cols));
 				draw_tile(cur_game, (cols - win.x) * SPRITE_W + GAME_X, (rows - win.y) * SPRITE_H + GAME_Y, SPRITE_W, SPRITE_H, sprite_index); 
 			}
-				
 		}
 	}
 	draw_player(cur_game, cur_player, win);
@@ -168,8 +167,8 @@ static void
 draw_player(struct game *cur_game, struct player *cur_player, struct win_pos win)
 {	
 	draw_tile(cur_game,
-		  cur_player->x*SPRITE_W - win.x*SPRITE_W + GAME_X,
-		  cur_player->y*SPRITE_H - win.y*SPRITE_H + GAME_Y,
+		  cur_player->x * SPRITE_W - win.x * SPRITE_W + GAME_X,
+		  cur_player->y * SPRITE_H - win.y * SPRITE_H + GAME_Y,
 		  SPRITE_W, SPRITE_H, 334); 
 }
 
@@ -179,17 +178,49 @@ draw_inv(struct game *cur_game, struct player *cur_player)
 	int i, j;
 	short int sprite_index;
 	char stackable;
+	char darkred[3] = { 128, 0, 0 };
 	char white[3] = { 255, 255, 255 };
 	char black[3] = { 0, 0, 0 };
 	char quantity[4];
-	
+
+	/* Draw quick bar */
+	draw_rect(cur_game, QB_X, QB_Y, QB_W, QB_H, SDL_TRUE, black, SDL_TRUE, white);
+	for (i = 0; i < 8; i++) {
+		draw_line(cur_game,
+			  QB_X + i*48,
+			  QB_Y,
+			  QB_X + i*48,
+			  QB_Y + 60,
+			  white);
+		if (cur_player->loot[i] != 0) {
+			sprite_index = get_loot_sprite(cur_player->loot[i]);
+			draw_tile(cur_game,
+				  QB_X + i*48 + 2,
+				  QB_Y + 2,
+				  SPRITE_W * 1.5, SPRITE_H * 1.5,
+				  sprite_index);
+			stackable = is_loot_stackable(cur_player->loot[i]);
+			if (stackable == STACKABLE && cur_player->quantity[i] > 1) {
+				sprintf(quantity, "%3d", cur_player->quantity[i]);
+				draw_small_sentence(cur_game,
+						    QB_X + i*48 + 2,
+						    QB_Y + 48,
+						    quantity);
+			}
+		}
+	}
+	/* Draw cursor */
+	for (i = 0; i < 3; i++) {
+		draw_rect(cur_game, WIN_W/2 - (48*8)/2 - i - 1 + 48 * cur_game->cursor, WIN_H - GAME_Y - 16 - 60 - i - 1, 48+3+i*2, 60+2+i*2, SDL_FALSE, darkred, SDL_FALSE, NULL);
+	}
+
+	/* Draw inventory? */
+	if (cur_game->inventory == SDL_FALSE) return;
 	/* Draw inventory rectangle */
 	draw_rect(cur_game, WIN_W - GAME_X - 16 - 192, 0 + GAME_Y + 16 + 18, 48*4, 60*8, SDL_TRUE, black, SDL_TRUE, white);
-	
 	/* Draw "Items" text box */
 	draw_rect(cur_game, WIN_W - GAME_X - 16 - 192, 0 + GAME_Y + 16, 48 * 4, 18, SDL_TRUE, black, SDL_TRUE, white);
 	draw_small_sentence(cur_game, WIN_W - GAME_X - 16 - 192 + 2, 0 + GAME_Y + 16 + 2, "Inventory");
-	
 	/* Draw grid */
 	for (i = 0; i < 8; i++) {
 		draw_line(cur_game,
@@ -205,18 +236,16 @@ draw_inv(struct game *cur_game, struct player *cur_player)
 	/* Draw items */
 	for (i = 0; i < 4; i++) {
 		for (j = 0; j < 8; j++) {
-			if (cur_player->loot[j+i*8] != 0) {
-				sprite_index = get_loot_sprite(cur_player->loot[j+i*8]);
+			if (cur_player->loot[j+i*8+8] != 0) {
+				sprite_index = get_loot_sprite(cur_player->loot[j+i*8+8]);
 				draw_tile(cur_game,
-					  WIN_W - GAME_X - 16 - 192 + 48 * i,
-					  0 + GAME_Y + 16 + 18 + 60 * j, 
+					  WIN_W - GAME_X - 16 - 192 + 48 * i + 2,
+					  0 + GAME_Y + 16 + 18 + 60 * j + 2, 
 					  SPRITE_W * 1.5, SPRITE_H * 1.5,
 					  sprite_index);
-				stackable = is_loot_stackable(cur_player->loot[j+i*8]);
-				if (stackable == STACKABLE && cur_player->quantity[j+i*8] > 1) {
-					sprintf(quantity, "%03d", cur_player->quantity[j+i*8]);
-					if (quantity[0] == '0') quantity[0] = ' ';
-					if (quantity[0] == ' ' && quantity[1] == '0') quantity[1] = ' ';
+				stackable = is_loot_stackable(cur_player->loot[j+i*8+8]);
+				if (stackable == STACKABLE && cur_player->quantity[j+i*8+8] > 1) {
+					sprintf(quantity, "%3d", cur_player->quantity[j+i*8+8]);
 					draw_small_sentence(cur_game,
 							    WIN_W - GAME_X - 16 - 192 + 48 * i + 1,
 							    0 + GAME_Y + 16 + 18 + 60 * j + 48,
