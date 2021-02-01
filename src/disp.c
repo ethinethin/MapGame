@@ -17,11 +17,7 @@ struct win_pos {
 /* Function prototypes */
 static void		draw_point(struct game *cur_game, int x, int y, char *col);
 static void		draw_line(struct game *cur_game, int x1, int y1, int x2, int y2, char *col);
-static void		draw_rect(struct game *cur_game, unsigned int x, unsigned int y,
-				  unsigned int w, unsigned int h, SDL_bool fill,
-			  	  char fill_col[3], SDL_bool border, char bord_col[3]);
 static void		draw_tile(struct game *cur_game, int x, int y, int w, int h, int sprite_index);
-static void		draw_game(struct game *cur_game, struct worldmap *map, struct player *cur_player);
 static void		draw_player(struct game *cur_game, struct player *cur_player, struct win_pos win);
 static void		draw_inv(struct game *cur_game, struct player *cur_player);
 static void		draw_map(struct game *cur_game, struct worldmap *map, struct player *cur_player);
@@ -92,7 +88,20 @@ draw_line(struct game *cur_game, int x1, int y1, int x2, int y2, char *col)
 	SDL_RenderDrawLine(cur_game->screen.renderer, x1, y1, x2, y2);
 }
 
-static void
+void
+render_clear(struct game *cur_game)
+{
+	SDL_SetRenderDrawColor(cur_game->screen.renderer, 0, 0, 0, 255);
+	SDL_RenderClear(cur_game->screen.renderer);
+}
+
+void
+render_present(struct game *cur_game)
+{
+	SDL_RenderPresent(cur_game->screen.renderer);
+}
+
+void
 draw_rect(struct game *cur_game, unsigned int x, unsigned int y, unsigned int w, unsigned int h, SDL_bool fill, char *fill_col, SDL_bool border, char *bord_col)
 {
 	SDL_Rect coords = { x, y, w, h };
@@ -127,12 +136,11 @@ draw_all(struct game *cur_game, struct worldmap *map, struct player *cur_player)
 	char white[3] = { 255, 255, 255 };
 
 	draw_game(cur_game, map, cur_player);
-	draw_inv(cur_game, cur_player);
 	draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
-	SDL_RenderPresent(cur_game->screen.renderer);
+	render_present(cur_game);
 }
 
-static void
+void
 draw_game(struct game *cur_game, struct worldmap *map, struct player *cur_player)
 {
 	int rows, cols;
@@ -146,8 +154,7 @@ draw_game(struct game *cur_game, struct worldmap *map, struct player *cur_player
 	update_seen(map, cur_player);
 	
 	/* draw map */
-	SDL_SetRenderDrawColor(cur_game->screen.renderer, 0, 0, 0, 255);
-	SDL_RenderClear(cur_game->screen.renderer);
+	render_clear(cur_game);
 	for (rows = win.y; rows < win.y+WIN_ROWS; rows++) {
 		for (cols = win.x; cols < win.x+WIN_COLS; cols++) {
 			sprite_index = get_sprite(*(*(map->tile+rows)+cols),
@@ -161,6 +168,7 @@ draw_game(struct game *cur_game, struct worldmap *map, struct player *cur_player
 		}
 	}
 	draw_player(cur_game, cur_player, win);
+	draw_inv(cur_game, cur_player);
 }
 
 static void

@@ -59,10 +59,6 @@ move_player(struct worldmap *map, struct player *cur_player, int x, int y)
 	/* move player */
 	cur_player->x = new_x;
 	cur_player->y = new_y;
-	/* check for loot */
-	if (*(*(map->loot+cur_player->y)+cur_player->x) != 0) {
-		pickup_item(map, cur_player);
-	}
 }
 
 void

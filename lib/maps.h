@@ -12,6 +12,7 @@ struct worldmap {
 	int **tile;
 	short int **biome;
 	unsigned short int **loot;
+	unsigned char **quantity;
 };
 
 extern void		 create_map(struct worldmap *map, int row_size, int col_size);

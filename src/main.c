@@ -36,7 +36,6 @@ struct worldmap MAP;
 int
 main()
 {
-
 	/* initialize game */
 	game_init();
 	
@@ -46,40 +45,46 @@ main()
 	/* enter main game loop */
 	SDL_Event event;
 	while(GAME.running && SDL_WaitEvent(&event)) {
-		if (event.type == SDL_QUIT) {
+		if (event.type == SDL_QUIT) { /* exit button pressed */
 			GAME.running = SDL_FALSE;
 		} else if (event.type == SDL_KEYDOWN) {
 			switch(event.key.keysym.sym) {
-				case SDLK_ESCAPE:
+				case SDLK_ESCAPE: /* quit */
 					GAME.running = SDL_FALSE;
 					break;
-				case SDLK_UP:
+				case SDLK_UP: /* move up */
 				case SDLK_w:
 					move_player(&MAP, &PLAYER, 0, -1);
 					break;
-				case SDLK_DOWN:
+				case SDLK_DOWN: /* move down */
 				case SDLK_s:
 					move_player(&MAP, &PLAYER, 0, 1);
 					break;
-				case SDLK_LEFT:
+				case SDLK_LEFT: /* move left */
 				case SDLK_a:
 					move_player(&MAP, &PLAYER, -1, 0);
 					break;
-				case SDLK_RIGHT:
+				case SDLK_RIGHT: /* move right */
 				case SDLK_d:
 					move_player(&MAP, &PLAYER, 1, 0);
 					break;
-				case SDLK_m:
+				case SDLK_m: /* view map */
 					worldmap(&GAME, &MAP, &PLAYER);
 					break;
-				case SDLK_i:
+				case SDLK_i: /* toggle inventory */
 					toggle_inv(&GAME);
 					break;
-				case SDLK_q:
+				case SDLK_q: /* move cursor left */
 					move_cursor(&GAME, -1);
 					break;
-				case SDLK_e:
+				case SDLK_e: /* move cursor right */
 					move_cursor(&GAME, 1);
+					break;
+				case SDLK_t:	/* throw */
+					throw_item(&GAME, &MAP, &PLAYER);
+					break;
+				case SDLK_r:	/* retrieve */
+					pickup_item(&GAME, &MAP, &PLAYER);
 					break;
 				default:
 					break;
@@ -157,6 +162,7 @@ static void
 copy_fart(struct worldmap *main_map, struct worldmap *fart, int row, int col)
 {
 	int rows, cols;
+	int rando;
 	
 	for (rows = 0; rows < fart->row_size; rows++) {
 		for (cols = 0; cols < fart->col_size; cols++) {
@@ -164,9 +170,15 @@ copy_fart(struct worldmap *main_map, struct worldmap *fart, int row, int col)
 			*(*(main_map->biome+rows+row)+cols+col) = *(*(fart->biome+rows)+cols);
 			// Add a bunch of random items
 			// Remove later
-			if (rand_num(1, 100) > 90) {
-				*(*(main_map->loot+rows+row)+cols+col) = rand_num(1, 8);
-				*(*(main_map->loot+rows+row)+cols+col) = 1;
+			rando = rand_num(1, 100);
+			if (rando > 90) {
+				rando = rand_num(1, 8);
+				*(*(main_map->loot+rows+row)+cols+col) = rando;
+				if (is_loot_stackable(rando) == STACKABLE) {
+					*(*(main_map->quantity+rows+row)+cols+col) = 50;
+				} else {
+					*(*(main_map->quantity+rows+row)+cols+col) = 1;
+				}
 			}
 		}
 	}
