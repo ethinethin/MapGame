@@ -9,6 +9,7 @@
 /* Function prototypes */
 static SDL_bool		handle_pickup(struct worldmap *map, struct player *cur_player, int dir);
 static SDL_bool		handle_throw(struct game *cur_game, struct worldmap *map, struct player *cur_player, int dir);
+static SDL_bool		handle_swap(struct game *cur_game, struct player *cur_player, char start_pos);
 
 struct loot LOOT[9] = {
 	{NULL, 0, UNSTACKABLE, PASSABLE},
@@ -287,10 +288,24 @@ handle_throw(struct game *cur_game, struct worldmap *map, struct player *cur_pla
 void
 move_cursor(struct game *cur_game, char dir)
 {
+	char max;
+	
+	/* Determine max location for cursor */
+	switch(cur_game->inventory) {
+		case SDL_TRUE:
+			max = 39;
+			break;
+		case SDL_FALSE:
+		default:
+			max = 7;
+			break;
+	}
+	/* Move cursor */
 	cur_game->cursor += dir;
+	/* Pac-man if necessary */
 	if (cur_game->cursor < 0) {
-		cur_game->cursor = 7;
-	} else if (cur_game->cursor > 7) {
+		cur_game->cursor = max;
+	} else if (cur_game->cursor > max) {
 		cur_game->cursor = 0;
 	}
 }
@@ -305,4 +320,76 @@ move_cursor_click(struct game *cur_game, int x)
 			return;
 		}
 	}
+}
+
+void
+swap_item(struct game *cur_game, struct worldmap *map, struct player *cur_player)
+{
+	char start_pos;
+	char white[3] = { 255, 255, 255 };
+	char black[3] = { 0, 0, 0 };
+	
+	/* Are you on an item? */
+	if (cur_player->loot[(short int) cur_game->cursor] == 0) { return; }
+	start_pos = cur_game->cursor;
+		
+	/* Wait for user input */
+	SDL_Event event;
+	SDL_bool finished = SDL_FALSE;
+	while(finished == SDL_FALSE && SDL_WaitEvent(&event)) {
+		/* Ask for which spot you wanna put it in */
+		draw_game(cur_game, map, cur_player);
+		draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
+		draw_rect(cur_game, GAME_X + 16, GAME_Y + 16, 28*10 + 2, 18 + 2, SDL_TRUE, black, SDL_TRUE, white);
+		draw_sentence(cur_game, GAME_X + 16 + 1, GAME_Y + 16 + 1, "Put where?");
+		render_present(cur_game);
+
+		if (event.type == SDL_KEYDOWN) {
+			switch(event.key.keysym.sym) {
+				case SDLK_i: /* toggle inventory */
+					toggle_inv(cur_game);
+					break;
+				case SDLK_q: /* move cursor left */
+					move_cursor(cur_game, -1);
+					break;
+				case SDLK_e: /* move cursor right */
+					move_cursor(cur_game, 1);
+					break;
+				case SDLK_f: /* finish the swap */
+					if (cur_game->cursor == start_pos) {
+						finished = SDL_TRUE;
+					} else {
+						finished = handle_swap(cur_game, cur_player, start_pos);
+					}
+					break;
+				case SDLK_1: /* move to quickbar slot 1 */
+					cur_game->cursor = 0;
+					if (cur_game->cursor == start_pos) {
+						finished = SDL_TRUE;
+					} else {
+						finished = handle_swap(cur_game, cur_player, start_pos);
+					}
+					break;
+			}
+		}
+	}
+}
+
+static SDL_bool
+handle_swap(struct game *cur_game, struct player *cur_player, char start_pos)
+{
+	unsigned short int tmp_loot;
+	unsigned char tmp_quantity;
+	
+	/* Save first item in tmp's */
+	tmp_loot = cur_player->loot[(short int) start_pos];
+	tmp_quantity = cur_player->quantity[(short int) start_pos];
+	/* Move second item into first item slot */
+	cur_player->loot[(short int) start_pos] = cur_player->loot[(short int) cur_game->cursor];
+	cur_player->quantity[(short int) start_pos] = cur_player->quantity[(short int) cur_game->cursor];
+	/* Move tmp into second item slot */
+	cur_player->loot[(short int) cur_game->cursor] = tmp_loot;
+	cur_player->quantity[(short int) cur_game->cursor] = tmp_quantity;
+	/* Finish normally */
+	return SDL_TRUE;
 }

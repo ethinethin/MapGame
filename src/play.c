@@ -65,4 +65,7 @@ void
 toggle_inv(struct game *cur_game)
 {
 	cur_game->inventory = !cur_game->inventory;
+	if (cur_game->inventory == SDL_FALSE && cur_game->cursor > 7) {
+		cur_game->cursor = 7;
+	}
 }

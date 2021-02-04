@@ -23,6 +23,6 @@ extern void		 pickup_item(struct game *cur_game, struct worldmap *map, struct pl
 extern void		 throw_item(struct game *cur_game, struct worldmap *map, struct player *cur_player);
 extern void		 move_cursor(struct game *cur_game, char dir);
 extern void		 move_cursor_click(struct game *cur_game, int x);
-
+extern void		 swap_item(struct game *cur_game, struct worldmap *map, struct player *cur_player);
 
 #endif

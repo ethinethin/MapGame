@@ -44,7 +44,7 @@ display_init(struct game *cur_game)
 	);
 	cur_game->screen.renderer = SDL_CreateRenderer(
 		cur_game->screen.window, -1,
-		SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC
+		SDL_RENDERER_ACCELERATED
 	);
 	
 	/* Load sprites and font */
@@ -183,7 +183,7 @@ draw_player(struct game *cur_game, struct player *cur_player, struct win_pos win
 static void
 draw_inv(struct game *cur_game, struct player *cur_player)
 {
-	int i, j;
+	int i, j, k;
 	short int sprite_index;
 	char stackable;
 	char darkred[3] = { 128, 0, 0 };
@@ -192,7 +192,7 @@ draw_inv(struct game *cur_game, struct player *cur_player)
 	char quantity[4];
 
 	/* Draw quick bar */
-	draw_rect(cur_game, QB_X, QB_Y, QB_W, QB_H, SDL_TRUE, black, SDL_TRUE, white);
+	draw_rect(cur_game, QB_X, QB_Y, QB_W + 1, QB_H, SDL_TRUE, black, SDL_TRUE, white);
 	for (i = 0; i < 8; i++) {
 		draw_line(cur_game,
 			  QB_X + i*48,
@@ -203,7 +203,7 @@ draw_inv(struct game *cur_game, struct player *cur_player)
 		if (cur_player->loot[i] != 0) {
 			sprite_index = get_loot_sprite(cur_player->loot[i]);
 			draw_tile(cur_game,
-				  QB_X + i*48 + 2,
+				  QB_X + i*48 + 1,
 				  QB_Y + 2,
 				  SPRITE_W * 1.5, SPRITE_H * 1.5,
 				  sprite_index);
@@ -211,23 +211,25 @@ draw_inv(struct game *cur_game, struct player *cur_player)
 			if (stackable == STACKABLE && cur_player->quantity[i] > 1) {
 				sprintf(quantity, "%3d", cur_player->quantity[i]);
 				draw_small_sentence(cur_game,
-						    QB_X + i*48 + 2,
+						    QB_X + i*48 + 1,
 						    QB_Y + 48,
 						    quantity);
 			}
 		}
 	}
 	/* Draw cursor */
-	for (i = 0; i < 3; i++) {
-		draw_rect(cur_game, WIN_W/2 - (48*8)/2 - i - 1 + 48 * cur_game->cursor, WIN_H - GAME_Y - 16 - 60 - i - 1, 48+3+i*2, 60+2+i*2, SDL_FALSE, darkred, SDL_FALSE, NULL);
+	if (cur_game->cursor <= 7) {
+		for (i = 0; i < 3; i++) {
+			draw_rect(cur_game, WIN_W/2 - (48*8)/2 - i - 1 + 48 * cur_game->cursor, WIN_H - GAME_Y - 16 - 60 - i - 1, 48+3+i*2, 60+2+i*2, SDL_FALSE, darkred, SDL_FALSE, NULL);
+		}
 	}
 
 	/* Draw inventory? */
 	if (cur_game->inventory == SDL_FALSE) return;
 	/* Draw inventory rectangle */
-	draw_rect(cur_game, WIN_W - GAME_X - 16 - 192, 0 + GAME_Y + 16 + 18, 48*4, 60*8, SDL_TRUE, black, SDL_TRUE, white);
+	draw_rect(cur_game, WIN_W - GAME_X - 16 - 192, 0 + GAME_Y + 16 + 18, 48*4 + 1, 60*8 + 1, SDL_TRUE, black, SDL_TRUE, white);
 	/* Draw "Items" text box */
-	draw_rect(cur_game, WIN_W - GAME_X - 16 - 192, 0 + GAME_Y + 16, 48 * 4, 18, SDL_TRUE, black, SDL_TRUE, white);
+	draw_rect(cur_game, WIN_W - GAME_X - 16 - 192, 0 + GAME_Y + 16, 48 * 4 + 1, 18 + 1, SDL_TRUE, black, SDL_TRUE, white);
 	draw_small_sentence(cur_game, WIN_W - GAME_X - 16 - 192 + 2, 0 + GAME_Y + 16 + 2, "Inventory");
 	/* Draw grid */
 	for (i = 0; i < 8; i++) {
@@ -247,7 +249,7 @@ draw_inv(struct game *cur_game, struct player *cur_player)
 			if (cur_player->loot[j+i*8+8] != 0) {
 				sprite_index = get_loot_sprite(cur_player->loot[j+i*8+8]);
 				draw_tile(cur_game,
-					  WIN_W - GAME_X - 16 - 192 + 48 * i + 2,
+					  WIN_W - GAME_X - 16 - 192 + 48 * i + 1,
 					  0 + GAME_Y + 16 + 18 + 60 * j + 2, 
 					  SPRITE_W * 1.5, SPRITE_H * 1.5,
 					  sprite_index);
@@ -260,6 +262,28 @@ draw_inv(struct game *cur_game, struct player *cur_player)
 							    quantity);
 				}
 			}
+		}
+	}
+	
+	/* Draw cursor */
+	if (cur_game->cursor > 7) {
+		/* Determine horizontal position */
+		if (cur_game->cursor >= 8 && cur_game->cursor < 16) {
+			j = WIN_W - GAME_X - 16 - 192;
+		} else if (cur_game->cursor >= 16 && cur_game->cursor < 24) {
+			j = WIN_W - GAME_X - 16 - 144;
+		} else if (cur_game->cursor >= 24 && cur_game->cursor < 32) {
+			j = WIN_W - GAME_X - 16 - 96;
+		} else if (cur_game->cursor >= 32 && cur_game->cursor < 40) {
+			j = WIN_W - GAME_X - 16 - 48;
+		} else {
+			return;
+		}
+		/* Determine vertical position */
+		i = 0 + GAME_Y + 16 + 18 + 60 * (cur_game->cursor % 8);
+		/* Draw cursor */
+		for (k = 0; k < 3; k++) {
+			draw_rect(cur_game, j - k - 1, i - k - 1, 48+3+k*2, 60+2+k*2 + 1, SDL_FALSE, darkred, SDL_FALSE, NULL);
 		}
 	}
 }
@@ -364,7 +388,7 @@ worldmap(struct game *cur_game, struct worldmap *map, struct player *cur_player)
 	/* Draw map */
 	draw_map(cur_game, map, cur_player);
 	/* Write "Map" at the top of the screen */
-	draw_rect(cur_game, MAP_X, MAP_Y-20, 28*9+2, 18+2, SDL_TRUE, black, SDL_TRUE, white);
+	draw_rect(cur_game, MAP_X, MAP_Y-20, 28*9+2, 18+2+1, SDL_TRUE, black, SDL_TRUE, white);
 	draw_sentence(cur_game, MAP_X+1, MAP_Y-19, "World Map");
 	/* Render */
 	SDL_RenderPresent(cur_game->screen.renderer);

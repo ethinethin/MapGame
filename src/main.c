@@ -45,6 +45,7 @@ main()
 	/* enter main game loop */
 	SDL_Event event;
 	while(GAME.running && SDL_WaitEvent(&event)) {
+		SDL_Delay(1);
 		if (event.type == SDL_QUIT) { /* exit button pressed */
 			GAME.running = SDL_FALSE;
 		} else if (event.type == SDL_KEYDOWN) {
@@ -85,6 +86,12 @@ main()
 					break;
 				case SDLK_r:	/* retrieve */
 					pickup_item(&GAME, &MAP, &PLAYER);
+					break;
+				case SDLK_f: /* swap item */
+					swap_item(&GAME, &MAP, &PLAYER);
+					break;
+				case SDLK_1: /* move to quickbar slot 1 */
+					GAME.cursor = 0;
 					break;
 				default:
 					break;
