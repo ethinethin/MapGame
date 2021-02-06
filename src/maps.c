@@ -187,7 +187,7 @@ populate_map(struct worldmap *map, int start_tile, short int biome)
 		}
 	}
 
-	while(1) {
+	while (1) {
 		/* Calculate all probabilities */
 		calc_probs(map, &probs, biome);
 		/* Apply all probabilities */

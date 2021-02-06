@@ -1,6 +1,20 @@
 Changelog
 -
 
+2021-02-05
+-
+
+- Cursor movement in inventory with mouse click
+- Swap items with mouse click
+- Move cursor on quickbar with number keys
+- Swap with mouse drag and drop
+
+2021-02-04
+-
+
+- Inventory swapping with keyboard
+- Cursor movement in inventory with keyboard
+
 2021-01-30
 -
 

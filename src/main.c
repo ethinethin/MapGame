@@ -4,6 +4,7 @@
 #include "loot.h"
 #include "main.h"
 #include "maps.h"
+#include "maus.h"
 #include "play.h"
 #include "rand.h"
 
@@ -12,8 +13,6 @@ static void	game_init(void);
 static void	game_quit(void);
 static void	generate_farts(struct game *cur_game, struct worldmap *main_map);
 static void	copy_fart(struct worldmap *main_map, struct worldmap *fart, int row, int col);
-static void	mouse_click(struct game *cur_game, int x, int y);
-
 
 /* Global game construct */
 struct game GAME = {
@@ -44,12 +43,12 @@ main()
 		
 	/* enter main game loop */
 	SDL_Event event;
-	while(GAME.running && SDL_WaitEvent(&event)) {
+	while (GAME.running && SDL_WaitEvent(&event)) {
 		SDL_Delay(1);
 		if (event.type == SDL_QUIT) { /* exit button pressed */
 			GAME.running = SDL_FALSE;
 		} else if (event.type == SDL_KEYDOWN) {
-			switch(event.key.keysym.sym) {
+			switch (event.key.keysym.sym) {
 				case SDLK_ESCAPE: /* quit */
 					GAME.running = SDL_FALSE;
 					break;
@@ -91,13 +90,34 @@ main()
 					swap_item(&GAME, &MAP, &PLAYER);
 					break;
 				case SDLK_1: /* move to quickbar slot 1 */
-					GAME.cursor = 0;
+					move_cursor(&GAME, 0 - GAME.cursor);
+					break;
+				case SDLK_2: /* move to quickbar slot 2 */
+					move_cursor(&GAME, 1 - GAME.cursor);
+					break;
+				case SDLK_3: /* move to quickbar slot 3 */
+					move_cursor(&GAME, 2 - GAME.cursor);
+					break;
+				case SDLK_4: /* move to quickbar slot 4 */
+					move_cursor(&GAME, 3 - GAME.cursor);
+					break;
+				case SDLK_5: /* move to quickbar slot 5 */
+					move_cursor(&GAME, 4 - GAME.cursor);
+					break;
+				case SDLK_6: /* move to quickbar slot 6 */
+					move_cursor(&GAME, 5 - GAME.cursor);
+					break;
+				case SDLK_7: /* move to quickbar slot 7 */
+					move_cursor(&GAME, 6 - GAME.cursor);
+					break;
+				case SDLK_8: /* move to quickbar slot 8 */
+					move_cursor(&GAME, 7 - GAME.cursor);
 					break;
 				default:
 					break;
 			}
 		} else if (event.type == SDL_MOUSEBUTTONDOWN) {
-			mouse_click(&GAME, event.button.x, event.button.y);
+			mouse_click(&GAME, &MAP, &PLAYER, event.button.x, event.button.y);
 		}
 		/* draw map, player, and render */
 		draw_all(&GAME, &MAP, &PLAYER);
@@ -189,13 +209,4 @@ copy_fart(struct worldmap *main_map, struct worldmap *fart, int row, int col)
 			}
 		}
 	}
-}
-
-static void
-mouse_click(struct game *cur_game, int x, int y)
-{
-	if (x >= QB_X && x <= QB_X + QB_W &&
-	    y >= QB_Y && y <= QB_Y + QB_H) {
-	    	move_cursor_click(cur_game, x - QB_X);
-	}    	
 }

@@ -17,7 +17,6 @@ struct win_pos {
 /* Function prototypes */
 static void		draw_point(struct game *cur_game, int x, int y, char *col);
 static void		draw_line(struct game *cur_game, int x1, int y1, int x2, int y2, char *col);
-static void		draw_tile(struct game *cur_game, int x, int y, int w, int h, int sprite_index);
 static void		draw_player(struct game *cur_game, struct player *cur_player, struct win_pos win);
 static void		draw_inv(struct game *cur_game, struct player *cur_player);
 static void		draw_map(struct game *cur_game, struct worldmap *map, struct player *cur_player);
@@ -46,6 +45,7 @@ display_init(struct game *cur_game)
 		cur_game->screen.window, -1,
 		SDL_RENDERER_ACCELERATED
 	);
+	SDL_SetRenderDrawBlendMode(cur_game->screen.renderer, SDL_BLENDMODE_BLEND);
 	
 	/* Load sprites and font */
 	load_sprites(cur_game);
@@ -121,7 +121,7 @@ draw_rect(struct game *cur_game, unsigned int x, unsigned int y, unsigned int w,
 	}
 }
 
-static void
+void
 draw_tile(struct game *cur_game, int x, int y, int w, int h, int sprite_index)
 {
 	SDL_Rect rect = {x, y, w, h};
@@ -227,20 +227,20 @@ draw_inv(struct game *cur_game, struct player *cur_player)
 	/* Draw inventory? */
 	if (cur_game->inventory == SDL_FALSE) return;
 	/* Draw inventory rectangle */
-	draw_rect(cur_game, WIN_W - GAME_X - 16 - 192, 0 + GAME_Y + 16 + 18, 48*4 + 1, 60*8 + 1, SDL_TRUE, black, SDL_TRUE, white);
+	draw_rect(cur_game, INV_X, INV_Y, INV_W, INV_H, SDL_TRUE, black, SDL_TRUE, white);
 	/* Draw "Items" text box */
-	draw_rect(cur_game, WIN_W - GAME_X - 16 - 192, 0 + GAME_Y + 16, 48 * 4 + 1, 18 + 1, SDL_TRUE, black, SDL_TRUE, white);
-	draw_small_sentence(cur_game, WIN_W - GAME_X - 16 - 192 + 2, 0 + GAME_Y + 16 + 2, "Inventory");
+	draw_rect(cur_game, INV_X, INV_Y - 20, INV_W, 18 + 3, SDL_TRUE, black, SDL_TRUE, white);
+	draw_small_sentence(cur_game, INV_X + 2, INV_Y - 17, "Inventory");
 	/* Draw grid */
 	for (i = 0; i < 8; i++) {
 		draw_line(cur_game,
-			  WIN_W - GAME_X - 16 - 192, GAME_Y + 16 + 18 + 60 * i,
-			  WIN_W - GAME_X - 16, GAME_Y + 16 + 18 + 60 * i, white);
+			  INV_X, INV_Y + 60 * i,
+			  INV_X + INV_W, INV_Y + 60 * i, white);
 	}
 	for (i = 1; i < 4; i++) {
 		draw_line(cur_game,
-			  WIN_W - GAME_X - 16 - 192 + i * 48, GAME_Y + 16 + 18,
-			  WIN_W - GAME_X - 16 - 192 + i * 48, GAME_Y + 16 + 18 + 480, white);
+			  INV_X + i * 48, INV_Y,
+			  INV_X + i * 48, INV_Y + INV_H, white);
 	}
 	
 	/* Draw items */
@@ -249,16 +249,16 @@ draw_inv(struct game *cur_game, struct player *cur_player)
 			if (cur_player->loot[j+i*8+8] != 0) {
 				sprite_index = get_loot_sprite(cur_player->loot[j+i*8+8]);
 				draw_tile(cur_game,
-					  WIN_W - GAME_X - 16 - 192 + 48 * i + 1,
-					  0 + GAME_Y + 16 + 18 + 60 * j + 2, 
+					  INV_X + 48 * i + 1,
+					  INV_Y + 60 * j + 2, 
 					  SPRITE_W * 1.5, SPRITE_H * 1.5,
 					  sprite_index);
 				stackable = is_loot_stackable(cur_player->loot[j+i*8+8]);
 				if (stackable == STACKABLE && cur_player->quantity[j+i*8+8] > 1) {
 					sprintf(quantity, "%3d", cur_player->quantity[j+i*8+8]);
 					draw_small_sentence(cur_game,
-							    WIN_W - GAME_X - 16 - 192 + 48 * i + 1,
-							    0 + GAME_Y + 16 + 18 + 60 * j + 48,
+							    INV_X + 48 * i + 1,
+							    INV_Y + 60 * j + 48,
 							    quantity);
 				}
 			}
@@ -269,18 +269,18 @@ draw_inv(struct game *cur_game, struct player *cur_player)
 	if (cur_game->cursor > 7) {
 		/* Determine horizontal position */
 		if (cur_game->cursor >= 8 && cur_game->cursor < 16) {
-			j = WIN_W - GAME_X - 16 - 192;
+			j = INV_X;
 		} else if (cur_game->cursor >= 16 && cur_game->cursor < 24) {
-			j = WIN_W - GAME_X - 16 - 144;
+			j = INV_X + 48;
 		} else if (cur_game->cursor >= 24 && cur_game->cursor < 32) {
-			j = WIN_W - GAME_X - 16 - 96;
+			j = INV_X + 96;
 		} else if (cur_game->cursor >= 32 && cur_game->cursor < 40) {
-			j = WIN_W - GAME_X - 16 - 48;
+			j = INV_X + 144;
 		} else {
 			return;
 		}
 		/* Determine vertical position */
-		i = 0 + GAME_Y + 16 + 18 + 60 * (cur_game->cursor % 8);
+		i = INV_Y + 60 * (cur_game->cursor % 8);
 		/* Draw cursor */
 		for (k = 0; k < 3; k++) {
 			draw_rect(cur_game, j - k - 1, i - k - 1, 48+3+k*2, 60+2+k*2 + 1, SDL_FALSE, darkred, SDL_FALSE, NULL);
@@ -387,6 +387,7 @@ worldmap(struct game *cur_game, struct worldmap *map, struct player *cur_player)
 	draw_game(cur_game, map, cur_player);
 	/* Draw map */
 	draw_map(cur_game, map, cur_player);
+	draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
 	/* Write "Map" at the top of the screen */
 	draw_rect(cur_game, MAP_X, MAP_Y-20, 28*9+2, 18+2+1, SDL_TRUE, black, SDL_TRUE, white);
 	draw_sentence(cur_game, MAP_X+1, MAP_Y-19, "World Map");
@@ -394,7 +395,7 @@ worldmap(struct game *cur_game, struct worldmap *map, struct player *cur_player)
 	SDL_RenderPresent(cur_game->screen.renderer);
 	/* Wait for user input */
 	SDL_Event event;
-	while(SDL_WaitEvent(&event)) {
+	while (SDL_WaitEvent(&event)) {
 		if (event.type == SDL_KEYDOWN) {
 			return;
 		}
@@ -405,7 +406,7 @@ static void
 load_sprites(struct game *cur_game)
 {
 	/* Load the map arrow sprites */
-	SDL_Surface* surface = SDL_LoadBMP("art/sprites.bmp");
+	SDL_Surface *surface = SDL_LoadBMP("art/sprites.bmp");
 	cur_game->sprites = (SDL_Surface**) malloc(sizeof(SDL_Surface*)*512);
 	int i, j;
 	SDL_Rect rect = {0, 0, SPRITE_W, SPRITE_H};

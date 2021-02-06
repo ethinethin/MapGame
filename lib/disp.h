@@ -12,6 +12,7 @@ extern void	render_clear(struct game *cur_game);
 extern void	render_present(struct game *cur_game);
 extern void	draw_rect(struct game *cur_game, unsigned int x, unsigned int y, unsigned int w, unsigned int h,
 			  SDL_bool fill, char *fill_col, SDL_bool border, char *bord_col);
+extern void	draw_tile(struct game *cur_game, int x, int y, int w, int h, int sprite_index);
 extern void	draw_all(struct game *cur_game, struct worldmap *map, struct player *cur_player);
 extern void	draw_game(struct game *cur_game, struct worldmap *map, struct player *cur_player);
 extern void	worldmap(struct game *cur_game, struct worldmap *map, struct player *cur_player);

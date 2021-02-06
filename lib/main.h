@@ -42,10 +42,10 @@ struct game {
 #define MAP_H 512
 
 /* Constants for inventory and quickbar */
-#define INV_X 0
-#define INV_Y 0
-#define INV_W 0
-#define INV_H 0
+#define INV_X (WIN_W - GAME_X - 16 - 192)
+#define INV_Y (GAME_Y + 16 + 18)
+#define INV_W (48*4 + 1)
+#define INV_H (60*8 + 1)
 #define QB_X (WIN_W/2 - 48*8/2)
 #define QB_Y (WIN_H - GAME_Y - 60 - 16)
 #define QB_W (48*8)

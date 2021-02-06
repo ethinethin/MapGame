@@ -46,10 +46,8 @@ move_player(struct worldmap *map, struct player *cur_player, int x, int y)
 	new_x = cur_player->x + x;
 	new_y = cur_player->y + y;
 	/* Pac-man the player */
-	if(new_x < 0) new_x = map->col_size - 1;
-	else if(new_x > map->col_size - 1) new_x = 0;
-	if(new_y < 0) new_y = map->row_size - 1;
-	else if(new_y > map->row_size - 1) new_y = 0;	
+	if (new_x < 0) new_x = map->col_size - 1; else if (new_x > map->col_size - 1) new_x = 0;
+	if (new_y < 0) new_y = map->row_size - 1; else if (new_y > map->row_size - 1) new_y = 0;	
 	/* check if tile is impassable */
 	if (is_passable(*(*(map->tile+new_y)+new_x),
 	                *(*(map->biome+new_y)+new_x)) == IMPASSABLE ||
