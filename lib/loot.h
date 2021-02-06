@@ -20,6 +20,7 @@ extern char		 is_loot_passable(short int id);
 extern char	 	*get_loot_name(short int id);
 extern char 		 is_loot_stackable(short int id);
 extern void		 pickup_item(struct game *cur_game, struct worldmap *map, struct player *cur_player);
+extern SDL_bool		 handle_pickup(struct worldmap *map, struct player *cur_player, int x, int y);
 extern void		 throw_item(struct game *cur_game, struct worldmap *map, struct player *cur_player);
 extern void		 move_cursor(struct game *cur_game, char dir);
 extern void		 swap_item(struct game *cur_game, struct worldmap *map, struct player *cur_player);

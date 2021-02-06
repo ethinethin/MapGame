@@ -38,9 +38,10 @@ main()
 	/* initialize game */
 	game_init();
 	
-	/* draw map, player, and render */
+	/* draw map, player, render and "move player" to update map */
 	draw_all(&GAME, &MAP, &PLAYER);
-		
+	move_player(&MAP, &PLAYER, 0, 0);
+	
 	/* enter main game loop */
 	SDL_Event event;
 	while (GAME.running && SDL_WaitEvent(&event)) {

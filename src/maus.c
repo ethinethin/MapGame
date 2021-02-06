@@ -19,10 +19,12 @@ struct coords {
 };
 
 /* Function prototypes */
-static SDL_bool		move_cursor_qb(struct game *cur_game, int x, int y);
-static SDL_bool		move_cursor_inv(struct game *cur_game, int x, int y);
-static void		drag_item(struct game *cur_game, struct player *cur_player);
-struct coords		get_map_coordinates(struct game *cur_game, struct worldmap *map, struct player *cur_player);
+static SDL_bool			move_cursor_qb(struct game *cur_game, int x, int y);
+static SDL_bool			move_cursor_inv(struct game *cur_game, int x, int y);
+static void			drag_item(struct game *cur_game, struct player *cur_player);
+static struct coords		get_click_coordinates(struct player *cur_player);
+static void			click_get_item(struct worldmap *map, struct player *cur_player, struct coords pos);
+
 
 void
 mouse_click(struct game *cur_game, struct worldmap *map, struct player *cur_player, int x, int y)
@@ -46,8 +48,10 @@ mouse_click(struct game *cur_game, struct worldmap *map, struct player *cur_play
 		   y >= INV_Y && y <= INV_Y + INV_H) {
 		cursor_moved = move_cursor_inv(cur_game, x - INV_X, y - INV_Y);
 	} else {
-		pos = get_map_coordinates(cur_game, map, cur_player);
+		pos = get_click_coordinates(cur_player);
+		click_get_item(map, cur_player, pos);
 		cursor_moved = SDL_FALSE;
+		return;
 	}
 	
 	/* Enter a user input loop until the mousebutton is lifted */
@@ -139,16 +143,24 @@ drag_item(struct game *cur_game, struct player *cur_player)
 	          get_loot_sprite(cur_player->loot[(short int) cur_game->cursor]));
 }
 
-struct coords
-get_map_coordinates(struct game *cur_game, struct worldmap *map, struct player *cur_player)
+static struct coords
+get_click_coordinates(struct player *cur_player)
 {
 	struct coords pos;
 	/* get window position based on mouse coords */
 	pos.x = (MOUSE.x - GAME_X)/32;
 	pos.y = (MOUSE.y - GAME_Y)/32;
+	/* get position relative to player */
+	pos.x -= cur_player->winpos_x;
+	pos.y -= cur_player->winpos_y;
 	return pos;
-	/* blah */
-	
-	/* get map position based on window position */
-	/* blah */
+}
+
+static void
+click_get_item(struct worldmap *map, struct player *cur_player, struct coords pos)
+{
+	/* Make sure it is close to the player */
+	if (pos.x > 1 || pos.x < -1 || pos.y > 1 || pos.y < -1) return;
+	/* Try to pick up the item */
+	handle_pickup(map, cur_player, pos.x, pos.y);
 }

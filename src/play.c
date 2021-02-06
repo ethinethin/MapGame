@@ -3,6 +3,9 @@
 #include "maps.h"
 #include "play.h"
 
+/* Function prototypes */
+static void	update_seen(struct worldmap *map, struct player *cur_player);
+
 void
 player_init(struct player *cur_player)
 {
@@ -57,6 +60,45 @@ move_player(struct worldmap *map, struct player *cur_player, int x, int y)
 	/* move player */
 	cur_player->x = new_x;
 	cur_player->y = new_y;
+	/* Update seen */
+	update_seen(map, cur_player);
+}
+
+static void
+update_seen(struct worldmap *map, struct player *cur_player)
+{
+	int rows, cols;
+	int rows_i, cols_i, rows_f, cols_f;
+	
+	rows_i = cur_player->y - 9;
+	cols_i = cur_player->x - 19;
+	rows_f = cur_player->y + 9;
+	cols_f = cur_player->x + 19;
+	
+	/* Check boundaries for loop */
+	if (rows_i < 0) {
+		rows_i = 0;
+		rows_f = WIN_ROWS - 1;
+	}
+	if (cols_i < 0) {
+		cols_i = 0;
+		cols_f = WIN_COLS - 1;
+	}
+	if (rows_f > map->row_size - 1) {
+		rows_f = map->row_size - 1;
+		rows_i = rows_f - WIN_ROWS + 1;
+	}
+	if (cols_f > map->col_size - 1) {
+		cols_f = map->col_size - 1;
+		cols_i = cols_f - WIN_COLS + 1;
+	}
+	
+	/* Set all seen values to 1 */
+	for (rows = rows_i ; rows <= rows_f; rows++) {
+		for (cols = cols_i; cols <= cols_f; cols++) {
+			*(*(cur_player->seen+rows)+cols) = 1;
+		}
+	}
 }
 
 void

@@ -8,7 +8,6 @@
 #include "play.h"
 
 /* Function prototypes */
-static SDL_bool		handle_pickup(struct worldmap *map, struct player *cur_player, int dir);
 static SDL_bool		handle_throw(struct game *cur_game, struct worldmap *map, struct player *cur_player, int dir);
 
 struct loot LOOT[9] = {
@@ -68,19 +67,19 @@ pickup_item(struct game *cur_game, struct worldmap *map, struct player *cur_play
 			switch (event.key.keysym.sym) {
 				case SDLK_UP: /* pickup up */
 				case SDLK_w:
-					finished = handle_pickup(map, cur_player, 0);
+					finished = handle_pickup(map, cur_player, 0, cur_player->y - 1);
 					break;
 				case SDLK_RIGHT: /* pickup right */
 				case SDLK_d:
-					finished = handle_pickup(map, cur_player, 1);
+					finished = handle_pickup(map, cur_player, cur_player->x + 1, 0);
 					break;
 				case SDLK_DOWN: /* pickup down */
 				case SDLK_s:
-					finished = handle_pickup(map, cur_player, 2);
+					finished = handle_pickup(map, cur_player, 0, cur_player->y + 1);
 					break;
 				case SDLK_LEFT: /* pickup left */
 				case SDLK_a:
-					finished = handle_pickup(map, cur_player, 3);
+					finished = handle_pickup(map, cur_player, cur_player->x - 1, 0);
 					break;
 				default:
 					finished = SDL_TRUE;
@@ -91,40 +90,26 @@ pickup_item(struct game *cur_game, struct worldmap *map, struct player *cur_play
 	}
 }
 
-static SDL_bool
-handle_pickup(struct worldmap *map, struct player *cur_player, int dir)
+SDL_bool
+handle_pickup(struct worldmap *map, struct player *cur_player, int x, int y)
 {
 	unsigned char cur_quantity;
 	short int cur_item;
 	int i;
-	int new_x = cur_player->x;
-	int new_y = cur_player->y;
+	int new_x; 
+	int new_y; 
 
+	/* Set pickup coordinates */
+	new_x = cur_player->x + x;
+	new_y = cur_player->y + y;
+	
 	/* Are you at the map boundaries? */
-	if ((cur_player->x == 0 && dir == 3) ||
-	    (cur_player->x == map->col_size - 1 && dir == 1) ||
-	    (cur_player->y == 0 && dir == 0) ||
-	    (cur_player->y == map->row_size -1 && dir == 2)) {
+	if (new_x < 0 || new_x > map->col_size - 1 ||
+	    new_y < 0 || new_y > map->row_size - 1) {
 	    	return SDL_TRUE;
 	}
 
 	/* Is there an item on the map? */
-	switch (dir) {
-		case 0:
-			new_y -= 1;
-			break;
-		case 1:
-			new_x += 1;
-			break;
-		case 2:
-			new_y += 1;
-			break;
-		case 3:
-			new_x -= 1;
-			break;
-		default:
-			break;
-	}
 	cur_item = *(*(map->loot+new_y)+new_x);
 	if (cur_item == 0) {
 		return SDL_TRUE;

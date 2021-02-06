@@ -21,7 +21,6 @@ static void		draw_player(struct game *cur_game, struct player *cur_player, struc
 static void		draw_inv(struct game *cur_game, struct player *cur_player);
 static void		draw_map(struct game *cur_game, struct worldmap *map, struct player *cur_player);
 static struct win_pos	find_win_pos(struct worldmap *map, struct player *cur_player);
-static void		update_seen(struct worldmap *map, struct player *cur_player);
 static void		load_sprites(struct game *cur_game);
 static void		unload_sprites(struct game *cur_game);
 
@@ -149,9 +148,6 @@ draw_game(struct game *cur_game, struct worldmap *map, struct player *cur_player
 	
 	/* Update window position */
 	win = find_win_pos(map, cur_player);
-
-	/* Update seen */
-	update_seen(map, cur_player);
 	
 	/* draw map */
 	render_clear(cur_game);
@@ -177,7 +173,9 @@ draw_player(struct game *cur_game, struct player *cur_player, struct win_pos win
 	draw_tile(cur_game,
 		  cur_player->x * SPRITE_W - win.x * SPRITE_W + GAME_X,
 		  cur_player->y * SPRITE_H - win.y * SPRITE_H + GAME_Y,
-		  SPRITE_W, SPRITE_H, 334); 
+		  SPRITE_W, SPRITE_H, 334);
+	cur_player->winpos_x = (cur_player->x * SPRITE_W - win.x * SPRITE_W)/32;
+	cur_player->winpos_y = (cur_player->y * SPRITE_H - win.y * SPRITE_H)/32;
 }
 
 static void
@@ -338,43 +336,6 @@ find_win_pos(struct worldmap *map, struct player *cur_player)
 	}
 	
 	return win;
-}
-
-static void
-update_seen(struct worldmap *map, struct player *cur_player)
-{
-	int rows, cols;
-	int rows_i, cols_i, rows_f, cols_f;
-	
-	rows_i = cur_player->y - 9;
-	cols_i = cur_player->x - 19;
-	rows_f = cur_player->y + 9;
-	cols_f = cur_player->x + 19;
-	
-	/* Check boundaries for loop */
-	if (rows_i < 0) {
-		rows_i = 0;
-		rows_f = WIN_ROWS - 1;
-	}
-	if (cols_i < 0) {
-		cols_i = 0;
-		cols_f = WIN_COLS - 1;
-	}
-	if (rows_f > map->row_size - 1) {
-		rows_f = map->row_size - 1;
-		rows_i = rows_f - WIN_ROWS + 1;
-	}
-	if (cols_f > map->col_size - 1) {
-		cols_f = map->col_size - 1;
-		cols_i = cols_f - WIN_COLS + 1;
-	}
-	
-	/* Set all seen values to 1 */
-	for (rows = rows_i ; rows <= rows_f; rows++) {
-		for (cols = cols_i; cols <= cols_f; cols++) {
-			*(*(cur_player->seen+rows)+cols) = 1;
-		}
-	}
 }
 
 void
