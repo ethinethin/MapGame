@@ -121,13 +121,14 @@ draw_rect(struct game *cur_game, unsigned int x, unsigned int y, unsigned int w,
 }
 
 void
-draw_tile(struct game *cur_game, int x, int y, int w, int h, int sprite_index)
+draw_tile(struct game *cur_game, int x, int y, int w, int h, int sprite_index, unsigned char alpha)
 {
 	SDL_Rect rect = {x, y, w, h};
-	SDL_Texture* texture = SDL_CreateTextureFromSurface(cur_game->screen.renderer, cur_game->sprites[sprite_index]);
-	SDL_RenderCopy(cur_game->screen.renderer, texture, NULL, &rect);
-	SDL_DestroyTexture(texture);
+	if (alpha != 255) SDL_SetTextureAlphaMod(cur_game->sprite_textures[sprite_index], alpha);
+	SDL_RenderCopy(cur_game->screen.renderer, cur_game->sprite_textures[sprite_index], NULL, &rect);
+	if (alpha != 255) SDL_SetTextureAlphaMod(cur_game->sprite_textures[sprite_index], 255);
 }
+
 
 void
 draw_all(struct game *cur_game, struct worldmap *map, struct player *cur_player)
@@ -155,11 +156,11 @@ draw_game(struct game *cur_game, struct worldmap *map, struct player *cur_player
 		for (cols = win.x; cols < win.x+WIN_COLS; cols++) {
 			sprite_index = get_sprite(*(*(map->tile+rows)+cols),
 						  *(*(map->biome+rows)+cols));
-			draw_tile(cur_game, (cols - win.x) * SPRITE_W + GAME_X, (rows - win.y) * SPRITE_H + GAME_Y, SPRITE_W, SPRITE_H, sprite_index); 
+			draw_tile(cur_game, (cols - win.x) * SPRITE_W + GAME_X, (rows - win.y) * SPRITE_H + GAME_Y, SPRITE_W, SPRITE_H, sprite_index, 255); 
 			/* check if there's loot */
 			if (*(*(map->loot+rows)+cols) != 0) {
 				sprite_index = get_loot_sprite(*(*(map->loot+rows)+cols));
-				draw_tile(cur_game, (cols - win.x) * SPRITE_W + GAME_X, (rows - win.y) * SPRITE_H + GAME_Y, SPRITE_W, SPRITE_H, sprite_index); 
+				draw_tile(cur_game, (cols - win.x) * SPRITE_W + GAME_X, (rows - win.y) * SPRITE_H + GAME_Y, SPRITE_W, SPRITE_H, sprite_index, 255); 
 			}
 		}
 	}
@@ -173,7 +174,7 @@ draw_player(struct game *cur_game, struct player *cur_player, struct win_pos win
 	draw_tile(cur_game,
 		  cur_player->x * SPRITE_W - win.x * SPRITE_W + GAME_X,
 		  cur_player->y * SPRITE_H - win.y * SPRITE_H + GAME_Y,
-		  SPRITE_W, SPRITE_H, 334);
+		  SPRITE_W, SPRITE_H, 334, 255);
 	cur_player->winpos_x = (cur_player->x * SPRITE_W - win.x * SPRITE_W)/32;
 	cur_player->winpos_y = (cur_player->y * SPRITE_H - win.y * SPRITE_H)/32;
 }
@@ -204,7 +205,8 @@ draw_inv(struct game *cur_game, struct player *cur_player)
 				  QB_X + i*48 + 1,
 				  QB_Y + 2,
 				  SPRITE_W * 1.5, SPRITE_H * 1.5,
-				  sprite_index);
+				  sprite_index,
+				  255);
 			stackable = is_loot_stackable(cur_player->loot[i]);
 			if (stackable == STACKABLE && cur_player->quantity[i] > 1) {
 				sprintf(quantity, "%3d", cur_player->quantity[i]);
@@ -250,7 +252,8 @@ draw_inv(struct game *cur_game, struct player *cur_player)
 					  INV_X + 48 * i + 1,
 					  INV_Y + 60 * j + 2, 
 					  SPRITE_W * 1.5, SPRITE_H * 1.5,
-					  sprite_index);
+					  sprite_index,
+					  255);
 				stackable = is_loot_stackable(cur_player->loot[j+i*8+8]);
 				if (stackable == STACKABLE && cur_player->quantity[j+i*8+8] > 1) {
 					sprintf(quantity, "%3d", cur_player->quantity[j+i*8+8]);
@@ -369,6 +372,7 @@ load_sprites(struct game *cur_game)
 	/* Load the map arrow sprites */
 	SDL_Surface *surface = SDL_LoadBMP("art/sprites.bmp");
 	cur_game->sprites = (SDL_Surface**) malloc(sizeof(SDL_Surface*)*512);
+	cur_game->sprite_textures = (SDL_Texture**) malloc(sizeof(SDL_Texture*)*512);
 	int i, j;
 	SDL_Rect rect = {0, 0, SPRITE_W, SPRITE_H};
 	for (i = 0; i < 16; i++) {
@@ -379,6 +383,7 @@ load_sprites(struct game *cur_game)
 			rect.x = j * 32;
 			rect.y = i * 32;
 			SDL_BlitSurface(surface, &rect, cur_game->sprites[(i*32)+j], NULL);
+			cur_game->sprite_textures[(i*32)+j] = SDL_CreateTextureFromSurface(cur_game->screen.renderer, cur_game->sprites[(i*32)+j]);
 		}
 	}
 	SDL_FreeSurface(surface);
@@ -392,8 +397,10 @@ unload_sprites(struct game *cur_game)
 	/* Free all sprites */
 	for (i = 0; i < 512; i++) {
 		SDL_FreeSurface(cur_game->sprites[i]);
+		SDL_DestroyTexture(cur_game->sprite_textures[i]);
 	}
 	free(cur_game->sprites);
+	free(cur_game->sprite_textures);
 }
 
 int LAST = 0;

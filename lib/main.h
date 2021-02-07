@@ -15,6 +15,7 @@ struct game {
 		SDL_Renderer *renderer;
 	} screen;
 	SDL_Surface **sprites;
+	SDL_Texture **sprite_textures;
 	SDL_Surface **font;
 	char cursor;
 	SDL_bool inventory;

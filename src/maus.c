@@ -1,9 +1,11 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include <SDL2/SDL.h>
 #include "disp.h"
 #include "loot.h"
 #include "main.h"
 #include "maus.h"
+#include "play.h"
 
 struct mouse {
 	int x;
@@ -24,7 +26,7 @@ static SDL_bool			move_cursor_inv(struct game *cur_game, int x, int y);
 static void			drag_item(struct game *cur_game, struct player *cur_player);
 static struct coords		get_click_coordinates(struct player *cur_player);
 static void			click_get_item(struct worldmap *map, struct player *cur_player, struct coords pos);
-
+static struct coords		drop_preview_coords(struct game *cur_game, struct player *cur_player);
 
 void
 mouse_click(struct game *cur_game, struct worldmap *map, struct player *cur_player, int x, int y)
@@ -32,6 +34,7 @@ mouse_click(struct game *cur_game, struct worldmap *map, struct player *cur_play
 	char start_pos;
 	char white[3] = { 255, 255, 255 };
 	SDL_bool cursor_moved;
+	SDL_Rect rect = { 0, 0, WIN_W, WIN_H };
 	struct coords pos;
 	
 	/* Mouse button is pressed down */
@@ -59,16 +62,28 @@ mouse_click(struct game *cur_game, struct worldmap *map, struct player *cur_play
 	
 	/* output screen to a texture */
 	SDL_Texture *texture;
-	texture = SDL_CreateTexture(cur_game->screen.renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, WIN_W, WIN_H);
+	texture = SDL_CreateTexture(cur_game->screen.renderer, SDL_PIXELFORMAT_RGBA8888,
+				    SDL_TEXTUREACCESS_TARGET, WIN_W, WIN_H);
 	SDL_SetRenderTarget(cur_game->screen.renderer, texture);
 	draw_game(cur_game, map, cur_player);
 	draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
 	SDL_SetRenderTarget(cur_game->screen.renderer, NULL);
 	SDL_Event event;
-	SDL_Rect rect = { 0, 0, WIN_W, WIN_H };
 	while(MOUSE.mdown == SDL_TRUE && SDL_WaitEvent(&event)) {
 		/* Poll for mouse state */
 		switch (event.type) {
+			case SDL_KEYDOWN:
+				if (event.key.keysym.sym == SDLK_i) {
+					toggle_inv(cur_game);
+					SDL_DestroyTexture(texture);
+					texture = SDL_CreateTexture(cur_game->screen.renderer, SDL_PIXELFORMAT_RGBA8888,
+								    SDL_TEXTUREACCESS_TARGET, WIN_W, WIN_H);
+					SDL_SetRenderTarget(cur_game->screen.renderer, texture);
+					draw_game(cur_game, map, cur_player);
+					draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
+					SDL_SetRenderTarget(cur_game->screen.renderer, NULL);
+				}
+				break;
 			case SDL_MOUSEMOTION:
 				MOUSE.x = event.motion.x;
 				MOUSE.y = event.motion.y;
@@ -83,6 +98,11 @@ mouse_click(struct game *cur_game, struct worldmap *map, struct player *cur_play
 				MOUSE.mdown = SDL_FALSE;
 				break;
 		}
+		/* redraw screen */
+		SDL_RenderCopy(cur_game->screen.renderer, texture, NULL, &rect); 
+		drag_item(cur_game, cur_player);
+		drop_preview_coords(cur_game, cur_player);
+		render_present(cur_game);
 		SDL_Delay(10);
 	}
 	SDL_SetRenderTarget(cur_game->screen.renderer, NULL);
@@ -91,13 +111,15 @@ mouse_click(struct game *cur_game, struct worldmap *map, struct player *cur_play
 	start_pos = cur_game->cursor;
 	if (MOUSE.x >= QB_X && MOUSE.x <= QB_X + QB_W &&
 	    MOUSE.y >= QB_Y && MOUSE.y <= QB_Y + QB_H) {
-	    	cursor_moved = move_cursor_qb(cur_game, MOUSE.x - QB_X, MOUSE.y - QB_Y);
+		cursor_moved = move_cursor_qb(cur_game, MOUSE.x - QB_X, MOUSE.y - QB_Y);
 	} else if (cur_game->inventory == SDL_TRUE &&
 		   MOUSE.x >= INV_X && MOUSE.x <= INV_X + INV_W &&
 		   MOUSE.y >= INV_Y && MOUSE.y <= INV_Y + INV_H) {
 		cursor_moved = move_cursor_inv(cur_game, MOUSE.x - INV_X, MOUSE.y - INV_Y);
 	} else {
 		/* You tried to drop it */
+		pos = drop_preview_coords(cur_game, cur_player);
+		handle_throw(cur_game, map, cur_player, pos.x, pos.y);
 		cursor_moved = SDL_FALSE;
 	}
 	if (cursor_moved == SDL_TRUE) handle_swap(cur_game, cur_player, start_pos);
@@ -125,11 +147,11 @@ move_cursor_inv(struct game *cur_game, int x, int y)
 	for (cols = 0; cols < 4; cols++) {
 		for (rows = 0; rows < 8; rows++) {
 			if (x > cols*48 && x <= (cols+1)*48 &&
-			    y > rows*60 && y <= (rows+1)*60) {
-			    	cur_game->cursor = rows+(cols*8)+8;
-			    	MOUSE.offset_x = x - cols*48;
-			    	MOUSE.offset_y = y - rows*60;
-			    	return SDL_TRUE;
+				y > rows*60 && y <= (rows+1)*60) {
+				cur_game->cursor = rows+(cols*8)+8;
+				MOUSE.offset_x = x - cols*48;
+				MOUSE.offset_y = y - rows*60;
+				return SDL_TRUE;
 			}
 		}
 	}
@@ -140,7 +162,7 @@ static void
 drag_item(struct game *cur_game, struct player *cur_player)
 {
 	draw_tile(cur_game, MOUSE.x - MOUSE.offset_x, MOUSE.y - MOUSE.offset_y, 48, 48,
-	          get_loot_sprite(cur_player->loot[(short int) cur_game->cursor]));
+	          get_loot_sprite(cur_player->loot[(short int) cur_game->cursor]), 192);
 }
 
 static struct coords
@@ -163,4 +185,43 @@ click_get_item(struct worldmap *map, struct player *cur_player, struct coords po
 	if (pos.x > 1 || pos.x < -1 || pos.y > 1 || pos.y < -1) return;
 	/* Try to pick up the item */
 	handle_pickup(map, cur_player, pos.x, pos.y);
+}
+
+static struct coords
+drop_preview_coords(struct game *cur_game, struct player *cur_player)
+{
+	struct coords pos;
+	
+	/* Should I draw it? */
+	if ((MOUSE.x >= QB_X && MOUSE.x <= QB_X + QB_W &&
+	     MOUSE.y >= QB_Y && MOUSE.y <= QB_Y + QB_H) |
+	    (cur_game->inventory == SDL_TRUE &&
+	     MOUSE.x >= INV_X && MOUSE.x <= INV_X + INV_W &&
+	     MOUSE.y >= INV_Y && MOUSE.y <= INV_Y + INV_H)) {
+		pos.x = -255;
+		return pos;
+	}
+	/* Where to draw it */
+	pos = get_click_coordinates(cur_player);
+	if (abs(pos.x) > abs(pos.y)) {
+		pos.y = 0;
+		if (pos.x < 0) {
+			pos.x = -1;
+		} else {
+			pos.x = 1;
+		}
+	} else {
+		pos.x = 0;
+		if (pos.y < 0) {
+			pos.y = -1;
+		} else {
+			pos.y = 1;
+		}
+	}
+	draw_tile(cur_game,
+		  GAME_X + cur_player->winpos_x*32 + pos.x * 32,
+		  GAME_Y + cur_player->winpos_y*32 + pos.y * 32, 32, 32,
+		  get_loot_sprite(cur_player->loot[(short int) cur_game->cursor]), 144);
+
+	return pos;
 }

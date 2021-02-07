@@ -20,6 +20,7 @@ struct game GAME = {
 	/* screen */
 	{ WIN_W, WIN_H, "MapGame", NULL, NULL },
 	NULL,			/* sprites */
+	NULL,			/* sprite_textures */
 	NULL,			/* font */
 	0,			/* cursor */
 	SDL_FALSE,		/* inventory */
