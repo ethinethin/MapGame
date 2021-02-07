@@ -22,6 +22,18 @@ Piece of cake! In-game keys are:
 - ESC: quit game
 - Arrow keys and WASD: move around
 - M: show world map
+- R: pickup item
+- T: throw item
+- F: swap item in inventory
+- I: toggle inventory on/off
+- Q and E: move cursor in quickbar/inventory
+
+Mouse controls:
+
+- Click on nearby item: pickup item
+- Click in inventory: move cursor in quickbar/inventory
+- Drag and drop in inventory/quickbar: swap item in inventory
+- Drag and drop on map: throw item
 
 That's all there is so far!
 

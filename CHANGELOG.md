@@ -4,6 +4,15 @@ Changelog
 2021-02-05
 -
 
+- Pickup with mouse
+- Hardware accelerated sprites
+- Fixed handle\_pickup and handle\_throw functions
+- Moved update\_seen
+- Item drag and drop to drop item on map
+
+2021-02-05
+-
+
 - Cursor movement in inventory with mouse click
 - Swap items with mouse click
 - Move cursor on quickbar with number keys
