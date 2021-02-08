@@ -15,14 +15,16 @@ struct win_pos {
 };
 
 /* Function prototypes */
-static void		draw_point(struct game *cur_game, int x, int y, char *col);
 static void		draw_line(struct game *cur_game, int x1, int y1, int x2, int y2, char *col);
 static void		draw_player(struct game *cur_game, struct player *cur_player, struct win_pos win);
+static void		draw_player_indicator(struct game *cur_game, struct player *cur_player, int size);
 static void		draw_inv(struct game *cur_game, struct player *cur_player);
-static void		draw_map(struct game *cur_game, struct worldmap *map, struct player *cur_player);
+static void		draw_map(struct game *cur_game);
 static struct win_pos	find_win_pos(struct worldmap *map, struct player *cur_player);
 static void		load_sprites(struct game *cur_game);
 static void		unload_sprites(struct game *cur_game);
+static void		map_init(struct game *cur_game);
+static void		map_destroy(struct game *cur_game);
 
 void
 display_init(struct game *cur_game)
@@ -32,24 +34,16 @@ display_init(struct game *cur_game)
 		printf("SDL error: %s\n", SDL_GetError());
 		exit(1);
 	}
-
 	/* Create the main window and renderer */
-	cur_game->screen.window = SDL_CreateWindow(
-		cur_game->screen.name,
-		SDL_WINDOWPOS_CENTERED,
-		SDL_WINDOWPOS_CENTERED,
-		cur_game->screen.w, cur_game->screen.h, 0
-	);
-	cur_game->screen.renderer = SDL_CreateRenderer(
-		cur_game->screen.window, -1,
-		SDL_RENDERER_ACCELERATED
-	);
+	cur_game->screen.window = SDL_CreateWindow(cur_game->screen.name, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+						   cur_game->screen.w, cur_game->screen.h, 0);
+	cur_game->screen.renderer = SDL_CreateRenderer(cur_game->screen.window, -1, SDL_RENDERER_ACCELERATED);
 	SDL_SetRenderDrawBlendMode(cur_game->screen.renderer, SDL_BLENDMODE_BLEND);
-	
 	/* Load sprites and font */
 	load_sprites(cur_game);
 	load_font(cur_game);
-	
+	/* Initialize worldmap */
+	map_init(cur_game);
 	/* Clear screen */
 	SDL_SetRenderDrawColor(cur_game->screen.renderer, 0, 0, 0, 255);
 	SDL_RenderClear(cur_game->screen.renderer);
@@ -69,11 +63,13 @@ display_quit(struct game *cur_game)
 	/* Unload sprites and font */
 	unload_sprites(cur_game);
 	unload_font(cur_game);
+	/* Kill the world map */
+	map_destroy(cur_game);
 	/* SDL quit */
 	SDL_Quit();
 }
 
-static void
+void
 draw_point(struct game *cur_game, int x, int y, char *col)
 {
 	SDL_SetRenderDrawColor(cur_game->screen.renderer, *(col+0), *(col+1), *(col+2), 255);
@@ -290,31 +286,27 @@ draw_inv(struct game *cur_game, struct player *cur_player)
 }
 
 static void
-draw_map(struct game *cur_game, struct worldmap *map, struct player *cur_player)
+draw_map(struct game *cur_game)
 {
-	int rows, cols;
-	char *tile_col;
-	char red[3] = { 255, 0, 0 };
 	char white[3] = { 255, 255, 255 };
 	char black[3] = { 0, 0, 0 };
+	SDL_Rect rect = { MAP_X, MAP_Y, MAP_W, MAP_H };
 	
 	/* Draw map */
 	draw_rect(cur_game, MAP_X, MAP_Y, MAP_W, MAP_H, SDL_TRUE, black, SDL_TRUE, white);
-	for (rows = 0; rows < MAP_ROWS; rows++) {
-		for (cols = 0; cols < MAP_COLS; cols++) {
-			if (*(*(cur_player->seen+rows)+cols) == 0) {
-				continue;
-			}
-			tile_col = get_color(*(*(map->tile + rows) + cols),
-					     *(*(map->biome + rows) + cols));
-			//draw_rect(cur_game, MAP_X + cols * 2 + 1, MAP_Y + rows * 2 + 1, 2, 2, SDL_TRUE, tile_col, SDL_FALSE, NULL);
-			draw_point(cur_game, MAP_X + cols, MAP_Y + rows, tile_col);
-		}
-	}
-	/* Draw player */
-	draw_point(cur_game, MAP_X + cur_player->x, MAP_Y + cur_player->y, red);
+	SDL_RenderCopy(cur_game->screen.renderer, cur_game->map_texture, NULL, &rect);
+	/* Draw map border */
 	draw_rect(cur_game, MAP_X, MAP_Y, MAP_W, MAP_H, SDL_FALSE, white, SDL_FALSE, NULL);
 
+}
+
+static void
+draw_player_indicator(struct game *cur_game, struct player *cur_player, int size)
+{
+	char red[3] = { 255, 0, 0 };
+	/* Draw player indicator */
+	draw_rect(cur_game, MAP_X + cur_player->x - size/2, MAP_Y + cur_player->y - size/2, size, size, SDL_FALSE, red, SDL_FALSE, NULL);
+	draw_rect(cur_game, MAP_X + cur_player->x - size/2 - 1, MAP_Y + cur_player->y - size/2 - 1, size+2, size+2, SDL_FALSE, red, SDL_FALSE, NULL);
 }
 
 static struct win_pos
@@ -347,21 +339,32 @@ worldmap(struct game *cur_game, struct worldmap *map, struct player *cur_player)
 	char black[3] = { 0, 0, 0 };
 	char white[3] = { 255, 255, 255 };
 	
-	/* Redraw screen */
-	draw_game(cur_game, map, cur_player);
-	/* Draw map */
-	draw_map(cur_game, map, cur_player);
-	draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
-	/* Write "Map" at the top of the screen */
-	draw_rect(cur_game, MAP_X, MAP_Y-20, 28*9+2, 18+2+1, SDL_TRUE, black, SDL_TRUE, white);
-	draw_sentence(cur_game, MAP_X+1, MAP_Y-19, "World Map");
-	/* Render */
-	SDL_RenderPresent(cur_game->screen.renderer);
 	/* Wait for user input */
 	SDL_Event event;
-	while (SDL_WaitEvent(&event)) {
+	int size = 1;
+	int size_change = 2;
+	while (SDL_TRUE) {
+		/* Redraw screen */
+		draw_game(cur_game, map, cur_player);
+		/* Draw map */
+		draw_map(cur_game);
+		draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
+		/* Write "Map" at the top of the screen */
+		draw_rect(cur_game, MAP_X, MAP_Y-20, 28*9+2, 18+2+1, SDL_TRUE, black, SDL_TRUE, white);
+		draw_sentence(cur_game, MAP_X+1, MAP_Y-19, "World Map");
+		draw_player_indicator(cur_game, cur_player, size);
+		render_present(cur_game);
+		/* Delay and poll for event */
+		SDL_Delay(20);
+		SDL_PollEvent(&event);
 		if (event.type == SDL_KEYDOWN) {
 			return;
+		}
+		size += size_change;
+		if (size >= 19) {
+			size_change = -2; 
+		} else if (size <= 1) {
+			size_change = 2;
 		}
 	}
 }
@@ -425,4 +428,17 @@ loading_bar(struct game *cur_game, char *title, int percentage)
 	draw_rect(cur_game, 20, 30, 1000, 40, SDL_TRUE, black, SDL_TRUE, white);
 	draw_rect(cur_game, 21, 31, percentage*10-2, 38, SDL_TRUE, blue, SDL_FALSE, NULL);
 	SDL_RenderPresent(cur_game->screen.renderer);
+}
+
+static void
+map_init(struct game *cur_game)
+{
+	cur_game->map_texture = SDL_CreateTexture(cur_game->screen.renderer, SDL_PIXELFORMAT_RGBA8888,
+						  SDL_TEXTUREACCESS_TARGET, MAP_COLS, MAP_ROWS);
+}
+
+static void
+map_destroy(struct game *cur_game)
+{
+	SDL_DestroyTexture(cur_game->map_texture);
 }

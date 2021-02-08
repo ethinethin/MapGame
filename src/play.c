@@ -1,18 +1,21 @@
+#include <stdio.h>
+#include <SDL2/SDL.h>
+#include "disp.h"
 #include "loot.h"
 #include "main.h"
 #include "maps.h"
 #include "play.h"
+#include "rand.h"
 
 /* Function prototypes */
-static void	update_seen(struct worldmap *map, struct player *cur_player);
+static void	update_seen(struct game *cur_game, struct worldmap *map, struct player *cur_player);
 
 void
-player_init(struct player *cur_player)
+player_init(struct worldmap *map, struct player *cur_player)
 {
 	int rows, cols;
 	/* Set player position */
-	cur_player->x = MAP_COLS/4;
-	cur_player->y = MAP_ROWS/4;
+	random_start(map, cur_player);
 	/* Initialize player seen */
 	cur_player->seen = malloc(sizeof(*cur_player->seen)*MAP_ROWS);
 	for (rows = 0; rows < MAP_ROWS; rows++) {
@@ -41,7 +44,7 @@ player_quit(struct player *cur_player)
 }
 
 void
-move_player(struct worldmap *map, struct player *cur_player, int x, int y)
+move_player(struct game *cur_game, struct worldmap *map, struct player *cur_player, int x, int y)
 {
 	int new_x, new_y;
 	
@@ -61,12 +64,13 @@ move_player(struct worldmap *map, struct player *cur_player, int x, int y)
 	cur_player->x = new_x;
 	cur_player->y = new_y;
 	/* Update seen */
-	update_seen(map, cur_player);
+	update_seen(cur_game, map, cur_player);
 }
 
 static void
-update_seen(struct worldmap *map, struct player *cur_player)
+update_seen(struct game *cur_game, struct worldmap *map, struct player *cur_player)
 {
+	char *tile_col;
 	int rows, cols;
 	int rows_i, cols_i, rows_f, cols_f;
 	
@@ -92,20 +96,46 @@ update_seen(struct worldmap *map, struct player *cur_player)
 		cols_f = map->col_size - 1;
 		cols_i = cols_f - WIN_COLS + 1;
 	}
-	
-	/* Set all seen values to 1 */
+
+	/* Set up renderer to render to the map texture */
+	SDL_SetRenderTarget(cur_game->screen.renderer, cur_game->map_texture);
+	/* Set all newly seen values to 1 */
 	for (rows = rows_i ; rows <= rows_f; rows++) {
 		for (cols = cols_i; cols <= cols_f; cols++) {
-			*(*(cur_player->seen+rows)+cols) = 1;
+			if (*(*(cur_player->seen+rows)+cols) == 0) {
+				/* Set tile as seen */
+				*(*(cur_player->seen+rows)+cols) = 1;
+				/* Draw pixel on map texture */
+				tile_col = get_color(*(*(map->tile + rows) + cols), *(*(map->biome + rows) + cols));
+				draw_point(cur_game, cols, rows, tile_col);
+			}
 		}
 	}
+	/* Reset renderer */
+	SDL_SetRenderTarget(cur_game->screen.renderer, NULL);
 }
 
 void
 toggle_inv(struct game *cur_game)
 {
 	cur_game->inventory = !cur_game->inventory;
-	if (cur_game->inventory == SDL_FALSE && cur_game->cursor > 7) {
-		cur_game->cursor = 7;
+}
+
+void
+random_start(struct worldmap *map, struct player *cur_player)
+{
+	int row, col;
+	SDL_bool finished = SDL_FALSE;
+	
+	while (finished == SDL_FALSE) {
+		/* Randomly determine location */
+		row = rand_num(0, map->row_size - 1);
+		col = rand_num(0, map->col_size - 1);
+		/* Check that it is passable */
+		if (is_passable(*(*(map->tile+row)+col), *(*(map->biome+row)+col)) == PASSABLE) {			
+			finished = SDL_TRUE;
+		}
 	}
+	cur_player->x = col;
+	cur_player->y = row;
 }

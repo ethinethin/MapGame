@@ -266,6 +266,15 @@ move_cursor(struct game *cur_game, char dir)
 			max = 7;
 			break;
 	}
+	/* If you have an invisible cursor, set it to the max quickbar slot */
+	if (cur_game->cursor > max) {
+		if (dir == 1) {
+			cur_game->cursor = max;
+		} else {
+			cur_game->cursor = 0;
+		}
+		return;
+	}
 	/* Move cursor */
 	cur_game->cursor += dir;
 	/* Pac-man if necessary */

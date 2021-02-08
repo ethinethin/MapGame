@@ -14,14 +14,16 @@ static void	game_quit(void);
 static void	generate_farts(struct game *cur_game, struct worldmap *main_map);
 static void	copy_fart(struct worldmap *main_map, struct worldmap *fart, int row, int col);
 
+
 /* Global game construct */
 struct game GAME = {
 	SDL_FALSE,		/* running */
 	/* screen */
 	{ WIN_W, WIN_H, "MapGame", NULL, NULL },
 	NULL,			/* sprites */
-	NULL,			/* sprite_textures */
 	NULL,			/* font */
+	NULL,			/* sprite_textures */
+	NULL,			/* map_texture */
 	0,			/* cursor */
 	SDL_FALSE,		/* inventory */
 	SDL_FALSE		/* fullscreen */
@@ -41,7 +43,7 @@ main()
 	
 	/* draw map, player, render and "move player" to update map */
 	draw_all(&GAME, &MAP, &PLAYER);
-	move_player(&MAP, &PLAYER, 0, 0);
+	move_player(&GAME, &MAP, &PLAYER, 0, 0);
 	
 	/* enter main game loop */
 	SDL_Event event;
@@ -56,19 +58,19 @@ main()
 					break;
 				case SDLK_UP: /* move up */
 				case SDLK_w:
-					move_player(&MAP, &PLAYER, 0, -1);
+					move_player(&GAME, &MAP, &PLAYER, 0, -1);
 					break;
 				case SDLK_DOWN: /* move down */
 				case SDLK_s:
-					move_player(&MAP, &PLAYER, 0, 1);
+					move_player(&GAME, &MAP, &PLAYER, 0, 1);
 					break;
 				case SDLK_LEFT: /* move left */
 				case SDLK_a:
-					move_player(&MAP, &PLAYER, -1, 0);
+					move_player(&GAME, &MAP, &PLAYER, -1, 0);
 					break;
 				case SDLK_RIGHT: /* move right */
 				case SDLK_d:
-					move_player(&MAP, &PLAYER, 1, 0);
+					move_player(&GAME, &MAP, &PLAYER, 1, 0);
 					break;
 				case SDLK_m: /* view map */
 					worldmap(&GAME, &MAP, &PLAYER);
@@ -136,12 +138,12 @@ game_init(void)
 	display_init(&GAME);
 	/* Seed RNG */
 	seed_rng();
-	/* Set up player */
-	player_init(&PLAYER);
 	/* Set up the worldmap */
 	create_map(&MAP, MAP_ROWS, MAP_COLS);
 	/* Generate farts and copy to worldmap */
 	generate_farts(&GAME, &MAP);
+	/* Set up player */
+	player_init(&MAP, &PLAYER);
 	/* The window is now up and running */
 	GAME.running = SDL_TRUE;
 }
@@ -174,11 +176,11 @@ generate_farts(struct game *cur_game, struct worldmap *main_map)
 		loading_bar(cur_game, "Generating maps", 100*rows/32);
 		for (cols = 0; cols < 64; cols++) {
 			/* Create a fart */
-			create_map(&fart, 16, 16);
+			create_map(&fart, 24, 24);
 			/* Populate with a random biome */
 			populate_map(&fart, 1, *(*(biomes.tile+rows)+cols) - 1);
 			/* copy_fart */
-			copy_fart(main_map, &fart, rows * 16, cols * 16);
+			copy_fart(main_map, &fart, rows * 16 - 4, cols * 16 - 4);
 			/* free_map */
 			free_map(&fart);
 		}
@@ -193,14 +195,30 @@ copy_fart(struct worldmap *main_map, struct worldmap *fart, int row, int col)
 	int rows, cols;
 	int rando;
 	
+	/* Make sure it fits in map */
+	if (row < 0) {
+		fart->row_size += row;
+		row = 0;
+	}
+	if (col < 0) {
+		fart->col_size += col;
+		col = 0;
+	}
+	
 	for (rows = 0; rows < fart->row_size; rows++) {
 		for (cols = 0; cols < fart->col_size; cols++) {
-			*(*(main_map->tile+rows+row)+cols+col) = *(*(fart->tile+rows)+cols);
-			*(*(main_map->biome+rows+row)+cols+col) = *(*(fart->biome+rows)+cols);
+			/* Make sure you're within the map */
+			if (rows + row > main_map->row_size - 1) continue;
+			if (cols + col > main_map->col_size - 1) continue;
+			/* If there's an existing tile, blend it maybe */
+			if (*(*(main_map->tile+rows+row)+cols+col) == 0 || rand_num(0, 1) == 1) {
+				*(*(main_map->tile+rows+row)+cols+col) = *(*(fart->tile+rows)+cols);
+				*(*(main_map->biome+rows+row)+cols+col) = *(*(fart->biome+rows)+cols);
+			}
 			// Add a bunch of random items
 			// Remove later
 			rando = rand_num(1, 100);
-			if (rando > 90) {
+			if (rando > 99) {
 				rando = rand_num(1, 8);
 				*(*(main_map->loot+rows+row)+cols+col) = rando;
 				if (is_loot_stackable(rando) == STACKABLE) {

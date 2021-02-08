@@ -1,7 +1,18 @@
 Changelog
 -
 
-2021-02-05
+2021-02-07
+-
+
+- Fixed drop preview ghosting
+- Implemented walk while dropping
+- Cursor remains in inventory after closing
+- Biome blending
+- World map rendered as texture
+- Blinking player indicator on world map
+- Random starting location
+
+2021-02-06
 -
 
 - Pickup with mouse

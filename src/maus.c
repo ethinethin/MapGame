@@ -26,7 +26,7 @@ static SDL_bool			move_cursor_inv(struct game *cur_game, int x, int y);
 static void			drag_item(struct game *cur_game, struct player *cur_player);
 static struct coords		get_click_coordinates(struct player *cur_player);
 static void			click_get_item(struct worldmap *map, struct player *cur_player, struct coords pos);
-static struct coords		drop_preview_coords(struct game *cur_game, struct player *cur_player);
+static struct coords		drop_preview(struct game *cur_game, struct player *cur_player);
 
 void
 mouse_click(struct game *cur_game, struct worldmap *map, struct player *cur_player, int x, int y)
@@ -73,26 +73,38 @@ mouse_click(struct game *cur_game, struct worldmap *map, struct player *cur_play
 		/* Poll for mouse state */
 		switch (event.type) {
 			case SDL_KEYDOWN:
-				if (event.key.keysym.sym == SDLK_i) {
-					toggle_inv(cur_game);
-					SDL_DestroyTexture(texture);
-					texture = SDL_CreateTexture(cur_game->screen.renderer, SDL_PIXELFORMAT_RGBA8888,
-								    SDL_TEXTUREACCESS_TARGET, WIN_W, WIN_H);
-					SDL_SetRenderTarget(cur_game->screen.renderer, texture);
-					draw_game(cur_game, map, cur_player);
-					draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
-					SDL_SetRenderTarget(cur_game->screen.renderer, NULL);
+				switch (event.key.keysym.sym) {
+					case SDLK_UP: /* move up */
+					case SDLK_w:
+						move_player(cur_game, map, cur_player, 0, -1);
+						break;
+					case SDLK_DOWN: /* move down */
+					case SDLK_s:
+						move_player(cur_game, map, cur_player, 0, 1);
+						break;
+					case SDLK_LEFT: /* move left */
+					case SDLK_a:
+						move_player(cur_game, map, cur_player, -1, 0);
+						break;
+					case SDLK_RIGHT: /* move right */
+					case SDLK_d:
+						move_player(cur_game, map, cur_player, 1, 0);
+						break;
+					case SDLK_i:
+						toggle_inv(cur_game);
+						break;
 				}
+				SDL_DestroyTexture(texture);
+				texture = SDL_CreateTexture(cur_game->screen.renderer, SDL_PIXELFORMAT_RGBA8888,
+							    SDL_TEXTUREACCESS_TARGET, WIN_W, WIN_H);
+				SDL_SetRenderTarget(cur_game->screen.renderer, texture);
+				draw_game(cur_game, map, cur_player);
+				draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
+				SDL_SetRenderTarget(cur_game->screen.renderer, NULL);
 				break;
 			case SDL_MOUSEMOTION:
 				MOUSE.x = event.motion.x;
 				MOUSE.y = event.motion.y;
-				/* Draw map from texture */
-				SDL_RenderCopy(cur_game->screen.renderer, texture, NULL, &rect); 
-				/* move item */
-				drag_item(cur_game, cur_player);
-				/* Present the screen */
-				render_present(cur_game);
 				break;
 			case SDL_MOUSEBUTTONUP:
 				MOUSE.mdown = SDL_FALSE;
@@ -101,7 +113,7 @@ mouse_click(struct game *cur_game, struct worldmap *map, struct player *cur_play
 		/* redraw screen */
 		SDL_RenderCopy(cur_game->screen.renderer, texture, NULL, &rect); 
 		drag_item(cur_game, cur_player);
-		drop_preview_coords(cur_game, cur_player);
+		drop_preview(cur_game, cur_player);
 		render_present(cur_game);
 		SDL_Delay(10);
 	}
@@ -118,7 +130,7 @@ mouse_click(struct game *cur_game, struct worldmap *map, struct player *cur_play
 		cursor_moved = move_cursor_inv(cur_game, MOUSE.x - INV_X, MOUSE.y - INV_Y);
 	} else {
 		/* You tried to drop it */
-		pos = drop_preview_coords(cur_game, cur_player);
+		pos = drop_preview(cur_game, cur_player);
 		handle_throw(cur_game, map, cur_player, pos.x, pos.y);
 		cursor_moved = SDL_FALSE;
 	}
@@ -188,7 +200,7 @@ click_get_item(struct worldmap *map, struct player *cur_player, struct coords po
 }
 
 static struct coords
-drop_preview_coords(struct game *cur_game, struct player *cur_player)
+drop_preview(struct game *cur_game, struct player *cur_player)
 {
 	struct coords pos;
 	
@@ -203,6 +215,7 @@ drop_preview_coords(struct game *cur_game, struct player *cur_player)
 	}
 	/* Where to draw it */
 	pos = get_click_coordinates(cur_player);
+		
 	if (abs(pos.x) > abs(pos.y)) {
 		pos.y = 0;
 		if (pos.x < 0) {
