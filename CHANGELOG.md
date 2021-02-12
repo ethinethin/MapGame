@@ -1,12 +1,22 @@
 Changelog
 -
 
+2021-02-12
+-
+
+- Right-click harvesting
+- Sustained harvesting
+- Harvesting progress bar
+- Harvesting gives random quantities based on tile
+- Tiles now have limited harvesting
+
 2021-02-11
 -
 
 - Diagonal mouse dropping
 - "Dev mode" reveal entire map
 - Random "safe" starting location improved
+- Modified player indicator on world map
 - Basic Harvesting (keyboard controls)
 
 2021-02-07

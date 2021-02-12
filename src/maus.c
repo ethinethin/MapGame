@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <SDL2/SDL.h>
 #include "disp.h"
+#include "harv.h"
 #include "loot.h"
 #include "main.h"
 #include "maus.h"
@@ -14,6 +15,7 @@ struct mouse {
 	int offset_x;
 	int offset_y;
 	SDL_bool mdown;
+	int button;
 } MOUSE;
 
 struct coords {
@@ -28,9 +30,10 @@ static void			drag_item(struct game *cur_game, struct player *cur_player);
 static struct coords		get_click_coordinates(struct player *cur_player);
 static void			click_get_item(struct worldmap *map, struct player *cur_player, struct coords pos);
 static struct coords		drop_preview(struct game *cur_game, struct player *cur_player);
+static void			click_harvest(struct game *cur_game, struct worldmap *map, struct player *cur_player, struct coords pos);
 
 void
-mouse_click(struct game *cur_game, struct worldmap *map, struct player *cur_player, int x, int y)
+mouse_click(struct game *cur_game, struct worldmap *map, struct player *cur_player, int x, int y, unsigned char button)
 {
 	char start_pos;
 	char white[3] = { 255, 255, 255 };
@@ -42,6 +45,7 @@ mouse_click(struct game *cur_game, struct worldmap *map, struct player *cur_play
 	MOUSE.x = x;
 	MOUSE.y = y;
 	MOUSE.mdown = SDL_TRUE;
+	MOUSE.button = button;
 	
 	/* Move the cursor if necessary */
 	if (x >= QB_X && x <= QB_X + QB_W &&
@@ -53,7 +57,11 @@ mouse_click(struct game *cur_game, struct worldmap *map, struct player *cur_play
 		cursor_moved = move_cursor_inv(cur_game, x - INV_X, y - INV_Y);
 	} else {
 		pos = get_click_coordinates(cur_player);
-		click_get_item(map, cur_player, pos);
+		if (button == SDL_BUTTON_LEFT) {
+			click_get_item(map, cur_player, pos);
+		} else if (button == SDL_BUTTON_RIGHT) {
+			click_harvest(cur_game, map, cur_player, pos);
+		}	
 		cursor_moved = SDL_FALSE;
 		return;
 	}
@@ -254,4 +262,13 @@ drop_preview(struct game *cur_game, struct player *cur_player)
 		  get_loot_sprite(cur_player->loot[(short int) cur_game->cursor]), 144);
 
 	return pos;
+}
+
+static void
+click_harvest(struct game *cur_game, struct worldmap *map, struct player *cur_player, struct coords pos)
+{
+	/* Make sure it is close to the player */
+	if (pos.x > 1 || pos.x < -1 || pos.y > 1 || pos.y < -1) return;
+	/* Try to pick up the item */
+	harvest_item(cur_game, map, cur_player, cur_player->x+pos.x, cur_player->y+pos.y);
 }

@@ -132,7 +132,7 @@ main()
 					break;
 			}
 		} else if (event.type == SDL_MOUSEBUTTONDOWN) {
-			mouse_click(&GAME, &MAP, &PLAYER, event.button.x, event.button.y);
+			mouse_click(&GAME, &MAP, &PLAYER, event.button.x, event.button.y, event.button.button);
 		}
 		/* draw map, player, and render */
 		draw_all(&GAME, &MAP, &PLAYER);

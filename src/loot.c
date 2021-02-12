@@ -355,7 +355,7 @@ swap_item(struct game *cur_game, struct worldmap *map, struct player *cur_player
 					break;
 			}
 		} else if (event.type == SDL_MOUSEBUTTONDOWN) {
-			mouse_click(cur_game, map, cur_player, event.button.x, event.button.y);
+			mouse_click(cur_game, map, cur_player, event.button.x, event.button.y, event.button.button);
 			finished = handle_swap(cur_game, cur_player, start_pos);
 		}
 	}

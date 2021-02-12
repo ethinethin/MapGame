@@ -1,6 +1,8 @@
 #ifndef MAPS_H
 #define MAPS_H
 
+#include <SDL2/SDL.h>
+
 /* Defines for map properties */
 #define IMPASSABLE 0
 #define PASSABLE 1
@@ -13,6 +15,7 @@ struct worldmap {
 	short int **biome;
 	unsigned short int **loot;
 	unsigned char **quantity;
+	SDL_bool **harvestable;
 };
 
 extern void		 create_map(struct worldmap *map, int row_size, int col_size);

@@ -3,6 +3,7 @@
 #include <SDL2/SDL.h>
 #include "disp.h"
 #include "font.h"
+#include "harv.h"
 #include "loot.h"
 #include "main.h"
 #include "maps.h"
@@ -144,6 +145,8 @@ draw_game(struct game *cur_game, struct worldmap *map, struct player *cur_player
 	int rows, cols;
 	short int sprite_index;
 	struct win_pos win;
+	short int alpha;
+	SDL_bool harvestable;
 	
 	/* Update window position */
 	win = find_win_pos(map, cur_player);
@@ -154,7 +157,13 @@ draw_game(struct game *cur_game, struct worldmap *map, struct player *cur_player
 		for (cols = win.x; cols < win.x+WIN_COLS; cols++) {
 			sprite_index = get_sprite(*(*(map->tile+rows)+cols),
 						  *(*(map->biome+rows)+cols));
-			draw_tile(cur_game, (cols - win.x) * SPRITE_W + GAME_X, (rows - win.y) * SPRITE_H + GAME_Y, SPRITE_W, SPRITE_H, sprite_index, 255); 
+			harvestable = is_harvestable(map, cols, rows);
+			if (harvestable == SDL_TRUE) {
+				alpha = 255;
+			} else {
+				alpha = 96;
+			}
+			draw_tile(cur_game, (cols - win.x) * SPRITE_W + GAME_X, (rows - win.y) * SPRITE_H + GAME_Y, SPRITE_W, SPRITE_H, sprite_index, alpha); 
 			/* check if there's loot */
 			if (*(*(map->loot+rows)+cols) != 0) {
 				sprite_index = get_loot_sprite(*(*(map->loot+rows)+cols));

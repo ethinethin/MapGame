@@ -35,6 +35,7 @@ Mouse controls:
 - Click in inventory: move cursor in quickbar/inventory
 - Drag and drop in inventory/quickbar: swap item in inventory
 - Drag and drop on map: throw item
+- Right click to harvest
 
 That's all there is so far!
 

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <SDL2/SDL.h>
 #include "loot.h"
 #include "maps.h"
 #include "rand.h"
@@ -128,16 +129,19 @@ create_map(struct worldmap *map, int row_size, int col_size)
 	map->biome = malloc(sizeof(*(map->biome))*row_size);
 	map->loot = malloc(sizeof(*(map->loot))*row_size);
 	map->quantity = malloc(sizeof(*(map->quantity))*row_size);
+	map->harvestable = malloc(sizeof(*(map->harvestable))*row_size);
 	for (rows = 0; rows < row_size; rows++) {
 		*(map->tile+rows) = malloc(sizeof(**map->tile)*col_size);
 		*(map->biome+rows) = malloc(sizeof(**map->biome)*col_size);
 		*(map->loot+rows) = malloc(sizeof(**map->loot)*col_size);
 		*(map->quantity+rows) = malloc(sizeof(**map->quantity)*col_size);
+		*(map->harvestable+rows) = malloc(sizeof(**map->harvestable)*col_size);
 		for (cols = 0; cols < col_size; cols++) {
 			*(*(map->tile+rows)+cols) = 0;
 			*(*(map->biome+rows)+cols) = 0;
 			*(*(map->loot+rows)+cols) = 0;
 			*(*(map->quantity+rows)+cols) = 0;
+			*(*(map->harvestable+rows)+cols) = SDL_TRUE;
 		}
 	}
 }
@@ -151,9 +155,15 @@ free_map(struct worldmap *map)
 	for (rows = 0; rows < map->row_size; rows++) {
 		free(*(map->tile+rows));
 		free(*(map->biome+rows));
+		free(*(map->loot+rows));
+		free(*(map->quantity+rows));
+		free(*(map->harvestable+rows));
 	}
 	free(map->tile);
 	free(map->biome);
+	free(map->loot);
+	free(map->quantity);
+	free(map->harvestable);
 }
 
 void
