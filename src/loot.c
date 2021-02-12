@@ -116,7 +116,7 @@ handle_pickup(struct worldmap *map, struct player *cur_player, int x, int y)
 	
 	/* If it's stackable, check for a non-maxed stack in the inventory */
 	if (is_loot_stackable(cur_item) == STACKABLE) {
-		for (i = 0; i < 40; i++) {
+		for (i = 0; i < MAX_INV; i++) {
 			if (cur_player->loot[i] == cur_item && cur_player->quantity[i] < 255) {
 				if ((int) cur_quantity + (int) cur_player->quantity[i] > 255) {
 					cur_quantity -= 255 - cur_player->quantity[i];
@@ -133,7 +133,7 @@ handle_pickup(struct worldmap *map, struct player *cur_player, int x, int y)
 	}
 	/* There's still item left (or the item was unstackable) */
 	if (cur_quantity > 0) {
-		for (i = 0; i < 40; i++) {
+		for (i = 0; i < MAX_INV; i++) {
 			if (cur_player->loot[i] == 0) {
 				cur_player->loot[i] = cur_item;
 				cur_player->quantity[i] = cur_quantity;

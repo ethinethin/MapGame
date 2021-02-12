@@ -1,6 +1,14 @@
 Changelog
 -
 
+2021-02-11
+-
+
+- Diagonal mouse dropping
+- "Dev mode" reveal entire map
+- Random "safe" starting location improved
+- Basic Harvesting (keyboard controls)
+
 2021-02-07
 -
 

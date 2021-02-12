@@ -254,8 +254,7 @@ calc_tiles(struct worldmap *map, struct tile_prob **probs)
 		for (cols = 0; cols < map->col_size; cols++) {
 			if (*(*(map->tile+rows)+cols) == 0) {
 				/* calculate max probability */
-				prob_max = 0;
-				for (z = 1; z < 9; z++) {
+				for (z = 1, prob_max = 0; z < 9; z++) {
 					prob_max += (*(*(probs+rows)+cols)).prob[z];
 				}
 				if (prob_max == 0) {

@@ -27,6 +27,7 @@ Piece of cake! In-game keys are:
 - F: swap item in inventory
 - I: toggle inventory on/off
 - Q and E: move cursor in quickbar/inventory
+- Z: harvest from tiles
 
 Mouse controls:
 

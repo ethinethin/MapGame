@@ -1,6 +1,10 @@
+#define DEVMODE
+
 #include <stdio.h>
 #include <SDL2/SDL.h>
+#include "devm.h"
 #include "disp.h"
+#include "harv.h"
 #include "loot.h"
 #include "main.h"
 #include "maps.h"
@@ -13,7 +17,6 @@ static void	game_init(void);
 static void	game_quit(void);
 static void	generate_farts(struct game *cur_game, struct worldmap *main_map);
 static void	copy_fart(struct worldmap *main_map, struct worldmap *fart, int row, int col);
-
 
 /* Global game construct */
 struct game GAME = {
@@ -44,6 +47,11 @@ main()
 	/* draw map, player, render and "move player" to update map */
 	draw_all(&GAME, &MAP, &PLAYER);
 	move_player(&GAME, &MAP, &PLAYER, 0, 0);
+	
+	/* Reveal the map */
+	#ifdef DEVMODE
+	reveal_map(&GAME, &MAP, &PLAYER);
+	#endif
 	
 	/* enter main game loop */
 	SDL_Event event;
@@ -92,6 +100,9 @@ main()
 					break;
 				case SDLK_f: /* swap item */
 					swap_item(&GAME, &MAP, &PLAYER);
+					break;
+				case SDLK_z: /*harvest item */
+					get_harvest_input(&GAME, &MAP, &PLAYER);
 					break;
 				case SDLK_1: /* move to quickbar slot 1 */
 					move_cursor(&GAME, 0 - GAME.cursor);

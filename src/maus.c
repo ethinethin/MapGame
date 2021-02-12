@@ -1,3 +1,4 @@
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <SDL2/SDL.h>
@@ -202,6 +203,7 @@ click_get_item(struct worldmap *map, struct player *cur_player, struct coords po
 static struct coords
 drop_preview(struct game *cur_game, struct player *cur_player)
 {
+	float angle;
 	struct coords pos;
 	
 	/* Should I draw it? */
@@ -215,22 +217,37 @@ drop_preview(struct game *cur_game, struct player *cur_player)
 	}
 	/* Where to draw it */
 	pos = get_click_coordinates(cur_player);
-		
-	if (abs(pos.x) > abs(pos.y)) {
+	angle = atan2f(-pos.y, pos.x);
+	if (angle >= -0.207 && angle < 0.207) {
+		pos.x = 1;
 		pos.y = 0;
-		if (pos.x < 0) {
-			pos.x = -1;
-		} else {
-			pos.x = 1;
-		}
+	} else if (angle >= 0.207 && angle < 0.738) {
+		pos.x = 1;
+		pos.y = -1;
+	} else if (angle >= 0.738 && angle < 2.404) {
+		pos.x = 0;
+		pos.y = -1;
+	} else if (angle >= 2.404 && angle < 2.884) {
+		pos.x = -1;
+		pos.y = -1;
+	} else if ((angle >= 2.884 && angle <= M_PI) ||
+		   (angle <= -1*M_PI && angle < -3.037)) {
+		pos.x = -1;
+		pos.y = 0;
+	} else if (angle >= -3.307 && angle < -2.404) {
+		pos.x = -1;
+		pos.y = 1;
+	} else if (angle >= -2.404 && angle < -0.738) {
+		pos.x = 0;
+		pos.y = 1;
+	} else if (angle >= -0.738 && angle < -0.207) {
+		pos.x = 1;
+		pos.y = 1;
 	} else {
 		pos.x = 0;
-		if (pos.y < 0) {
-			pos.y = -1;
-		} else {
-			pos.y = 1;
-		}
+		pos.y = 0;
 	}
+	
 	draw_tile(cur_game,
 		  GAME_X + cur_player->winpos_x*32 + pos.x * 32,
 		  GAME_Y + cur_player->winpos_y*32 + pos.y * 32, 32, 32,

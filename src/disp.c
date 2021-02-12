@@ -35,7 +35,9 @@ display_init(struct game *cur_game)
 		exit(1);
 	}
 	/* Create the main window and renderer */
-	cur_game->screen.window = SDL_CreateWindow(cur_game->screen.name, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
+	cur_game->screen.window = SDL_CreateWindow(cur_game->screen.name,
+						   100, 100,
+						   //SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 						   cur_game->screen.w, cur_game->screen.h, 0);
 	cur_game->screen.renderer = SDL_CreateRenderer(cur_game->screen.window, -1, SDL_RENDERER_ACCELERATED);
 	SDL_SetRenderDrawBlendMode(cur_game->screen.renderer, SDL_BLENDMODE_BLEND);
@@ -304,9 +306,14 @@ static void
 draw_player_indicator(struct game *cur_game, struct player *cur_player, int size)
 {
 	char red[3] = { 255, 0, 0 };
+	int w_size;
+	int h_size;
+	
 	/* Draw player indicator */
-	draw_rect(cur_game, MAP_X + cur_player->x - size/2, MAP_Y + cur_player->y - size/2, size, size, SDL_FALSE, red, SDL_FALSE, NULL);
-	draw_rect(cur_game, MAP_X + cur_player->x - size/2 - 1, MAP_Y + cur_player->y - size/2 - 1, size+2, size+2, SDL_FALSE, red, SDL_FALSE, NULL);
+	w_size = size*1;
+	h_size = size*21/39;
+	draw_rect(cur_game, MAP_X + cur_player->x - w_size/2, MAP_Y + cur_player->y - h_size/2, w_size, h_size, SDL_FALSE, red, SDL_FALSE, NULL);
+	draw_rect(cur_game, MAP_X + cur_player->x - w_size/2 - 1, MAP_Y + cur_player->y - h_size/2 - 1, w_size+2, h_size+2, SDL_FALSE, red, SDL_FALSE, NULL);
 }
 
 static struct win_pos
@@ -361,10 +368,10 @@ worldmap(struct game *cur_game, struct worldmap *map, struct player *cur_player)
 			return;
 		}
 		size += size_change;
-		if (size >= 19) {
-			size_change = -2; 
+		if (size >= 39) {
+			size_change = -4; 
 		} else if (size <= 1) {
-			size_change = 2;
+			size_change = 4;
 		}
 	}
 }

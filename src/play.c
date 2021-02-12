@@ -100,7 +100,7 @@ update_seen(struct game *cur_game, struct worldmap *map, struct player *cur_play
 	/* Set up renderer to render to the map texture */
 	SDL_SetRenderTarget(cur_game->screen.renderer, cur_game->map_texture);
 	/* Set all newly seen values to 1 */
-	for (rows = rows_i ; rows <= rows_f; rows++) {
+	for (rows = rows_i; rows <= rows_f; rows++) {
 		for (cols = cols_i; cols <= cols_f; cols++) {
 			if (*(*(cur_player->seen+rows)+cols) == 0) {
 				/* Set tile as seen */
@@ -124,7 +124,9 @@ toggle_inv(struct game *cur_game)
 void
 random_start(struct worldmap *map, struct player *cur_player)
 {
+	int u_count;
 	int row, col;
+	int rows, cols;
 	SDL_bool finished = SDL_FALSE;
 	
 	while (finished == SDL_FALSE) {
@@ -132,9 +134,23 @@ random_start(struct worldmap *map, struct player *cur_player)
 		row = rand_num(0, map->row_size - 1);
 		col = rand_num(0, map->col_size - 1);
 		/* Check that it is passable */
-		if (is_passable(*(*(map->tile+row)+col), *(*(map->biome+row)+col)) == PASSABLE) {			
-			finished = SDL_TRUE;
+		if (is_passable(*(*(map->tile+row)+col), *(*(map->biome+row)+col)) == IMPASSABLE) {
+			continue;
 		}
+		/* Check around starting location and count unpassables */
+		for (u_count = 0, rows = row - 1; rows < row + 2; rows++) {
+			for (cols = col - 1; cols < col +2; cols++) {
+				if (rows < 0 || cols << 0 || rows > map->row_size-1 || cols > map->col_size-1) continue;
+				if (is_passable(*(*(map->tile+row+rows)+col+cols), *(*(map->biome+row+rows)+col+cols)) == IMPASSABLE) {
+					u_count++;
+				}
+			}
+		}
+		if (u_count > 3) {
+			continue;
+		}		
+		/* Lookin good */
+		finished = SDL_TRUE;
 	}
 	cur_player->x = col;
 	cur_player->y = row;
