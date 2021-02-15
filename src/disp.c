@@ -151,20 +151,27 @@ draw_game(struct game *cur_game, struct worldmap *map, struct player *cur_player
 	/* Update window position */
 	win = find_win_pos(map, cur_player);
 	
-	/* draw map */
+	/* Draw game tiles on screen */
 	render_clear(cur_game);
 	for (rows = win.y; rows < win.y+WIN_ROWS; rows++) {
 		for (cols = win.x; cols < win.x+WIN_COLS; cols++) {
-			sprite_index = get_sprite(*(*(map->tile+rows)+cols),
-						  *(*(map->biome+rows)+cols));
-			harvestable = is_harvestable(map, cols, rows);
-			if (harvestable == SDL_TRUE) {
+			/* Check if there's ground */
+			if (*(*(map->ground+rows)+cols) != 0) {
+				sprite_index = get_loot_sprite(*(*(map->ground+rows)+cols));
 				alpha = 255;
 			} else {
-				alpha = 96;
+				sprite_index = get_sprite(*(*(map->tile+rows)+cols),
+							  *(*(map->biome+rows)+cols));
+				harvestable = is_harvestable(map, cols, rows);
+				if (harvestable == SDL_TRUE) {
+					alpha = 255;
+				} else {
+					alpha = 96;
+				}
 			}
+			/* Draw ground tile */
 			draw_tile(cur_game, (cols - win.x) * SPRITE_W + GAME_X, (rows - win.y) * SPRITE_H + GAME_Y, SPRITE_W, SPRITE_H, sprite_index, alpha); 
-			/* check if there's loot */
+			/* Draw loot */
 			if (*(*(map->loot+rows)+cols) != 0) {
 				sprite_index = get_loot_sprite(*(*(map->loot+rows)+cols));
 				draw_tile(cur_game, (cols - win.x) * SPRITE_W + GAME_X, (rows - win.y) * SPRITE_H + GAME_Y, SPRITE_W, SPRITE_H, sprite_index, 255); 

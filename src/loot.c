@@ -7,16 +7,18 @@
 #include "maus.h"
 #include "play.h"
 
-struct loot LOOT[9] = {
-	{NULL, 0, UNSTACKABLE, PASSABLE},
-	{"money", 258, STACKABLE, PASSABLE},
-	{"potion", 259, STACKABLE, PASSABLE},
-	{"sword", 261, UNSTACKABLE, PASSABLE},
-	{"shield", 262, UNSTACKABLE, PASSABLE},
-	{"key", 263, STACKABLE, PASSABLE},
-	{"necklace", 268, UNSTACKABLE, PASSABLE},
-	{"chicken", 271, STACKABLE, PASSABLE},
-	{"wall", 78, UNSTACKABLE, IMPASSABLE}
+struct loot LOOT[] = {
+	{NULL, 0, UNSTACKABLE, PASSABLE, ITEM},
+	{"money", 258, STACKABLE, PASSABLE, ITEM},
+	{"potion", 259, STACKABLE, PASSABLE, ITEM},
+	{"sword", 261, UNSTACKABLE, PASSABLE, ITEM},
+	{"shield", 262, UNSTACKABLE, PASSABLE, ITEM},
+	{"key", 263, STACKABLE, PASSABLE, ITEM},
+	{"necklace", 268, UNSTACKABLE, PASSABLE, ITEM},
+	{"chicken", 271, STACKABLE, PASSABLE, ITEM},
+	{"wall", 78, UNSTACKABLE, IMPASSABLE, ITEM},
+	{"planks", 64, UNSTACKABLE, PASSABLE, GROUND},
+	{"redfloor", 39, UNSTACKABLE, PASSABLE, GROUND}
 };
 
 short int
@@ -41,6 +43,12 @@ char
 is_loot_stackable(short int id)
 {
 	return LOOT[id].stackable;
+}
+
+char
+is_loot_ground(short int id)
+{
+	return LOOT[id].ground;
 }
 
 void
@@ -91,7 +99,7 @@ SDL_bool
 handle_pickup(struct worldmap *map, struct player *cur_player, int x, int y)
 {
 	unsigned char cur_quantity;
-	short int cur_item;
+	unsigned short int *cur_item;
 	int i;
 	int new_x; 
 	int new_y; 
@@ -107,24 +115,25 @@ handle_pickup(struct worldmap *map, struct player *cur_player, int x, int y)
 	}
 
 	/* Is there an item on the map? */
-	cur_item = *(*(map->loot+new_y)+new_x);
-	if (cur_item == 0) {
-		return SDL_TRUE;
+	cur_item = *(map->loot+new_y)+new_x;
+	if (*cur_item == 0) {
+		cur_item = *(map->ground+new_y)+new_x;
+		cur_quantity = 1;
 	} else {
 		cur_quantity = *(*(map->quantity+new_y)+new_x);
 	}
 	
 	/* If it's stackable, check for a non-maxed stack in the inventory */
-	if (is_loot_stackable(cur_item) == STACKABLE) {
+	if (is_loot_stackable(*cur_item) == STACKABLE) {
 		for (i = 0; i < MAX_INV; i++) {
-			if (cur_player->loot[i] == cur_item && cur_player->quantity[i] < 255) {
+			if (cur_player->loot[i] == *cur_item && cur_player->quantity[i] < 255) {
 				if ((int) cur_quantity + (int) cur_player->quantity[i] > 255) {
 					cur_quantity -= 255 - cur_player->quantity[i];
 					*(*(map->quantity+new_y)+new_x) -= 255 - cur_player->quantity[i];
 					cur_player->quantity[i] = 255;
 				} else {
 					cur_player->quantity[i] += cur_quantity;
-					*(*(map->loot+new_y)+new_x) = 0;
+					*cur_item = 0;
 					*(*(map->quantity+new_y)+new_x) = 0;
 					return SDL_TRUE;
 				}		
@@ -135,9 +144,9 @@ handle_pickup(struct worldmap *map, struct player *cur_player, int x, int y)
 	if (cur_quantity > 0) {
 		for (i = 0; i < MAX_INV; i++) {
 			if (cur_player->loot[i] == 0) {
-				cur_player->loot[i] = cur_item;
+				cur_player->loot[i] = *cur_item;
 				cur_player->quantity[i] = cur_quantity;
-				*(*(map->loot+new_y)+new_x) = 0;
+				*cur_item = 0;
 				*(*(map->quantity+new_y)+new_x) = 0;
 				return SDL_TRUE;
 			}
@@ -210,45 +219,63 @@ handle_throw(struct game *cur_game, struct worldmap *map, struct player *cur_pla
 	    new_y < 0 || new_y > map->row_size - 1) {
 	    	return SDL_TRUE;
 	}
-		
-	/* is there an item on the map already? */
-	item_on_map = *(*(map->loot+new_y)+new_x);
+	
+	/* Is the current map tile IMPASSABLE? */
+	if (is_passable(*(*(map->tile+new_y)+new_x), *(*(map->biome+new_y)+new_x)) == IMPASSABLE) {
+		return SDL_TRUE;
+	}
+	
+	/* What's the item being dropped? */
 	cur_item = cur_player->loot[(int) cur_game->cursor];
-	/* There's no item on map, just place it and leave */
-	if (item_on_map == 0) {
-		*(*(map->loot+new_y)+new_x) = cur_item;
-		*(*(map->quantity+new_y)+new_x) = cur_player->quantity[(int) cur_game->cursor];
+
+	/* Is it a ground tile or item? */
+	if (is_loot_ground(cur_item) == GROUND) {
+		/* Is there already a ground tile? */
+		if (*(*(map->ground+new_y)+new_x) != 0) {
+			return SDL_TRUE;
+		}
+		/* There's no ground, place the ground, remove from inventory and leave */
+		*(*(map->ground+new_y)+new_x) = cur_item;
 		cur_player->loot[(int) cur_game->cursor] = 0;
 		cur_player->quantity[(int) cur_game->cursor] = 0;
 		return SDL_TRUE;
 	} else {
-		/* Unstackable item blocking map, get outta here */
-		if (is_loot_stackable(item_on_map) == UNSTACKABLE) {
+		/* is there an item on the map already? */
+		item_on_map = *(*(map->loot+new_y)+new_x);
+		/* There's no item on map, just place it and leave */
+		if (item_on_map == 0) {
+			*(*(map->loot+new_y)+new_x) = cur_item;
+			*(*(map->quantity+new_y)+new_x) = cur_player->quantity[(int) cur_game->cursor];
+			cur_player->loot[(int) cur_game->cursor] = 0;
+			cur_player->quantity[(int) cur_game->cursor] = 0;
 			return SDL_TRUE;
-		} else if (item_on_map != cur_item) {
-			return SDL_TRUE;
+		} else {
+			/* Unstackable item blocking map, get outta here */
+			if (is_loot_stackable(item_on_map) == UNSTACKABLE) {
+				return SDL_TRUE;
+			} else if (item_on_map != cur_item) {
+				return SDL_TRUE;
+			}
+		}
+		/* We only get here if there's an item on the map that is stackable equal to what we're trying to drop */
+		/* Will the stack overflow? */
+		unsigned char drop_how_much;
+		if ((int) *(*(map->quantity+new_y)+new_x) + (int) cur_player->quantity[(int) cur_game->cursor] > 255) {
+			drop_how_much = 255 - *(*(map->quantity+new_y)+new_x);
+		} else {
+			drop_how_much = cur_player->quantity[(int) cur_game->cursor];
+		}
+		/* Make the change */
+		*(*(map->loot+new_y)+new_x) = cur_item;
+		*(*(map->quantity+new_y)+new_x) += drop_how_much;
+		cur_player->quantity[(int) cur_game->cursor] -= drop_how_much;
+	
+		/* Any items left? */
+		if (cur_player->quantity[(int) cur_game->cursor] == 0) {
+			cur_player->loot[(int) cur_game->cursor] = 0;
 		}
 	}
-	
-	/* We only get here if there's an item on the map that is stackable equal to what we're trying to drop */
-	/* Will the stack overflow? */
-	unsigned char drop_how_much;
-	if ((int) *(*(map->quantity+new_y)+new_x) + (int) cur_player->quantity[(int) cur_game->cursor] > 255) {
-		drop_how_much = 255 - *(*(map->quantity+new_y)+new_x);
-	} else {
-		drop_how_much = cur_player->quantity[(int) cur_game->cursor];
-	}
-	/* Make the change */
-	*(*(map->loot+new_y)+new_x) = cur_item;
-	*(*(map->quantity+new_y)+new_x) += drop_how_much;
-	cur_player->quantity[(int) cur_game->cursor] -= drop_how_much;
-	
-	/* Any items left? */
-	if (cur_player->quantity[(int) cur_game->cursor] == 0) {
-		cur_player->loot[(int) cur_game->cursor] = 0;
-	}
-	
-	return SDL_TRUE;
+	return SDL_TRUE;	
 }
 
 void

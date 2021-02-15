@@ -1,6 +1,13 @@
 Changelog
 -
 
+2021-02-14
+-
+
+- Floor tile layer added to map
+- Harvested tiles can regenerate
+- Toggle inventory while harvesting
+
 2021-02-12
 -
 

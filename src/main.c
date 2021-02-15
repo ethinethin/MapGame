@@ -155,6 +155,8 @@ game_init(void)
 	generate_farts(&GAME, &MAP);
 	/* Set up player */
 	player_init(&MAP, &PLAYER);
+	/* Set up depleted item table */
+	setup_dtable();
 	/* The window is now up and running */
 	GAME.running = SDL_TRUE;
 }
@@ -168,6 +170,8 @@ game_quit(void)
 	free_map(&MAP);
 	/* Free the player */
 	player_quit(&PLAYER);
+	/* Delete the depleted table */
+	kill_dtable();
 }
 
 static void
@@ -229,7 +233,8 @@ copy_fart(struct worldmap *main_map, struct worldmap *fart, int row, int col)
 			// Add a bunch of random items
 			// Remove later
 			rando = rand_num(1, 100);
-			if (rando > 99) {
+			if (rando > 99 && is_passable(*(*(main_map->tile+rows+row)+cols+col),
+						     *(*(main_map->biome+rows+row)+cols+col)) == IMPASSABLE) {
 				rando = rand_num(1, 8);
 				*(*(main_map->loot+rows+row)+cols+col) = rando;
 				if (is_loot_stackable(rando) == STACKABLE) {

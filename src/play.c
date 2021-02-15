@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <SDL2/SDL.h>
 #include "disp.h"
+#include "harv.h"
 #include "loot.h"
 #include "main.h"
 #include "maps.h"
@@ -47,6 +48,9 @@ void
 move_player(struct game *cur_game, struct worldmap *map, struct player *cur_player, int x, int y)
 {
 	int new_x, new_y;
+	
+	/* Check depleted tiles and regenerate if necessary */
+	check_depleted(map);
 	
 	/* Determine new coordinates */
 	new_x = cur_player->x + x;
