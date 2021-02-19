@@ -6,5 +6,6 @@
 #include "play.h"
 
 extern void	reveal_map(struct game *cur_game, struct worldmap *map, struct player *cur_player);
+extern void	give_me_floors(struct player *cur_player);
 
 #endif

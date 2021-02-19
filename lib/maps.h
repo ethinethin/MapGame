@@ -16,6 +16,7 @@ struct worldmap {
 	unsigned short int **loot;
 	unsigned char **quantity;
 	unsigned short int **ground;
+	unsigned short int **roof;
 	SDL_bool **harvestable;
 };
 

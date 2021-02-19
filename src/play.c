@@ -30,6 +30,14 @@ player_init(struct worldmap *map, struct player *cur_player)
 		cur_player->loot[rows] = 0;
 		cur_player->quantity[rows] = 0;
 	}
+	/* Initialize the screen view */
+	cur_player->screen_view = malloc(sizeof(*cur_player->screen_view)*WIN_ROWS);
+	for (rows = 0; rows < WIN_ROWS; rows++) {
+		*(cur_player->screen_view+rows) = malloc(sizeof(**cur_player->screen_view)*WIN_COLS);
+		for (cols = 0; cols < WIN_COLS; cols++) {
+			*(*(cur_player->screen_view+rows)+cols) = 0;
+		}
+	}
 }
 
 void
@@ -42,6 +50,11 @@ player_quit(struct player *cur_player)
 		free(*(cur_player->seen+rows));
 	}
 	free(cur_player->seen);
+	/* Free memory allocated for screen_view */
+	for (rows = 0; rows < WIN_ROWS; rows++) {
+		free(*(cur_player->screen_view+rows));
+	}
+	free(cur_player->screen_view);
 }
 
 void
@@ -158,4 +171,78 @@ random_start(struct worldmap *map, struct player *cur_player)
 	}
 	cur_player->x = col;
 	cur_player->y = row;
+}
+
+void
+check_if_inside(struct worldmap *map, struct player *cur_player)
+{
+	int rows, cols;
+	int row, col;
+	int map_row, map_col;
+	int i;
+	
+	/* Clear out screen view */
+	for (rows = 0; rows < WIN_ROWS; rows++) {
+		for (cols = 0; cols < WIN_COLS; cols++) {
+			*(*(cur_player->screen_view+rows)+cols) = 0;
+		}
+	}
+		
+	/* Player is not inside */
+	if (*(*(map->roof+cur_player->y)+cur_player->x) == 0) {
+		return;
+	}
+	
+	/* Player is inside */
+	*(*(cur_player->screen_view+cur_player->winpos_y)+cur_player->winpos_x) = 1;
+	/* Expand in concentric squares around player */
+	for (i = 1; i < WIN_COLS; i++) {
+		/* Go through every tile in the square */
+		for (rows = cur_player->winpos_y - i; rows < cur_player->winpos_y + i + 1; rows++) {
+			for (cols = cur_player->winpos_x - i; cols < cur_player->winpos_x + i + 1; cols++) {
+				/* Check that you're in bounds for screen view */
+				row = rows;
+				col = cols;
+				if (row < 0) row = 0;
+				if (row >= WIN_ROWS) row = WIN_ROWS - 1;
+				if (col < 0) col = 0;
+				if (col >= WIN_COLS) col = WIN_COLS - 1;
+				/* Is this square already revealed? If so, continue */
+				if (*(*(cur_player->screen_view+row)+col) == 1) continue;
+				/* Translate screenview bounds to map coordinates */
+				map_row = row - cur_player->winpos_y + cur_player->y;
+				map_col = col - cur_player->winpos_x + cur_player->x;
+				/* Does this square have a roof tile? If not, continue */
+				if (*(*(map->roof+map_row)+map_col) == 0) continue;
+				/* Check north - need safety checks */
+				if (row - 1 >= 0) {
+					if (*(*(cur_player->screen_view+row-1)+col) == 1) {
+						*(*(cur_player->screen_view+row)+col) = 1;
+						continue;
+					}
+				}
+				/* Check east - need safety checks */
+				if (col + 1 < WIN_COLS) {
+					if (*(*(cur_player->screen_view+row)+col+1) == 1) {
+						*(*(cur_player->screen_view+row)+col) = 1;
+						continue;
+					}
+				}
+				/* Check south - need safety checks */
+				if (row + 1 < WIN_ROWS) {
+					if (*(*(cur_player->screen_view+row+1)+col) == 1) {
+						*(*(cur_player->screen_view+row)+col) = 1;
+						continue;
+					}
+				}
+				/* Check west - need safety checks */
+				if (col - 1 >= 0) {
+					if (*(*(cur_player->screen_view+row)+col-1) == 1) {
+						*(*(cur_player->screen_view+row)+col) = 1;
+						continue;
+					}
+				}
+			}
+		}
+	}
 }

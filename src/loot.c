@@ -16,9 +16,9 @@ struct loot LOOT[] = {
 	{"key", 263, STACKABLE, PASSABLE, ITEM},
 	{"necklace", 268, UNSTACKABLE, PASSABLE, ITEM},
 	{"chicken", 271, STACKABLE, PASSABLE, ITEM},
-	{"wall", 78, UNSTACKABLE, IMPASSABLE, ITEM},
+	{"wall", 78, UNSTACKABLE, IMPASSABLE, WALL},
 	{"planks", 64, UNSTACKABLE, PASSABLE, GROUND},
-	{"redfloor", 39, UNSTACKABLE, PASSABLE, GROUND}
+	{"roof", 39, UNSTACKABLE, PASSABLE, ROOF}
 };
 
 short int
@@ -46,9 +46,9 @@ is_loot_stackable(short int id)
 }
 
 char
-is_loot_ground(short int id)
+get_loot_type(short int id)
 {
-	return LOOT[id].ground;
+	return LOOT[id].type;
 }
 
 void
@@ -99,6 +99,7 @@ SDL_bool
 handle_pickup(struct worldmap *map, struct player *cur_player, int x, int y)
 {
 	unsigned char cur_quantity;
+	char loot_type;
 	unsigned short int *cur_item;
 	int i;
 	int new_x; 
@@ -114,27 +115,45 @@ handle_pickup(struct worldmap *map, struct player *cur_player, int x, int y)
 	    	return SDL_TRUE;
 	}
 
-	/* Is there an item on the map? */
-	cur_item = *(map->loot+new_y)+new_x;
+	/* Is there a roof tile? */
+	cur_item = *(map->roof+new_y)+new_x;
+	cur_quantity = 1;
+	loot_type = ROOF;
+	if (*cur_item == 0 || *(*(map->roof+cur_player->y)+cur_player->x) != 0) {
+		/* No, or player is inside, so point to item */
+		cur_item = *(map->loot+new_y)+new_x;
+		cur_quantity = *(*(map->quantity+new_y)+new_x);
+		loot_type = get_loot_type(*cur_item);
+	}
+	/* Is there an item? */
 	if (*cur_item == 0) {
+		/* No, point to ground */
 		cur_item = *(map->ground+new_y)+new_x;
 		cur_quantity = 1;
-	} else {
-		cur_quantity = *(*(map->quantity+new_y)+new_x);
+		loot_type = GROUND;
 	}
-	
+	/* Is there a ground? */
+	if (*cur_item == 0) {
+		/* No, get up on out of here */
+		return SDL_TRUE;
+	}
+		
 	/* If it's stackable, check for a non-maxed stack in the inventory */
 	if (is_loot_stackable(*cur_item) == STACKABLE) {
 		for (i = 0; i < MAX_INV; i++) {
 			if (cur_player->loot[i] == *cur_item && cur_player->quantity[i] < 255) {
 				if ((int) cur_quantity + (int) cur_player->quantity[i] > 255) {
 					cur_quantity -= 255 - cur_player->quantity[i];
-					*(*(map->quantity+new_y)+new_x) -= 255 - cur_player->quantity[i];
 					cur_player->quantity[i] = 255;
+					if (loot_type != ROOF && loot_type != GROUND) {
+						*(*(map->quantity+new_y)+new_x) -= 255 - cur_player->quantity[i];
+					}
 				} else {
 					cur_player->quantity[i] += cur_quantity;
 					*cur_item = 0;
-					*(*(map->quantity+new_y)+new_x) = 0;
+					if (loot_type != ROOF && loot_type != GROUND) {
+						*(*(map->quantity+new_y)+new_x) = 0;
+					}
 					return SDL_TRUE;
 				}		
 			}
@@ -147,7 +166,9 @@ handle_pickup(struct worldmap *map, struct player *cur_player, int x, int y)
 				cur_player->loot[i] = *cur_item;
 				cur_player->quantity[i] = cur_quantity;
 				*cur_item = 0;
-				*(*(map->quantity+new_y)+new_x) = 0;
+				if (loot_type != ROOF && loot_type != GROUND) {
+					*(*(map->quantity+new_y)+new_x) = 0;
+				}
 				return SDL_TRUE;
 			}
 		}
@@ -205,6 +226,7 @@ throw_item(struct game *cur_game, struct worldmap *map, struct player *cur_playe
 SDL_bool
 handle_throw(struct game *cur_game, struct worldmap *map, struct player *cur_player,  int x, int y)
 {
+	char loot_type;
 	int new_x;
 	int new_y;
 	short int item_on_map;
@@ -229,13 +251,24 @@ handle_throw(struct game *cur_game, struct worldmap *map, struct player *cur_pla
 	cur_item = cur_player->loot[(int) cur_game->cursor];
 
 	/* Is it a ground tile or item? */
-	if (is_loot_ground(cur_item) == GROUND) {
+	loot_type = get_loot_type(cur_item);
+	if (loot_type == GROUND) {
 		/* Is there already a ground tile? */
 		if (*(*(map->ground+new_y)+new_x) != 0) {
 			return SDL_TRUE;
 		}
 		/* There's no ground, place the ground, remove from inventory and leave */
 		*(*(map->ground+new_y)+new_x) = cur_item;
+		cur_player->loot[(int) cur_game->cursor] = 0;
+		cur_player->quantity[(int) cur_game->cursor] = 0;
+		return SDL_TRUE;
+	} else if (loot_type == ROOF) {
+		/* Is there already a roof tile? */
+		if (*(*(map->roof+new_y)+new_x) != 0) {
+			return SDL_TRUE;
+		}
+		/* There's no roof, so place it, remove from inventory, and return */
+		*(*(map->roof+new_y)+new_x) = cur_item;
 		cur_player->loot[(int) cur_game->cursor] = 0;
 		cur_player->quantity[(int) cur_game->cursor] = 0;
 		return SDL_TRUE;

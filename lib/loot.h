@@ -7,22 +7,25 @@
 
 #define UNSTACKABLE 0
 #define STACKABLE 1
+
 #define ITEM 0
 #define GROUND 1
+#define ROOF 2
+#define WALL 3
 
 struct loot {
 	char *name;
 	short int sprite;
 	char stackable;
 	char passable;
-	char ground;
+	char type;
 };
 
 extern short int	 get_loot_sprite(short int id);
 extern char		 is_loot_passable(short int id);
 extern char	 	*get_loot_name(short int id);
 extern char 		 is_loot_stackable(short int id);
-extern char		 is_loot_ground(short int id);
+extern char		 get_loot_type(short int id);
 extern void		 pickup_item(struct game *cur_game, struct worldmap *map, struct player *cur_player);
 extern SDL_bool		 handle_pickup(struct worldmap *map, struct player *cur_player, int x, int y);
 extern void		 throw_item(struct game *cur_game, struct worldmap *map, struct player *cur_player);

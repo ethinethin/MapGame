@@ -101,8 +101,16 @@ harvest_item(struct game *cur_game, struct worldmap *map, struct player *cur_pla
 	
 	if (x < 0 || y < 0 || x > map->col_size - 1 || y > map->row_size - 1) return SDL_TRUE;
 	
-	/* Is there an item on the map? */
-	if (*(*(map->loot+y)+x) != 0) {
+	/* Is there a roof on the map and the player is outdoors? */
+	if (*(*(map->roof+y)+x) != 0 && *(*(map->roof+cur_player->y)+cur_player->x) == 0) {
+		item = *(*(map->roof+y)+x);
+		/* Try to stash the roof and take off map if stash is successful */
+		if (stash_item(cur_player, item, 1) == SDL_TRUE) {
+			/* Take roof off map */
+			*(*(map->roof+y)+x) = 0;
+		}
+		return SDL_TRUE;
+	} else if (*(*(map->loot+y)+x) != 0) {
 		item = *(*(map->loot+y)+x);
 		quantity = *(*(map->quantity+y)+x);
 		/* Take item off map */

@@ -51,7 +51,7 @@ I am programming this as part of a challenge, with the following conditions:
 
 - Only doing major coding on-stream
 - Debugging and administrative stuff (like writing this README) allowed off stream
-- Only streaming Fridays, Saturdays and Sundays, 5 PM - 8 PM EST.
+- Only streaming in limited capacity (2 to 4 hours per stream, 2 to 4 days per week)
 
 You can check out my stream at: https://twitch.tv/ethinethin
 

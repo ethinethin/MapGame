@@ -51,6 +51,7 @@ main()
 	/* Reveal the map */
 	#ifdef DEVMODE
 	reveal_map(&GAME, &MAP, &PLAYER);
+	give_me_floors(&PLAYER);
 	#endif
 	
 	/* enter main game loop */

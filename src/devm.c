@@ -26,3 +26,16 @@ reveal_map(struct game *cur_game, struct worldmap *map, struct player *cur_playe
 	SDL_SetRenderTarget(cur_game->screen.renderer, NULL);
 
 }
+
+void
+give_me_floors(struct player *cur_player)
+{
+	int i;
+	
+	for (i = 0; i < 10; i++) {
+		cur_player->loot[i] = 9;
+		cur_player->quantity[i] = 1;
+		cur_player->loot[i+10] = 10;
+		cur_player->quantity[i+10] = 1;
+	}
+}

@@ -18,6 +18,7 @@ struct win_pos {
 /* Function prototypes */
 static void		draw_line(struct game *cur_game, int x1, int y1, int x2, int y2, char *col);
 static void		draw_player(struct game *cur_game, struct player *cur_player, struct win_pos win);
+static void		update_winpos(struct player *cur_player, struct win_pos win);
 static void		draw_player_indicator(struct game *cur_game, struct player *cur_player, int size);
 static void		draw_inv(struct game *cur_game, struct player *cur_player);
 static void		draw_map(struct game *cur_game);
@@ -142,6 +143,7 @@ draw_all(struct game *cur_game, struct worldmap *map, struct player *cur_player)
 void
 draw_game(struct game *cur_game, struct worldmap *map, struct player *cur_player)
 {
+	char loot_type;
 	int rows, cols;
 	short int sprite_index;
 	struct win_pos win;
@@ -150,6 +152,10 @@ draw_game(struct game *cur_game, struct worldmap *map, struct player *cur_player
 	
 	/* Update window position */
 	win = find_win_pos(map, cur_player);
+	/* Update player winpos */
+	update_winpos(cur_player, win);
+	/* Update screen view */
+	check_if_inside(map, cur_player);
 	
 	/* Draw game tiles on screen */
 	render_clear(cur_game);
@@ -174,7 +180,22 @@ draw_game(struct game *cur_game, struct worldmap *map, struct player *cur_player
 			/* Draw loot */
 			if (*(*(map->loot+rows)+cols) != 0) {
 				sprite_index = get_loot_sprite(*(*(map->loot+rows)+cols));
-				draw_tile(cur_game, (cols - win.x) * SPRITE_W + GAME_X, (rows - win.y) * SPRITE_H + GAME_Y, SPRITE_W, SPRITE_H, sprite_index, 255); 
+				loot_type = get_loot_type(*(*(map->loot+rows)+cols));
+				if (loot_type == ITEM) {
+					draw_tile(cur_game, (cols - win.x) * SPRITE_W + GAME_X + 4, (rows - win.y) * SPRITE_H + GAME_Y + 4, SPRITE_W*3/4, SPRITE_H*3/4, sprite_index, 255); 
+				} else if (loot_type == WALL) {
+					draw_tile(cur_game, (cols - win.x) * SPRITE_W + GAME_X, (rows - win.y) * SPRITE_H + GAME_Y, SPRITE_W, SPRITE_H, sprite_index, 255); 
+				}
+			}
+			/* Check if there's a roof and draw it */
+			if (*(*(map->roof+rows)+cols) != 0) {
+				if (*(*(cur_player->screen_view+(rows - win.y))+(cols - win.x)) == 0) {
+					alpha = 255;
+				} else {
+					alpha = 64;
+				}
+				sprite_index = get_loot_sprite(*(*(map->roof+rows)+cols));
+				draw_tile(cur_game, (cols - win.x) * SPRITE_W + GAME_X, (rows - win.y) * SPRITE_H + GAME_Y, SPRITE_W, SPRITE_H, sprite_index, alpha); 
 			}
 		}
 	}
@@ -189,6 +210,11 @@ draw_player(struct game *cur_game, struct player *cur_player, struct win_pos win
 		  cur_player->x * SPRITE_W - win.x * SPRITE_W + GAME_X,
 		  cur_player->y * SPRITE_H - win.y * SPRITE_H + GAME_Y,
 		  SPRITE_W, SPRITE_H, 334, 255);
+}
+
+static void
+update_winpos(struct player *cur_player, struct win_pos win)
+{
 	cur_player->winpos_x = (cur_player->x * SPRITE_W - win.x * SPRITE_W)/32;
 	cur_player->winpos_y = (cur_player->y * SPRITE_H - win.y * SPRITE_H)/32;
 }

@@ -1,6 +1,16 @@
 Changelog
 -
 
+2021-02-18
+-
+
+- Changed dropped items to 24x24 sprites
+- Introduced wall and roof item types
+- Walls displayed at 32x32
+- Implemented roof tile layer and all logic with placing and harvesting
+- Implemented complex "indoor/outdoor" logic to reveal inside of buildings
+- Roof tiles displayed at lower alpha to show inside
+
 2021-02-14
 -
 
