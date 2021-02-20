@@ -157,7 +157,7 @@ random_start(struct worldmap *map, struct player *cur_player)
 		/* Check around starting location and count unpassables */
 		for (u_count = 0, rows = row - 1; rows < row + 2; rows++) {
 			for (cols = col - 1; cols < col +2; cols++) {
-				if (rows < 0 || cols << 0 || rows > map->row_size-1 || cols > map->col_size-1) continue;
+				if (rows < 0 || cols < 0 || rows > map->row_size-1 || cols > map->col_size-1) continue;
 				if (is_passable(*(*(map->tile+row+rows)+col+cols), *(*(map->biome+row+rows)+col+cols)) == IMPASSABLE) {
 					u_count++;
 				}
