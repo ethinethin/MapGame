@@ -36,6 +36,9 @@ Mouse controls:
 - Drag and drop in inventory/quickbar: swap item in inventory
 - Drag and drop on map: throw item
 - Right click to harvest
+- Right click on item stacks to enter place item mode
+	- Left click to place a single
+	- Right click to exit place item mode
 
 That's all there is so far!
 

@@ -8,7 +8,7 @@
 #include "play.h"
 
 struct loot LOOT[] = {
-	{NULL, 0, UNSTACKABLE, PASSABLE, ITEM},
+	{NULL, 0, UNSTACKABLE, PASSABLE, NOITEM},
 	{"money", 258, STACKABLE, PASSABLE, ITEM},
 	{"potion", 259, STACKABLE, PASSABLE, ITEM},
 	{"sword", 261, UNSTACKABLE, PASSABLE, ITEM},
@@ -279,6 +279,7 @@ handle_throw(struct game *cur_game, struct worldmap *map, struct player *cur_pla
 		}
 		/* There's no item, so place a singular wall and return */
 		*(*(map->loot+new_y)+new_x) = cur_item;
+		*(*(map->quantity+new_y)+new_x) = quantity;
 		cur_player->quantity[(int) cur_game->cursor] -= 1;
 		if (cur_player->quantity[(int) cur_game->cursor] == 0) cur_player->loot[(int) cur_game->cursor] = 0;
 		return SDL_TRUE;		

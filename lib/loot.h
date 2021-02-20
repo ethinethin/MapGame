@@ -13,6 +13,7 @@
 #define ROOF 2
 #define WALL 3
 #define DOOR 4
+#define NOITEM 5
 
 struct loot {
 	char *name;

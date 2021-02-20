@@ -1,6 +1,13 @@
 Changelog
 -
 
+2021-02-19
+-
+
+- Added "place item" mode (drop singles from a stack)
+- Dropped items (including roof and ground tiles) are always displayed smaller on map
+- Placed walls, roofs and grounds are always displayed full size
+
 2021-02-18
 -
 
