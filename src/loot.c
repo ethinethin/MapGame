@@ -16,9 +16,9 @@ struct loot LOOT[] = {
 	{"key", 263, STACKABLE, PASSABLE, ITEM},
 	{"necklace", 268, UNSTACKABLE, PASSABLE, ITEM},
 	{"chicken", 271, STACKABLE, PASSABLE, ITEM},
-	{"wall", 78, UNSTACKABLE, IMPASSABLE, WALL},
-	{"planks", 64, UNSTACKABLE, PASSABLE, GROUND},
-	{"roof", 39, UNSTACKABLE, PASSABLE, ROOF}
+	{"wall", 78, STACKABLE, IMPASSABLE, WALL},
+	{"planks", 64, STACKABLE, PASSABLE, GROUND},
+	{"roof", 39, STACKABLE, PASSABLE, ROOF}
 };
 
 short int
@@ -200,19 +200,19 @@ throw_item(struct game *cur_game, struct worldmap *map, struct player *cur_playe
 			switch (event.key.keysym.sym) {
 				case SDLK_UP: /* throw up */
 				case SDLK_w:
-					finished = handle_throw(cur_game, map, cur_player, 0, -1);
+					finished = handle_throw(cur_game, map, cur_player, 0, -1, cur_player->quantity[(int) cur_game->cursor]);
 					break;
 				case SDLK_RIGHT: /* throw right */
 				case SDLK_d:
-					finished = handle_throw(cur_game, map, cur_player, 1, 0);
+					finished = handle_throw(cur_game, map, cur_player, 1, 0, cur_player->quantity[(int) cur_game->cursor]);
 					break;
 				case SDLK_DOWN: /* throw down */
 				case SDLK_s:
-					finished = handle_throw(cur_game, map, cur_player, 0, 1);
+					finished = handle_throw(cur_game, map, cur_player, 0, 1, cur_player->quantity[(int) cur_game->cursor]);
 					break;
 				case SDLK_LEFT: /* throw left */
 				case SDLK_a:
-					finished = handle_throw(cur_game, map, cur_player, -1, 0);
+					finished = handle_throw(cur_game, map, cur_player, -1, 0, cur_player->quantity[(int) cur_game->cursor]);
 					break;
 				default:
 					finished = SDL_TRUE;
@@ -224,7 +224,7 @@ throw_item(struct game *cur_game, struct worldmap *map, struct player *cur_playe
 }
 
 SDL_bool
-handle_throw(struct game *cur_game, struct worldmap *map, struct player *cur_player,  int x, int y)
+handle_throw(struct game *cur_game, struct worldmap *map, struct player *cur_player,  int x, int y, short int quantity)
 {
 	char loot_type;
 	int new_x;
@@ -252,35 +252,45 @@ handle_throw(struct game *cur_game, struct worldmap *map, struct player *cur_pla
 
 	/* Is it a ground tile or item? */
 	loot_type = get_loot_type(cur_item);
-	if (loot_type == GROUND) {
+	if (loot_type == GROUND && quantity == 1) {
 		/* Is there already a ground tile? */
 		if (*(*(map->ground+new_y)+new_x) != 0) {
 			return SDL_TRUE;
 		}
 		/* There's no ground, place the ground, remove from inventory and leave */
 		*(*(map->ground+new_y)+new_x) = cur_item;
-		cur_player->loot[(int) cur_game->cursor] = 0;
-		cur_player->quantity[(int) cur_game->cursor] = 0;
+		cur_player->quantity[(int) cur_game->cursor] -= 1;
+		if (cur_player->quantity[(int) cur_game->cursor] == 0) cur_player->loot[(int) cur_game->cursor] = 0;
 		return SDL_TRUE;
-	} else if (loot_type == ROOF) {
+	} else if (loot_type == ROOF && quantity == 1) {
 		/* Is there already a roof tile? */
 		if (*(*(map->roof+new_y)+new_x) != 0) {
 			return SDL_TRUE;
 		}
 		/* There's no roof, so place it, remove from inventory, and return */
 		*(*(map->roof+new_y)+new_x) = cur_item;
-		cur_player->loot[(int) cur_game->cursor] = 0;
-		cur_player->quantity[(int) cur_game->cursor] = 0;
+		cur_player->quantity[(int) cur_game->cursor] -= 1;
+		if (cur_player->quantity[(int) cur_game->cursor] == 0) cur_player->loot[(int) cur_game->cursor] = 0;
 		return SDL_TRUE;
+	} else if (loot_type == WALL && quantity == 1) {
+		/* Is there already an item? */
+		if (*(*(map->loot+new_y)+new_x) != 0) {
+			return SDL_TRUE;
+		}
+		/* There's no item, so place a singular wall and return */
+		*(*(map->loot+new_y)+new_x) = cur_item;
+		cur_player->quantity[(int) cur_game->cursor] -= 1;
+		if (cur_player->quantity[(int) cur_game->cursor] == 0) cur_player->loot[(int) cur_game->cursor] = 0;
+		return SDL_TRUE;		
 	} else {
 		/* is there an item on the map already? */
 		item_on_map = *(*(map->loot+new_y)+new_x);
 		/* There's no item on map, just place it and leave */
 		if (item_on_map == 0) {
 			*(*(map->loot+new_y)+new_x) = cur_item;
-			*(*(map->quantity+new_y)+new_x) = cur_player->quantity[(int) cur_game->cursor];
-			cur_player->loot[(int) cur_game->cursor] = 0;
-			cur_player->quantity[(int) cur_game->cursor] = 0;
+			*(*(map->quantity+new_y)+new_x) = quantity;
+			cur_player->quantity[(int) cur_game->cursor] = cur_player->quantity[(int) cur_game->cursor] - quantity;
+			if (cur_player->quantity[(int) cur_game->cursor] == 0) cur_player->loot[(int) cur_game->cursor] = 0;
 			return SDL_TRUE;
 		} else {
 			/* Unstackable item blocking map, get outta here */
@@ -293,10 +303,10 @@ handle_throw(struct game *cur_game, struct worldmap *map, struct player *cur_pla
 		/* We only get here if there's an item on the map that is stackable equal to what we're trying to drop */
 		/* Will the stack overflow? */
 		unsigned char drop_how_much;
-		if ((int) *(*(map->quantity+new_y)+new_x) + (int) cur_player->quantity[(int) cur_game->cursor] > 255) {
+		if ((int) *(*(map->quantity+new_y)+new_x) + (int) quantity > 255) {
 			drop_how_much = 255 - *(*(map->quantity+new_y)+new_x);
 		} else {
-			drop_how_much = cur_player->quantity[(int) cur_game->cursor];
+			drop_how_much = quantity;
 		}
 		/* Make the change */
 		*(*(map->loot+new_y)+new_x) = cur_item;
@@ -429,6 +439,23 @@ handle_swap(struct game *cur_game, struct player *cur_player, char start_pos)
 	
 	/* Not moving item */
 	if (start_pos == cur_game->cursor) return SDL_TRUE;
+	
+	/* Are the items the same? If so, combine if possible */
+	if (cur_player->loot[(short int) start_pos] == cur_player->loot[(short int) cur_game->cursor]) {
+		if (is_loot_stackable(cur_player->loot[(short int) start_pos]) == SDL_FALSE) {
+			return SDL_TRUE;
+		}
+		if ((int) cur_player->quantity[(short int) start_pos] + (int) cur_player->quantity[(short int) cur_game->cursor] <= 255) {
+			cur_player->quantity[(short int) cur_game->cursor] += cur_player->quantity[(short int) start_pos];
+			cur_player->loot[(short int) start_pos] = 0;
+			cur_player->quantity[(short int) start_pos] = 0;
+			return SDL_TRUE;
+		} else {
+			cur_player->quantity[(short int) start_pos] -= 255 - cur_player->quantity[(short int) cur_game->cursor];
+			cur_player->quantity[(short int) cur_game->cursor] = 255;
+			return SDL_TRUE;
+		}
+	}
 	
 	/* Save first item in tmp's */
 	tmp_loot = cur_player->loot[(short int) start_pos];

@@ -181,9 +181,9 @@ draw_game(struct game *cur_game, struct worldmap *map, struct player *cur_player
 			if (*(*(map->loot+rows)+cols) != 0) {
 				sprite_index = get_loot_sprite(*(*(map->loot+rows)+cols));
 				loot_type = get_loot_type(*(*(map->loot+rows)+cols));
-				if (loot_type == ITEM) {
+				if (*(*(map->quantity+rows)+cols) > 1 || loot_type == ITEM || loot_type == GROUND || loot_type == ROOF) {
 					draw_tile(cur_game, (cols - win.x) * SPRITE_W + GAME_X + 4, (rows - win.y) * SPRITE_H + GAME_Y + 4, SPRITE_W*3/4, SPRITE_H*3/4, sprite_index, 255); 
-				} else if (loot_type == WALL) {
+				} else if (loot_type == WALL || loot_type == DOOR) {
 					draw_tile(cur_game, (cols - win.x) * SPRITE_W + GAME_X, (rows - win.y) * SPRITE_H + GAME_Y, SPRITE_W, SPRITE_H, sprite_index, 255); 
 				}
 			}
@@ -248,7 +248,7 @@ draw_inv(struct game *cur_game, struct player *cur_player)
 				  sprite_index,
 				  255);
 			stackable = is_loot_stackable(cur_player->loot[i]);
-			if (stackable == STACKABLE && cur_player->quantity[i] > 1) {
+			if (stackable == STACKABLE) {
 				sprintf(quantity, "%3d", cur_player->quantity[i]);
 				draw_small_sentence(cur_game,
 						    QB_X + i*48 + 1,
@@ -295,7 +295,7 @@ draw_inv(struct game *cur_game, struct player *cur_player)
 					  sprite_index,
 					  255);
 				stackable = is_loot_stackable(cur_player->loot[j+i*8+8]);
-				if (stackable == STACKABLE && cur_player->quantity[j+i*8+8] > 1) {
+				if (stackable == STACKABLE) {
 					sprintf(quantity, "%3d", cur_player->quantity[j+i*8+8]);
 					draw_small_sentence(cur_game,
 							    INV_X + 48 * i + 1,

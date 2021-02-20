@@ -132,7 +132,7 @@ harvest_item(struct game *cur_game, struct worldmap *map, struct player *cur_pla
 		return SDL_TRUE;
 	}	
 	
-	/* No item on map, try to harvest */
+	/* No item in roof, loot, or ground, so try to harvest */
 	biome = *(*(map->biome+y)+x);
 	tile = *(*(map->tile+y)+x);
 	item = get_item(biome, tile);

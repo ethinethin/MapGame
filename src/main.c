@@ -235,7 +235,7 @@ copy_fart(struct worldmap *main_map, struct worldmap *fart, int row, int col)
 			// Remove later
 			rando = rand_num(1, 100);
 			if (rando > 99 && is_passable(*(*(main_map->tile+rows+row)+cols+col),
-						     *(*(main_map->biome+rows+row)+cols+col)) == IMPASSABLE) {
+						     *(*(main_map->biome+rows+row)+cols+col)) == PASSABLE) {
 				rando = rand_num(1, 8);
 				*(*(main_map->loot+rows+row)+cols+col) = rando;
 				if (is_loot_stackable(rando) == STACKABLE) {

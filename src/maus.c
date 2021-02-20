@@ -51,10 +51,18 @@ mouse_click(struct game *cur_game, struct worldmap *map, struct player *cur_play
 	if (x >= QB_X && x <= QB_X + QB_W &&
 	    y >= QB_Y && y <= QB_Y + QB_H) {
 	    	cursor_moved = move_cursor_qb(cur_game, x - QB_X, y - QB_Y);
+		if (button == SDL_BUTTON_RIGHT) {
+			place_items(cur_game, map, cur_player);
+			return;
+		}	
 	} else if (cur_game->inventory == SDL_TRUE &&
 		   x >= INV_X && x <= INV_X + INV_W &&
 		   y >= INV_Y && y <= INV_Y + INV_H) {
 		cursor_moved = move_cursor_inv(cur_game, x - INV_X, y - INV_Y);
+		if (button == SDL_BUTTON_RIGHT) {
+			place_items(cur_game, map, cur_player);
+			return;
+		}
 	} else {
 		pos = get_click_coordinates(cur_player);
 		if (button == SDL_BUTTON_LEFT) {
@@ -140,7 +148,7 @@ mouse_click(struct game *cur_game, struct worldmap *map, struct player *cur_play
 	} else {
 		/* You tried to drop it */
 		pos = drop_preview(cur_game, cur_player);
-		handle_throw(cur_game, map, cur_player, pos.x, pos.y);
+		handle_throw(cur_game, map, cur_player, pos.x, pos.y, cur_player->quantity[(int) cur_game->cursor]);
 		cursor_moved = SDL_FALSE;
 	}
 	if (cursor_moved == SDL_TRUE) handle_swap(cur_game, cur_player, start_pos);
@@ -271,4 +279,146 @@ click_harvest(struct game *cur_game, struct worldmap *map, struct player *cur_pl
 	if (pos.x > 1 || pos.x < -1 || pos.y > 1 || pos.y < -1) return;
 	/* Try to pick up the item */
 	harvest_item(cur_game, map, cur_player, cur_player->x+pos.x, cur_player->y+pos.y);
+}
+
+
+void
+place_items(struct game *cur_game, struct worldmap *map, struct player *cur_player)
+{
+	char start_pos;
+	char white[3] = { 255, 255, 255 };
+	struct coords pos;
+	SDL_Rect rect = { 0, 0, WIN_W, WIN_H };
+
+	/* Output screen to a texture */
+	SDL_Texture *texture;
+	texture = SDL_CreateTexture(cur_game->screen.renderer, SDL_PIXELFORMAT_RGBA8888,
+				    SDL_TEXTUREACCESS_TARGET, WIN_W, WIN_H);
+	SDL_SetRenderTarget(cur_game->screen.renderer, texture);
+	draw_game(cur_game, map, cur_player);
+	draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
+	SDL_SetRenderTarget(cur_game->screen.renderer, NULL);
+	/* Enter input loop */
+	SDL_Event event;
+	SDL_bool finished = SDL_FALSE;
+	SDL_bool redraw = SDL_FALSE;
+	SDL_bool cursor_moved = SDL_FALSE;
+	start_pos = cur_game->cursor;
+	while(finished == SDL_FALSE && SDL_WaitEvent(&event)) {
+		/* Poll for mouse state */
+		switch (event.type) {
+			case SDL_KEYDOWN:
+				redraw = SDL_TRUE;
+				switch (event.key.keysym.sym) {
+					case SDLK_UP: /* move up */
+					case SDLK_w:
+						move_player(cur_game, map, cur_player, 0, -1);
+						break;
+					case SDLK_DOWN: /* move down */
+					case SDLK_s:
+						move_player(cur_game, map, cur_player, 0, 1);
+						break;
+					case SDLK_LEFT: /* move left */
+					case SDLK_a:
+						move_player(cur_game, map, cur_player, -1, 0);
+						break;
+					case SDLK_RIGHT: /* move right */
+					case SDLK_d:
+						move_player(cur_game, map, cur_player, 1, 0);
+						break;
+					case SDLK_i:
+						toggle_inv(cur_game);
+						break;
+					default:
+						finished = SDL_TRUE;
+						break;
+				}
+				break;
+			case SDL_MOUSEMOTION:
+				MOUSE.x = event.motion.x;
+				MOUSE.y = event.motion.y;
+				break;
+			case SDL_MOUSEBUTTONUP:
+				MOUSE.mdown = SDL_FALSE;
+				break;
+			case SDL_MOUSEBUTTONDOWN:
+				MOUSE.mdown = SDL_TRUE;
+				/* Left click, tried to place item */
+				if (event.button.button == SDL_BUTTON_LEFT) {
+					if (MOUSE.x >= QB_X && MOUSE.x <= QB_X + QB_W &&
+					    MOUSE.y >= QB_Y && MOUSE.y <= QB_Y + QB_H) {
+						cursor_moved = move_cursor_qb(cur_game, MOUSE.x - QB_X, MOUSE.y - QB_Y);
+					} else if (cur_game->inventory == SDL_TRUE &&
+						   MOUSE.x >= INV_X && MOUSE.x <= INV_X + INV_W &&
+						   MOUSE.y >= INV_Y && MOUSE.y <= INV_Y + INV_H) {
+						cursor_moved = move_cursor_inv(cur_game, MOUSE.x - INV_X, MOUSE.y - INV_Y);
+					} else {	
+						/* You tried to drop it */
+						pos = drop_preview(cur_game, cur_player);
+						handle_throw(cur_game, map, cur_player, pos.x, pos.y, 1);
+						cursor_moved = SDL_FALSE;
+					}
+					/* Did you try to put item in a different slot? */
+					if (cursor_moved == SDL_TRUE) {
+						/* Are you clicking the same square? If so, get outta here */
+						if (start_pos == cur_game->cursor) {
+							finished = SDL_TRUE;
+						} else {
+							/* Is the loot stackable? */
+							if (is_loot_stackable(cur_player->loot[(short int) start_pos]) == SDL_TRUE) {
+								/* Is there no item or <255 of the same item? */
+								if ((cur_player->loot[(short int) start_pos] == cur_player->loot[(short int) cur_game->cursor] &&
+								     cur_player->quantity[(short int) cur_game->cursor] < 255) ||
+								     cur_player->loot[(short int) cur_game->cursor] == 0) {
+									cur_player->loot[(short int) cur_game->cursor]	= cur_player->loot[(short int) start_pos];
+								    	cur_player->quantity[(short int) cur_game->cursor] += 1;
+								    	cur_player->quantity[(short int) start_pos] -= 1;
+								    	if (cur_player->quantity[(short int) start_pos] == 0) {
+								    		cur_player->loot[(short int) start_pos] = 0;
+								    	} else {
+									    	/* Move cursor back */
+										cur_game->cursor = start_pos;
+									}
+								} else {
+									handle_swap(cur_game, cur_player, start_pos);
+									finished = SDL_TRUE;
+								}
+							} else {
+								handle_swap(cur_game, cur_player, start_pos);
+								finished = SDL_TRUE;
+							}
+						}
+					}
+					redraw = SDL_TRUE;
+					if (cur_player->quantity[(short int) start_pos] == 0) {
+						/* Zero out loot if necessary and you're done */
+						cur_player->loot[(short int) start_pos] = 0;
+						finished = SDL_TRUE;
+					} 
+				} else if (event.button.button == SDL_BUTTON_RIGHT) {
+					finished = SDL_TRUE;
+				}
+				break;
+		}
+		/* redraw screen */
+		if (redraw == SDL_TRUE) {
+			SDL_DestroyTexture(texture);
+			texture = SDL_CreateTexture(cur_game->screen.renderer, SDL_PIXELFORMAT_RGBA8888,
+						    SDL_TEXTUREACCESS_TARGET, WIN_W, WIN_H);
+			SDL_SetRenderTarget(cur_game->screen.renderer, texture);
+			draw_game(cur_game, map, cur_player);
+			draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
+			SDL_SetRenderTarget(cur_game->screen.renderer, NULL);
+			redraw = SDL_FALSE;
+		}
+		/* Output texture */
+		if (finished == SDL_FALSE) {
+			SDL_RenderCopy(cur_game->screen.renderer, texture, NULL, &rect); 
+			drag_item(cur_game, cur_player);
+			drop_preview(cur_game, cur_player);
+			render_present(cur_game);
+		}
+		SDL_Delay(10);
+	}
+	SDL_DestroyTexture(texture);
 }
