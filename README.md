@@ -47,6 +47,11 @@ License
 
 Like what you want see and want to use it? Fine! It's licensed under a BSD 3-clause License, so you can do almost anything you want, just give a quick read to the LICENSE file.
 
+Feedback and/or Support
+-
+
+Feel free to reach out to me on any platform for feedback and/or support. I am particularly interested in comments from users who have compiled (or tried to compile) MapGame for Windows or Linux. I read Twitch chat during streams and have directly implemented user suggestions in both debugging and adding game features. My gmail, Twitch, and Youtube usernames are the same as my GitHub.
+
 Game Jam Rules
 -
 
@@ -58,3 +63,7 @@ I am programming this as part of a challenge, with the following conditions:
 
 You can check out my stream at: https://twitch.tv/ethinethin
 
+Thanks
+-
+
+Special thanks to Twitch users who have helped me with this project!
