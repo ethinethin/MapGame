@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include "disp.h"
 #include "font.h"
+#include "hold.h"
 #include "loot.h"
 #include "main.h"
 #include "maps.h"
@@ -18,7 +19,10 @@ struct loot LOOT[] = {
 	{"chicken", 271, STACKABLE, PASSABLE, ITEM},
 	{"wall", 78, STACKABLE, IMPASSABLE, WALL},
 	{"planks", 64, STACKABLE, PASSABLE, GROUND},
-	{"roof", 39, STACKABLE, PASSABLE, ROOF}
+	{"roof", 39, STACKABLE, PASSABLE, ROOF},
+	{"closed door", 184, STACKABLE, IMPASSABLE, C_DOOR},
+	{"open door", 220, STACKABLE, PASSABLE, O_DOOR},
+	{"closed chest", 424, STACKABLE, IMPASSABLE, HOLDER}
 };
 
 short int
@@ -72,19 +76,19 @@ pickup_item(struct game *cur_game, struct worldmap *map, struct player *cur_play
 			switch (event.key.keysym.sym) {
 				case SDLK_UP: /* pickup up */
 				case SDLK_w:
-					finished = handle_pickup(map, cur_player, 0, -1);
+					finished = handle_pickup(cur_game, map, cur_player, 0, -1);
 					break;
 				case SDLK_RIGHT: /* pickup right */
 				case SDLK_d:
-					finished = handle_pickup(map, cur_player, 1, 0);
+					finished = handle_pickup(cur_game, map, cur_player, 1, 0);
 					break;
 				case SDLK_DOWN: /* pickup down */
 				case SDLK_s:
-					finished = handle_pickup(map, cur_player, 0, 1);
+					finished = handle_pickup(cur_game, map, cur_player, 0, 1);
 					break;
 				case SDLK_LEFT: /* pickup left */
 				case SDLK_a:
-					finished = handle_pickup(map, cur_player, -1, 0);
+					finished = handle_pickup(cur_game, map, cur_player, -1, 0);
 					break;
 				default:
 					finished = SDL_TRUE;
@@ -96,7 +100,7 @@ pickup_item(struct game *cur_game, struct worldmap *map, struct player *cur_play
 }
 
 SDL_bool
-handle_pickup(struct worldmap *map, struct player *cur_player, int x, int y)
+handle_pickup(struct game *cur_game, struct worldmap *map, struct player *cur_player, int x, int y)
 {
 	unsigned char cur_quantity;
 	char loot_type;
@@ -137,16 +141,37 @@ handle_pickup(struct worldmap *map, struct player *cur_player, int x, int y)
 		/* No, get up on out of here */
 		return SDL_TRUE;
 	}
-		
+	
+	/* Is it a placed door? */
+	if (cur_quantity == 1 && (loot_type == C_DOOR || loot_type == O_DOOR)) {
+		switch(loot_type) {
+			case C_DOOR:
+				/* open it */
+				*cur_item += 1;
+				break;
+			case O_DOOR:
+				/* close it */
+				*cur_item -= 1;
+				break;
+		}
+		return SDL_TRUE;
+	}
+	
+	/* Is it a chest? */
+	if (cur_quantity == 1 && loot_type == HOLDER) {
+		open_chest(cur_game, map, cur_player, new_x, new_y);
+		return SDL_TRUE;
+	}
+	
 	/* If it's stackable, check for a non-maxed stack in the inventory */
 	if (is_loot_stackable(*cur_item) == STACKABLE) {
 		for (i = 0; i < MAX_INV; i++) {
-			if (cur_player->loot[i] == *cur_item && cur_player->quantity[i] < 255) {
-				if ((int) cur_quantity + (int) cur_player->quantity[i] > 255) {
-					cur_quantity -= 255 - cur_player->quantity[i];
-					cur_player->quantity[i] = 255;
+			if (cur_player->loot[i] == *cur_item && cur_player->quantity[i] < MAX_STACK) {
+				if ((int) cur_quantity + (int) cur_player->quantity[i] > MAX_STACK) {
+					cur_quantity -= MAX_STACK - cur_player->quantity[i];
+					cur_player->quantity[i] = MAX_STACK;
 					if (loot_type != ROOF && loot_type != GROUND) {
-						*(*(map->quantity+new_y)+new_x) -= 255 - cur_player->quantity[i];
+						*(*(map->quantity+new_y)+new_x) -= MAX_STACK - cur_player->quantity[i];
 					}
 				} else {
 					cur_player->quantity[i] += cur_quantity;
@@ -231,6 +256,7 @@ handle_throw(struct game *cur_game, struct worldmap *map, struct player *cur_pla
 	int new_y;
 	short int item_on_map;
 	short int cur_item;
+	short int cur_quantity;
 	
 	/* Set pickup coordinates */
 	new_x = cur_player->x + x;
@@ -246,12 +272,18 @@ handle_throw(struct game *cur_game, struct worldmap *map, struct player *cur_pla
 	if (is_passable(*(*(map->tile+new_y)+new_x), *(*(map->biome+new_y)+new_x)) == IMPASSABLE) {
 		return SDL_TRUE;
 	}
-	
+		
 	/* What's the item being dropped? */
 	cur_item = cur_player->loot[(int) cur_game->cursor];
-
-	/* Is it a ground tile or item? */
+	cur_quantity = *(*(map->quantity+new_y)+new_x);
 	loot_type = get_loot_type(cur_item);
+
+	/* Is there a single DOOR or CONTAINER? */
+	if (cur_quantity == 1 && (loot_type == C_DOOR || loot_type == O_DOOR || loot_type == HOLDER)) {
+		return SDL_TRUE;
+	}
+
+	/* Is it a ground tile or item? quantity = amount dropped */
 	if (loot_type == GROUND && quantity == 1) {
 		/* Is there already a ground tile? */
 		if (*(*(map->ground+new_y)+new_x) != 0) {
@@ -292,6 +324,9 @@ handle_throw(struct game *cur_game, struct worldmap *map, struct player *cur_pla
 			*(*(map->quantity+new_y)+new_x) = quantity;
 			cur_player->quantity[(int) cur_game->cursor] = cur_player->quantity[(int) cur_game->cursor] - quantity;
 			if (cur_player->quantity[(int) cur_game->cursor] == 0) cur_player->loot[(int) cur_game->cursor] = 0;
+			if (loot_type == HOLDER) {
+				add_hold(new_x, new_y);
+			}
 			return SDL_TRUE;
 		} else {
 			/* Unstackable item blocking map, get outta here */
@@ -304,8 +339,8 @@ handle_throw(struct game *cur_game, struct worldmap *map, struct player *cur_pla
 		/* We only get here if there's an item on the map that is stackable equal to what we're trying to drop */
 		/* Will the stack overflow? */
 		unsigned char drop_how_much;
-		if ((int) *(*(map->quantity+new_y)+new_x) + (int) quantity > 255) {
-			drop_how_much = 255 - *(*(map->quantity+new_y)+new_x);
+		if ((int) *(*(map->quantity+new_y)+new_x) + (int) quantity > MAX_STACK) {
+			drop_how_much = MAX_STACK - *(*(map->quantity+new_y)+new_x);
 		} else {
 			drop_how_much = quantity;
 		}
@@ -446,14 +481,14 @@ handle_swap(struct game *cur_game, struct player *cur_player, char start_pos)
 		if (is_loot_stackable(cur_player->loot[(short int) start_pos]) == SDL_FALSE) {
 			return SDL_TRUE;
 		}
-		if ((int) cur_player->quantity[(short int) start_pos] + (int) cur_player->quantity[(short int) cur_game->cursor] <= 255) {
+		if ((int) cur_player->quantity[(short int) start_pos] + (int) cur_player->quantity[(short int) cur_game->cursor] <= MAX_STACK) {
 			cur_player->quantity[(short int) cur_game->cursor] += cur_player->quantity[(short int) start_pos];
 			cur_player->loot[(short int) start_pos] = 0;
 			cur_player->quantity[(short int) start_pos] = 0;
 			return SDL_TRUE;
 		} else {
-			cur_player->quantity[(short int) start_pos] -= 255 - cur_player->quantity[(short int) cur_game->cursor];
-			cur_player->quantity[(short int) cur_game->cursor] = 255;
+			cur_player->quantity[(short int) start_pos] -= MAX_STACK - cur_player->quantity[(short int) cur_game->cursor];
+			cur_player->quantity[(short int) cur_game->cursor] = MAX_STACK;
 			return SDL_TRUE;
 		}
 	}

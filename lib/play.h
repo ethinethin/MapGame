@@ -15,7 +15,7 @@ struct player {
 	int winpos_y;
 	char **seen;
 	unsigned short int loot[MAX_INV];
-	unsigned char quantity[MAX_INV];
+	unsigned short int quantity[MAX_INV];
 	char **screen_view;
 };
 

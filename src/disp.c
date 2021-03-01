@@ -183,7 +183,7 @@ draw_game(struct game *cur_game, struct worldmap *map, struct player *cur_player
 				loot_type = get_loot_type(*(*(map->loot+rows)+cols));
 				if (*(*(map->quantity+rows)+cols) > 1 || loot_type == ITEM || loot_type == GROUND || loot_type == ROOF) {
 					draw_tile(cur_game, (cols - win.x) * SPRITE_W + GAME_X + 4, (rows - win.y) * SPRITE_H + GAME_Y + 4, SPRITE_W*3/4, SPRITE_H*3/4, sprite_index, 255); 
-				} else if (loot_type == WALL || loot_type == DOOR) {
+				} else if (loot_type == WALL || loot_type == C_DOOR || loot_type == O_DOOR || loot_type == HOLDER) {
 					draw_tile(cur_game, (cols - win.x) * SPRITE_W + GAME_X, (rows - win.y) * SPRITE_H + GAME_Y, SPRITE_W, SPRITE_H, sprite_index, 255); 
 				}
 			}

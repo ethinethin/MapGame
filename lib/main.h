@@ -53,5 +53,7 @@ struct game {
 #define QB_W (48*8)
 #define QB_H 60
 
+/* Constants for loot */
+#define MAX_STACK 999
 
 #endif

@@ -1,6 +1,13 @@
 Changelog
 -
 
+2021-02-28
+-
+
+- Raised stack limit to 999
+- Added doors
+- Added holders linked list (no holder functionality yet)
+
 2021-02-19
 -
 

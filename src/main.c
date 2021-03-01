@@ -5,6 +5,7 @@
 #include "devm.h"
 #include "disp.h"
 #include "harv.h"
+#include "hold.h"
 #include "loot.h"
 #include "main.h"
 #include "maps.h"
@@ -158,6 +159,8 @@ game_init(void)
 	player_init(&MAP, &PLAYER);
 	/* Set up depleted item table */
 	setup_dtable();
+	/* Set up holder table */
+	setup_hold();
 	/* The window is now up and running */
 	GAME.running = SDL_TRUE;
 }
@@ -165,20 +168,23 @@ game_init(void)
 static void
 game_quit(void)
 {
-	/* Quit SDL display functions */
-	display_quit(&GAME);
-	/* Free the world map and exit normally */
-	free_map(&MAP);
+	/* Delete holder table */
+	kill_hold();
+	/* Delete depleted item table */
+	kill_dtable();
 	/* Free the player */
 	player_quit(&PLAYER);
-	/* Delete the depleted table */
-	kill_dtable();
+	/* Free the world map and exit normally */
+	free_map(&MAP);
+	/* Quit SDL display functions */
+	display_quit(&GAME);	
 }
 
 static void
 generate_farts(struct game *cur_game, struct worldmap *main_map)
 {
 	int rows, cols;
+	int rando;
 	struct worldmap biomes;
 	struct worldmap fart;
 
@@ -203,13 +209,30 @@ generate_farts(struct game *cur_game, struct worldmap *main_map)
 	}
 	/* Free the biome plan */
 	free_map(&biomes);
+	
+	// Add a bunch of random items
+	// Remove later
+	for (rows = 0; rows < main_map->row_size - 1; rows++) {
+		for (cols = 0; cols < main_map->col_size - 1; cols++) {
+			rando = rand_num(1, 100);
+			if (rando == 100 && is_passable(*(*(main_map->tile+rows)+cols),
+						     *(*(main_map->biome+rows)+cols)) == PASSABLE) {
+				rando = rand_num(1, 8);
+				*(*(main_map->loot+rows)+cols) = rando;
+				if (is_loot_stackable(rando) == STACKABLE) {
+					*(*(main_map->quantity+rows)+cols) = rand_num(30,50);
+				} else {
+					*(*(main_map->quantity+rows)+cols) = 1;
+				}
+			}
+		}
+	}
 }
 
 static void
 copy_fart(struct worldmap *main_map, struct worldmap *fart, int row, int col)
 {
 	int rows, cols;
-	int rando;
 	
 	/* Make sure it fits in map */
 	if (row < 0) {
@@ -230,19 +253,6 @@ copy_fart(struct worldmap *main_map, struct worldmap *fart, int row, int col)
 			if (*(*(main_map->tile+rows+row)+cols+col) == 0 || rand_num(0, 1) == 1) {
 				*(*(main_map->tile+rows+row)+cols+col) = *(*(fart->tile+rows)+cols);
 				*(*(main_map->biome+rows+row)+cols+col) = *(*(fart->biome+rows)+cols);
-			}
-			// Add a bunch of random items
-			// Remove later
-			rando = rand_num(1, 100);
-			if (rando > 99 && is_passable(*(*(main_map->tile+rows+row)+cols+col),
-						     *(*(main_map->biome+rows+row)+cols+col)) == PASSABLE) {
-				rando = rand_num(1, 8);
-				*(*(main_map->loot+rows+row)+cols+col) = rando;
-				if (is_loot_stackable(rando) == STACKABLE) {
-					*(*(main_map->quantity+rows+row)+cols+col) = 50;
-				} else {
-					*(*(main_map->quantity+rows+row)+cols+col) = 1;
-				}
 			}
 		}
 	}

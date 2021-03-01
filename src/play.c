@@ -148,8 +148,8 @@ random_start(struct worldmap *map, struct player *cur_player)
 	
 	while (finished == SDL_FALSE) {
 		/* Randomly determine location */
-		row = rand_num(0, map->row_size - 1);
-		col = rand_num(0, map->col_size - 1);
+		row = rand_num(5, map->row_size - 6);
+		col = rand_num(5, map->col_size - 6);
 		/* Check that it is passable */
 		if (is_passable(*(*(map->tile+row)+col), *(*(map->biome+row)+col)) == IMPASSABLE) {
 			continue;

@@ -28,7 +28,7 @@ static SDL_bool			move_cursor_qb(struct game *cur_game, int x, int y);
 static SDL_bool			move_cursor_inv(struct game *cur_game, int x, int y);
 static void			drag_item(struct game *cur_game, struct player *cur_player);
 static struct coords		get_click_coordinates(struct player *cur_player);
-static void			click_get_item(struct worldmap *map, struct player *cur_player, struct coords pos);
+static void			click_get_item(struct game *cur_game, struct worldmap *map, struct player *cur_player, struct coords pos);
 static struct coords		drop_preview(struct game *cur_game, struct player *cur_player);
 static void			click_harvest(struct game *cur_game, struct worldmap *map, struct player *cur_player, struct coords pos);
 
@@ -66,7 +66,7 @@ mouse_click(struct game *cur_game, struct worldmap *map, struct player *cur_play
 	} else {
 		pos = get_click_coordinates(cur_player);
 		if (button == SDL_BUTTON_LEFT) {
-			click_get_item(map, cur_player, pos);
+			click_get_item(cur_game, map, cur_player, pos);
 		} else if (button == SDL_BUTTON_RIGHT) {
 			click_harvest(cur_game, map, cur_player, pos);
 		}	
@@ -208,12 +208,12 @@ get_click_coordinates(struct player *cur_player)
 }
 
 static void
-click_get_item(struct worldmap *map, struct player *cur_player, struct coords pos)
+click_get_item(struct game *cur_game, struct worldmap *map, struct player *cur_player, struct coords pos)
 {
 	/* Make sure it is close to the player */
 	if (pos.x > 1 || pos.x < -1 || pos.y > 1 || pos.y < -1) return;
 	/* Try to pick up the item */
-	handle_pickup(map, cur_player, pos.x, pos.y);
+	handle_pickup(cur_game, map, cur_player, pos.x, pos.y);
 }
 
 static struct coords

@@ -1,6 +1,7 @@
 #include <SDL2/SDL.h>
 #include "disp.h"
 #include "harv.h"
+#include "hold.h"
 #include "loot.h"
 #include "main.h"
 #include "maps.h"
@@ -113,6 +114,16 @@ harvest_item(struct game *cur_game, struct worldmap *map, struct player *cur_pla
 	} else if (*(*(map->loot+y)+x) != 0) {
 		item = *(*(map->loot+y)+x);
 		quantity = *(*(map->quantity+y)+x);
+		/* If it's a placed open door, change it to a closed door */
+		if (quantity == 1 && get_loot_type(item) == O_DOOR) {
+			item -= 1;
+		/* If it's a container, either open or collect it */	
+		} else if (get_loot_type(item) == HOLDER) {
+			if (chest_empty(map, x, y) == SDL_FALSE) {
+				open_chest(cur_game, map, cur_player, x, y);
+				return SDL_TRUE;
+			}
+		}
 		/* Take item off map */
 		*(*(map->quantity+y)+x) = 0;
 		*(*(map->loot+y)+x) = 0;
@@ -235,10 +246,10 @@ stash_item(struct player *cur_player, short int item_id, unsigned char quantity)
 	/* If it's stackable, check for a non-maxed stack in the inventory */
 	if (is_loot_stackable(item_id) == STACKABLE) {
 		for (i = 0; i < MAX_INV; i++) {
-			if (cur_player->loot[i] == item_id && cur_player->quantity[i] < 255) {
-				if ((int) quantity + (int) cur_player->quantity[i] > 255) {
-					quantity -= 255 - cur_player->quantity[i];
-					cur_player->quantity[i] = 255;
+			if (cur_player->loot[i] == item_id && cur_player->quantity[i] < MAX_STACK) {
+				if ((int) quantity + (int) cur_player->quantity[i] > MAX_STACK) {
+					quantity -= MAX_STACK - cur_player->quantity[i];
+					cur_player->quantity[i] = MAX_STACK;
 				} else {
 					cur_player->quantity[i] += quantity;
 					return SDL_TRUE;
@@ -334,9 +345,12 @@ harvest_loop(struct game *cur_game, struct worldmap *map, struct player *cur_pla
 void
 setup_dtable(void)
 {
-	/* Make an initial entry in D_TABLE */
-	D_TABLE = malloc(sizeof(*D_TABLE)*1);
-	D_TABLE->next = NULL;
+	struct d_data *first;
+	
+	/* Make first (null) entry in depleted table */
+	first = malloc(sizeof(*first)*1);
+	first->next = NULL;
+	D_TABLE = first;
 }
 
 static void
@@ -415,5 +429,19 @@ check_depleted(struct worldmap *map)
 void
 kill_dtable(void)
 {
-
+	struct d_data *next;
+	struct d_data *tmp;
+	
+	/* Delete all entries from the holder table */
+	next = D_TABLE;
+	while (SDL_TRUE) {
+		if (next->next == NULL) {
+			free(next);
+			return;
+		} else {
+			tmp = next;
+			next = next->next;
+			free(tmp);
+		}
+	}	
 }
