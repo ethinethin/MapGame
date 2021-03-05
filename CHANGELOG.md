@@ -1,6 +1,13 @@
 Changelog
 -
 
+2021-03-04
+-
+
+- General bug fixes (random start location)
+- Opening and closing chest
+- Dragging and dropping chest (swap not implemented yet)
+
 2021-02-28
 -
 

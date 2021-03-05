@@ -134,7 +134,6 @@ mouse_click(struct game *cur_game, struct worldmap *map, struct player *cur_play
 		render_present(cur_game);
 		SDL_Delay(10);
 	}
-	SDL_SetRenderTarget(cur_game->screen.renderer, NULL);
 	SDL_DestroyTexture(texture);
 	/* Button was let go - did you try to move the item? */
 	start_pos = cur_game->cursor;

@@ -58,7 +58,7 @@ main()
 	/* enter main game loop */
 	SDL_Event event;
 	while (GAME.running && SDL_WaitEvent(&event)) {
-		SDL_Delay(1);
+		SDL_Delay(10);
 		if (event.type == SDL_QUIT) { /* exit button pressed */
 			GAME.running = SDL_FALSE;
 		} else if (event.type == SDL_KEYDOWN) {
@@ -192,7 +192,7 @@ generate_farts(struct game *cur_game, struct worldmap *main_map)
 	create_map(&biomes, 32, 64);
 	populate_map(&biomes, 1, 5);
 	
-	/* Create 4 fart */
+	/* Create farts */
 	for (rows = 0; rows < 32; rows++) {
 		/* Loading bar */
 		loading_bar(cur_game, "Generating maps", 100*rows/32);

@@ -16,7 +16,6 @@ struct win_pos {
 };
 
 /* Function prototypes */
-static void		draw_line(struct game *cur_game, int x1, int y1, int x2, int y2, char *col);
 static void		draw_player(struct game *cur_game, struct player *cur_player, struct win_pos win);
 static void		update_winpos(struct player *cur_player, struct win_pos win);
 static void		draw_player_indicator(struct game *cur_game, struct player *cur_player, int size);
@@ -51,9 +50,10 @@ display_init(struct game *cur_game)
 	/* Clear screen */
 	SDL_SetRenderDrawColor(cur_game->screen.renderer, 0, 0, 0, 255);
 	SDL_RenderClear(cur_game->screen.renderer);
-	SDL_RenderPresent(cur_game->screen.renderer);
+	/* Poll for event */
 	SDL_Event event;
-	SDL_WaitEvent(&event);
+	SDL_PollEvent(&event);
+	SDL_RenderPresent(cur_game->screen.renderer);
 }
 
 void
@@ -80,7 +80,7 @@ draw_point(struct game *cur_game, int x, int y, char *col)
 	SDL_RenderDrawPoint(cur_game->screen.renderer, x, y);
 }
 
-static void
+void
 draw_line(struct game *cur_game, int x1, int y1, int x2, int y2, char *col)
 {
 	SDL_SetRenderDrawColor(cur_game->screen.renderer, *(col+0), *(col+1), *(col+2), 255);
@@ -404,16 +404,16 @@ worldmap(struct game *cur_game, struct worldmap *map, struct player *cur_player)
 		draw_player_indicator(cur_game, cur_player, size);
 		render_present(cur_game);
 		/* Delay and poll for event */
-		SDL_Delay(20);
+		SDL_Delay(10);
 		SDL_PollEvent(&event);
 		if (event.type == SDL_KEYDOWN) {
 			return;
 		}
 		size += size_change;
 		if (size >= 39) {
-			size_change = -4; 
+			size_change = -3; 
 		} else if (size <= 1) {
-			size_change = 4;
+			size_change = 3;
 		}
 	}
 }

@@ -22,7 +22,7 @@ struct loot LOOT[] = {
 	{"roof", 39, STACKABLE, PASSABLE, ROOF},
 	{"closed door", 184, STACKABLE, IMPASSABLE, C_DOOR},
 	{"open door", 220, STACKABLE, PASSABLE, O_DOOR},
-	{"closed chest", 424, STACKABLE, IMPASSABLE, HOLDER}
+	{"treasure chest", 424, STACKABLE, IMPASSABLE, HOLDER}
 };
 
 short int
@@ -102,7 +102,7 @@ pickup_item(struct game *cur_game, struct worldmap *map, struct player *cur_play
 SDL_bool
 handle_pickup(struct game *cur_game, struct worldmap *map, struct player *cur_player, int x, int y)
 {
-	unsigned char cur_quantity;
+	unsigned short int cur_quantity;
 	char loot_type;
 	unsigned short int *cur_item;
 	int i;
@@ -338,7 +338,7 @@ handle_throw(struct game *cur_game, struct worldmap *map, struct player *cur_pla
 		}
 		/* We only get here if there's an item on the map that is stackable equal to what we're trying to drop */
 		/* Will the stack overflow? */
-		unsigned char drop_how_much;
+		unsigned short int drop_how_much;
 		if ((int) *(*(map->quantity+new_y)+new_x) + (int) quantity > MAX_STACK) {
 			drop_how_much = MAX_STACK - *(*(map->quantity+new_y)+new_x);
 		} else {
@@ -471,7 +471,7 @@ SDL_bool
 handle_swap(struct game *cur_game, struct player *cur_player, char start_pos)
 {
 	unsigned short int tmp_loot;
-	unsigned char tmp_quantity;
+	unsigned short int tmp_quantity;
 	
 	/* Not moving item */
 	if (start_pos == cur_game->cursor) return SDL_TRUE;

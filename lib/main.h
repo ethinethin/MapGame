@@ -53,6 +53,13 @@ struct game {
 #define QB_W (48*8)
 #define QB_H 60
 
+/* Constants for holders */
+#define HOLDER_X (WIN_W/2 - 48*10/2)
+#define HOLDER_Y (WIN_H/2 - 60*4/2)
+#define HOLDER_W (48*10 + 1)
+#define HOLDER_H (60*4 + 1)
+
+
 /* Constants for loot */
 #define MAX_STACK 999
 

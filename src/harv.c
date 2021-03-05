@@ -119,7 +119,7 @@ harvest_item(struct game *cur_game, struct worldmap *map, struct player *cur_pla
 			item -= 1;
 		/* If it's a container, either open or collect it */	
 		} else if (get_loot_type(item) == HOLDER) {
-			if (chest_empty(map, x, y) == SDL_FALSE) {
+			if (chest_empty(x, y) == SDL_FALSE) {
 				open_chest(cur_game, map, cur_player, x, y);
 				return SDL_TRUE;
 			}

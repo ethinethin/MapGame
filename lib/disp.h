@@ -9,6 +9,7 @@
 extern void	display_init(struct game *cur_game);
 extern void	display_quit(struct game *cur_game);
 extern void	draw_point(struct game *cur_game, int x, int y, char *col);
+extern void	draw_line(struct game *cur_game, int x1, int y1, int x2, int y2, char *col);
 extern void	render_clear(struct game *cur_game);
 extern void	render_present(struct game *cur_game);
 extern void	draw_rect(struct game *cur_game, unsigned int x, unsigned int y, unsigned int w, unsigned int h,
