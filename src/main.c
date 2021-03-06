@@ -24,7 +24,6 @@ struct game GAME = {
 	SDL_FALSE,		/* running */
 	/* screen */
 	{ WIN_W, WIN_H, "MapGame", NULL, NULL },
-	NULL,			/* sprites */
 	NULL,			/* font */
 	NULL,			/* sprite_textures */
 	NULL,			/* map_texture */

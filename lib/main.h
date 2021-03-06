@@ -14,7 +14,6 @@ struct game {
 		SDL_Window *window;
 		SDL_Renderer *renderer;
 	} screen;
-	SDL_Surface **sprites;
 	SDL_Surface **font;
 	SDL_Texture **sprite_textures;
 	SDL_Texture *map_texture;

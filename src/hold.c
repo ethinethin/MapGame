@@ -47,10 +47,14 @@ static void		 item_click_qb(struct item_clicked *cur_click, struct player *cur_p
 static void		 item_click_inv(struct item_clicked *cur_click, struct player *cur_player);
 static void		 item_click_hold(struct item_clicked *cur_click);
 static void		 item_click_location(struct item_clicked *cur_click, struct player *cur_player);
-static void		 handle_hold_swap(struct item_clicked *item_click, struct item_clicked *item_drop);
+static void		 handle_hold_swap(struct game *cur_game, struct player *cur_player, struct item_clicked *item_click, struct item_clicked *item_drop, unsigned short int quantity);
+static void		 swap_usints(unsigned short int *usint1, unsigned short int *usint2);
 static void		 draw_chest(struct game *cur_game, struct worldmap *map, int x, int y, struct holder *cur_holder);
 static struct holder	*get_holder(int x, int y);
 static void		 drag_item(struct game *cur_game, short int loot);
+static void		 place_in_hold(struct game *cur_game, struct worldmap *map, struct player *cur_player, int x, int y, struct item_clicked *item_click);
+static void		 update_quantity(struct item_clicked *item_click, struct player *cur_player);
+
 
 void
 setup_hold(void)
@@ -78,8 +82,6 @@ add_hold(int x, int y)
 		new->loot[i] = 0;
 		new->quantity[i] = 0;
 	}
-	new->loot[10] = 1;
-	new->quantity[10] = 10;
 	new->next = NULL;
 	
 	/* Add it to the holder table */
@@ -146,11 +148,6 @@ open_chest(struct game *cur_game, struct worldmap *map, struct player *cur_playe
 	item_click.holder = get_holder(x, y);
 	item_drop.holder = item_click.holder;
 	item_click.loot = 0;
-	
-	/* Enter input loop */
-	SDL_Event event;
-	SDL_bool finished = SDL_FALSE;
-	SDL_bool redraw = SDL_TRUE;
 	/* Draw screen to texture */
 	SDL_Texture *texture;
 	texture = SDL_CreateTexture(cur_game->screen.renderer, SDL_PIXELFORMAT_RGBA8888,
@@ -160,28 +157,15 @@ open_chest(struct game *cur_game, struct worldmap *map, struct player *cur_playe
 	draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
 	draw_chest(cur_game, map, x, y, item_click.holder);
 	SDL_SetRenderTarget(cur_game->screen.renderer, NULL);
-	while(finished == SDL_FALSE) {
-		SDL_RenderCopy(cur_game->screen.renderer, texture, NULL, &rect); 
-		render_present(cur_game);
-		if (redraw == SDL_TRUE || (MOUSE.mdown == SDL_TRUE && item_click.loot != 0)) {
-			/* Redraw screen to texture */
-			SDL_DestroyTexture(texture);
-			texture = SDL_CreateTexture(cur_game->screen.renderer, SDL_PIXELFORMAT_RGBA8888,
-				    SDL_TEXTUREACCESS_TARGET, WIN_W, WIN_H);
-			SDL_SetRenderTarget(cur_game->screen.renderer, texture);
-			draw_game(cur_game, map, cur_player);
-			draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
-			draw_chest(cur_game, map, x, y, item_click.holder);
-			/* Draw cursor? */
-			if (MOUSE.mdown == SDL_TRUE && item_click.loot != 0) {
-				drag_item(cur_game, item_click.loot);
-			}
-			/* Render screen */
-			SDL_SetRenderTarget(cur_game->screen.renderer, NULL);
-			redraw = SDL_FALSE;
-		}
+	/* Draw screen */
+	SDL_RenderCopy(cur_game->screen.renderer, texture, NULL, &rect); 
+	render_present(cur_game);
+	/* Enter input loop */
+	SDL_Event event;
+	SDL_bool finished = SDL_FALSE;
+	SDL_bool redraw = SDL_TRUE;
+	while(finished == SDL_FALSE && SDL_WaitEvent(&event)) {
 		/* Check for input */
-		SDL_PollEvent(&event);
 		switch (event.type) {
 			case SDL_KEYDOWN:
 				if (event.key.keysym.sym == SDLK_i) {
@@ -214,8 +198,15 @@ open_chest(struct game *cur_game, struct worldmap *map, struct player *cur_playe
 						item_click_location(&item_click, cur_player);
 						MOUSE.mdown = SDL_TRUE;
 					}
-				} else if (MOUSE.button == SDL_BUTTON_RIGHT) {				
+				} else if (MOUSE.button == SDL_BUTTON_RIGHT) {	
 					/* If right click: go into placement mode */
+					item_click_location(&item_click, cur_player);
+					if (item_click.click_location != 0 && item_click.loot != 0) {
+						place_in_hold(cur_game, map, cur_player, x, y, &item_click);
+						item_click.loot = 0;
+						MOUSE.mdown = SDL_FALSE;
+						redraw = SDL_TRUE;
+					}
 				}
 				break;
 			case SDL_MOUSEBUTTONUP:
@@ -223,7 +214,7 @@ open_chest(struct game *cur_game, struct worldmap *map, struct player *cur_playe
 					/* Determine where dropping */
 					item_click_location(&item_drop, cur_player);
 					if (item_drop.click_location != 0) {
-						handle_hold_swap(&item_click, &item_drop);
+						handle_hold_swap(cur_game, cur_player, &item_click, &item_drop, item_click.quantity);
 					}
 				}
 				MOUSE.mdown = SDL_FALSE;
@@ -231,6 +222,25 @@ open_chest(struct game *cur_game, struct worldmap *map, struct player *cur_playe
 				redraw = SDL_TRUE;
 				break;	
 		}
+		/* Redraw screen to texture if necessary */
+		if (redraw == SDL_TRUE) {
+			SDL_DestroyTexture(texture);
+			texture = SDL_CreateTexture(cur_game->screen.renderer, SDL_PIXELFORMAT_RGBA8888,
+				    SDL_TEXTUREACCESS_TARGET, WIN_W, WIN_H);
+			SDL_SetRenderTarget(cur_game->screen.renderer, texture);
+			draw_game(cur_game, map, cur_player);
+			draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
+			draw_chest(cur_game, map, x, y, item_click.holder);
+			/* Render screen */
+			SDL_SetRenderTarget(cur_game->screen.renderer, NULL);
+			redraw = SDL_FALSE;
+		}
+		SDL_RenderCopy(cur_game->screen.renderer, texture, NULL, &rect); 
+		/* Draw cursor? */
+		if (MOUSE.mdown == SDL_TRUE && item_click.loot != 0) {
+			drag_item(cur_game, item_click.loot);
+		}
+		render_present(cur_game);
 		SDL_Delay(10);
 	}
 	SDL_DestroyTexture(texture);
@@ -315,9 +325,68 @@ item_click_location(struct item_clicked *cur_click, struct player *cur_player)
 }
 
 static void
-handle_hold_swap(struct item_clicked *item_click, struct item_clicked *item_drop)
+handle_hold_swap(struct game *cur_game, struct player *cur_player, struct item_clicked *item_click, struct item_clicked *item_drop, unsigned short int quantity)
 {
+	unsigned short int *click_loot, *click_quantity, *drop_loot, *drop_quantity;
+	
+	/* Make sure you're not moving to the same slot */
+	if (item_click->click_location == item_drop->click_location && item_click->loot_location == item_drop->loot_location) return;
+	/* Find source and destination location and quantity */
+	if (item_click->click_location <= INV_CLICK) {
+		/* source is inventory */
+		click_loot = &cur_player->loot[item_click->loot_location];
+		click_quantity = &cur_player->quantity[item_click->loot_location];
+	} else {
+		/* source is holder */
+		click_loot = &item_click->holder->loot[item_click->loot_location];
+		click_quantity = &item_click->holder->quantity[item_click->loot_location];
+	}
+	if (item_drop->click_location <= INV_CLICK) {
+		/* destination is inventory */
+		drop_loot = &cur_player->loot[item_drop->loot_location];
+		drop_quantity = &cur_player->quantity[item_drop->loot_location];
+		cur_game->cursor = (char) item_drop->loot_location;
+	} else {
+		/* destination is holder */
+		drop_loot = &item_drop->holder->loot[item_drop->loot_location];
+		drop_quantity = &item_drop->holder->quantity[item_drop->loot_location];
+	}
+	/* Swap objects if click quantity is equal to quantity */
+	if (*click_quantity == quantity) {
+		if (*click_loot != *drop_loot) {
+			/* Loot is different, swap it */
+			swap_usints(click_loot, drop_loot);
+			swap_usints(click_quantity, drop_quantity);
+		} else if (is_loot_stackable(*click_loot) == UNSTACKABLE) {
+			/* Loot is the same, but unstackable, so don't do anything */
+			return;
+		} else if (*click_quantity + *drop_quantity <= MAX_STACK) {
+			/* Loot is the same and stackable with MAX_STACK or less total */
+			*drop_quantity = *click_quantity + *drop_quantity;
+			*click_loot = 0;
+			*click_quantity = 0;
+		} else {
+			/* Loot is the same and stackable with more than MAX_STACK */
+			*click_quantity -= MAX_STACK - *drop_quantity;
+			*drop_quantity = MAX_STACK;
+		}
+	} else if ((*click_loot == *drop_loot && *drop_quantity < MAX_STACK) || *drop_loot == 0) {
+		/* Otherwise, we're placing 1 item */
+		*drop_loot = *click_loot;
+		*drop_quantity += 1;
+		*click_quantity -= 1;
+		/* Dropped the last one */
+		if (*click_quantity == 0) *click_loot = 0;
+	}
+}
 
+static void
+swap_usints(unsigned short int *usint1, unsigned short int *usint2)
+{
+	unsigned short int tmp;
+	tmp = *usint1;
+	*usint1 = *usint2;
+	*usint2 = tmp;
 }
 
 static void
@@ -352,7 +421,7 @@ draw_chest(struct game *cur_game, struct worldmap *map, int x, int y, struct hol
 	draw_rect(cur_game, HOLDER_X, HOLDER_Y - 20, HOLDER_W, 18 + 3, SDL_TRUE, black, SDL_TRUE, white);
 	draw_small_sentence(cur_game, HOLDER_X + 2, HOLDER_Y - 17, get_loot_name(*(*(map->loot+y)+x)));
 	draw_line(cur_game, HOLDER_X + HOLDER_W - 15, HOLDER_Y - 15, HOLDER_X + HOLDER_W - 5, HOLDER_Y - 5, white);
-	draw_line(cur_game, HOLDER_X + HOLDER_W - 5, HOLDER_Y - 15, HOLDER_X + HOLDER_W - 15, HOLDER_Y - 5, white);
+	draw_line(cur_game, HOLDER_X + HOLDER_W - 6, HOLDER_Y - 15, HOLDER_X + HOLDER_W - 16, HOLDER_Y - 5, white);
 	/* Draw loot tiles for holder */
 	for (j = 0; j < 10; j++) {
 		for (i = 0; i < 4; i++) {
@@ -421,4 +490,114 @@ drag_item(struct game *cur_game, short int loot)
 {
 	draw_tile(cur_game, MOUSE.x - MOUSE.offset_x, MOUSE.y - MOUSE.offset_y, 48, 48,
 	          get_loot_sprite(loot), 192);
+}
+
+static void
+place_in_hold(struct game *cur_game, struct worldmap *map, struct player *cur_player, int x, int y, struct item_clicked *item_click)
+{
+	char white[3] = { 255, 255, 255 };
+	SDL_Rect rect = { 0, 0, WIN_W, WIN_H };
+	struct item_clicked item_drop;
+	
+	/* Set drop holder equal to the holder being viewed */
+	item_drop.holder = item_click->holder;
+
+	/* Draw screen to texture */
+	SDL_Texture *texture;
+	texture = SDL_CreateTexture(cur_game->screen.renderer, SDL_PIXELFORMAT_RGBA8888,
+				    SDL_TEXTUREACCESS_TARGET, WIN_W, WIN_H);
+	SDL_SetRenderTarget(cur_game->screen.renderer, texture);
+	draw_game(cur_game, map, cur_player);
+	draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
+	draw_chest(cur_game, map, x, y, item_click->holder);
+	SDL_SetRenderTarget(cur_game->screen.renderer, NULL);
+	/* Enter input loop */
+	SDL_Event event;
+	SDL_bool finished = SDL_FALSE;
+	SDL_bool redraw = SDL_TRUE;
+	while(finished == SDL_FALSE && SDL_WaitEvent(&event)) {
+		/* Redraw screen to texture if necessary */
+		if (redraw == SDL_TRUE) {
+			SDL_DestroyTexture(texture);
+			texture = SDL_CreateTexture(cur_game->screen.renderer, SDL_PIXELFORMAT_RGBA8888,
+				    SDL_TEXTUREACCESS_TARGET, WIN_W, WIN_H);
+			SDL_SetRenderTarget(cur_game->screen.renderer, texture);
+			draw_game(cur_game, map, cur_player);
+			draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
+			draw_chest(cur_game, map, x, y, item_click->holder);
+			SDL_SetRenderTarget(cur_game->screen.renderer, NULL);
+			redraw = SDL_FALSE;
+		}
+		SDL_RenderCopy(cur_game->screen.renderer, texture, NULL, &rect); 
+		drag_item(cur_game, item_click->loot);
+		render_present(cur_game);
+		SDL_Delay(10);
+		
+		/* Poll for mouse state */
+		switch (event.type) {
+			case SDL_KEYDOWN:
+				redraw = SDL_TRUE;
+				switch (event.key.keysym.sym) {
+					case SDLK_i:
+						toggle_inv(cur_game);
+						break;
+					default:
+						finished = SDL_TRUE;
+						break;
+				}
+				continue;
+				break;
+			case SDL_MOUSEMOTION:
+				MOUSE.x = event.motion.x;
+				MOUSE.y = event.motion.y;
+				break;
+			case SDL_MOUSEBUTTONDOWN:
+				/* Find where you clicked */
+				item_click_location(&item_drop, cur_player);
+				if (item_click->click_location == item_drop.click_location &&
+				    item_click->loot_location == item_drop.loot_location) {
+				    	/* Clicking on the stack you're dropping, exit */
+				    	finished = SDL_TRUE;
+				    	continue;
+				}
+				/* Left click, tried to place item */
+				if (event.button.button == SDL_BUTTON_LEFT) {
+					/* If you click outside of inventory spaces, close the chest */
+					if (!(
+						(MOUSE.x >= QB_X && MOUSE.x <= QB_X + QB_W && MOUSE.y >= QB_Y && MOUSE.y <= QB_Y + QB_H) ||
+						(cur_game->inventory == SDL_TRUE && MOUSE.x >= INV_X && MOUSE.x <= INV_X + INV_W && MOUSE.y >= INV_Y && MOUSE.y <= INV_Y + INV_H) ||
+						(MOUSE.x >= HOLDER_X && MOUSE.x <= HOLDER_X + HOLDER_W && MOUSE.y >= HOLDER_Y && MOUSE.y <= HOLDER_Y + HOLDER_H)
+					)) {
+						finished = SDL_TRUE;
+						continue;
+					}
+					if (item_drop.click_location != 0) {
+						handle_hold_swap(cur_game, cur_player, item_click, &item_drop, 1);
+						redraw = SDL_TRUE;
+						/* Update quantity in item_drop */
+						update_quantity(item_click, cur_player);
+						/* Item stack depleted */
+						if (item_click->quantity == 0) finished = SDL_TRUE;
+						continue;
+					}
+				} else if (event.button.button == SDL_BUTTON_RIGHT) {
+					finished = SDL_TRUE;
+					continue;
+				}
+				break;
+		}
+	}
+	SDL_DestroyTexture(texture);
+}
+
+static void
+update_quantity(struct item_clicked *item_click, struct player *cur_player)
+{
+	if (item_click->click_location <= INV_CLICK) {
+		/* source is inventory */
+		item_click->quantity = cur_player->quantity[item_click->loot_location];
+	} else {
+		/* source is holder */
+		item_click->quantity = item_click->holder->quantity[item_click->loot_location];
+	}
 }

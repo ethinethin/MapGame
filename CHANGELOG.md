@@ -1,6 +1,13 @@
 Changelog
 -
 
+2021-03-05
+-
+
+- Removed all software rendering of tiles
+- Player can swap items in holder mode
+- Placement mode can be used in holder mode
+
 2021-03-04
 -
 

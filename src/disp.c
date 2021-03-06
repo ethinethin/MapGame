@@ -423,22 +423,28 @@ load_sprites(struct game *cur_game)
 {
 	/* Load the map arrow sprites */
 	SDL_Surface *surface = SDL_LoadBMP("art/sprites.bmp");
-	cur_game->sprites = (SDL_Surface**) malloc(sizeof(SDL_Surface*)*512);
+	SDL_Surface **tiles;
+	tiles = (SDL_Surface**) malloc(sizeof(SDL_Surface*)*512);
 	cur_game->sprite_textures = (SDL_Texture**) malloc(sizeof(SDL_Texture*)*512);
 	int i, j;
 	SDL_Rect rect = {0, 0, SPRITE_W, SPRITE_H};
 	for (i = 0; i < 16; i++) {
 		for (j = 0; j < 32; j++) {
-			cur_game->sprites[(i*32)+j] = SDL_CreateRGBSurface(0, SPRITE_W, SPRITE_H, 24, 0x00, 0x00, 0x00, 0x00);
-			SDL_SetColorKey(cur_game->sprites[(i*32)+j], 1, 0x000000);
-			SDL_FillRect(cur_game->sprites[(i*32)+j], 0, 0x000000);
+			tiles[(i*32)+j] = SDL_CreateRGBSurface(0, SPRITE_W, SPRITE_H, 24, 0x00, 0x00, 0x00, 0x00);
+			SDL_SetColorKey(tiles[(i*32)+j], 1, 0x000000);
+			SDL_FillRect(tiles[(i*32)+j], 0, 0x000000);
 			rect.x = j * 32;
 			rect.y = i * 32;
-			SDL_BlitSurface(surface, &rect, cur_game->sprites[(i*32)+j], NULL);
-			cur_game->sprite_textures[(i*32)+j] = SDL_CreateTextureFromSurface(cur_game->screen.renderer, cur_game->sprites[(i*32)+j]);
+			SDL_BlitSurface(surface, &rect, tiles[(i*32)+j], NULL);
+			cur_game->sprite_textures[(i*32)+j] = SDL_CreateTextureFromSurface(cur_game->screen.renderer, tiles[(i*32)+j]);
 		}
 	}
+	for (i = 0; i < 512; i++) {
+		SDL_FreeSurface(tiles[i]);
+	}
+	free(tiles);
 	SDL_FreeSurface(surface);
+	
 }
 
 static void
@@ -448,10 +454,8 @@ unload_sprites(struct game *cur_game)
 
 	/* Free all sprites */
 	for (i = 0; i < 512; i++) {
-		SDL_FreeSurface(cur_game->sprites[i]);
 		SDL_DestroyTexture(cur_game->sprite_textures[i]);
 	}
-	free(cur_game->sprites);
 	free(cur_game->sprite_textures);
 }
 

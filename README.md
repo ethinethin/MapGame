@@ -39,6 +39,8 @@ Mouse controls:
 - Right click on item stacks to enter place item mode
 	- Left click to place a single
 	- Right click to exit place item mode
+- Left click doors and holders to open
+- Right click doors and holders to pick up (holders must be empty to pick up)
 
 That's all there is so far!
 
