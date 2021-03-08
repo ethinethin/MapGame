@@ -1,6 +1,22 @@
 Changelog
 -
 
+2021-03-07
+-
+
+- Added new sprites to the game
+- Added animation of sprites to game
+- Optimized all input loops to accommodate animation
+- Added “X” in world map and allowed click closing
+- Dropped item stacks are always PASSABLE
+- Changed world map indicator to always show current view
+- Added “X” in inventory
+
+2021-03-06
+-
+
+- Designed several new sprites for grassland
+
 2021-03-05
 -
 

@@ -60,18 +60,20 @@ pickup_item(struct game *cur_game, struct worldmap *map, struct player *cur_play
 {
 	char white[3] = { 255, 255, 255 };
 	char black[3] = { 0, 0, 0 };
-
-	/* Prompt for direction and render */
-	draw_game(cur_game, map, cur_player);
-	draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
-	draw_rect(cur_game, GAME_X + 16, GAME_Y + 16, 28*16 + 2, 18 + 2, SDL_TRUE, black, SDL_TRUE, white);
-	draw_sentence(cur_game, GAME_X + 16 + 1, GAME_Y + 16 + 1, "Which direction?");
-	render_present(cur_game);
 	
 	/* Wait for user input */
 	SDL_Event event;
 	SDL_bool finished = SDL_FALSE;
-	while (finished == SDL_FALSE && SDL_WaitEvent(&event)) {
+	while (finished == SDL_FALSE) {
+		/* Draw screen */
+		draw_game(cur_game, map, cur_player);
+		draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
+		draw_rect(cur_game, GAME_X + 16, GAME_Y + 16, 28*16 + 2, 18 + 2, SDL_TRUE, black, SDL_TRUE, white);
+		draw_sentence(cur_game, GAME_X + 16 + 1, GAME_Y + 16 + 1, "Which direction?");
+		render_present(cur_game);
+		SDL_Delay(10);
+		/* Poll for input */
+		if (SDL_PollEvent(&event) == 0) continue;
 		if (event.type == SDL_KEYDOWN) {
 			switch (event.key.keysym.sym) {
 				case SDLK_UP: /* pickup up */
@@ -89,6 +91,9 @@ pickup_item(struct game *cur_game, struct worldmap *map, struct player *cur_play
 				case SDLK_LEFT: /* pickup left */
 				case SDLK_a:
 					finished = handle_pickup(cur_game, map, cur_player, -1, 0);
+					break;
+				case SDLK_i:
+					toggle_inv(cur_game);
 					break;
 				default:
 					finished = SDL_TRUE;
@@ -209,18 +214,20 @@ throw_item(struct game *cur_game, struct worldmap *map, struct player *cur_playe
 
 	/* Check for item */
 	if (cur_player->loot[(int) cur_game->cursor] == 0) return;
-
-	/* Prompt for direction and render */
-	draw_game(cur_game, map, cur_player);
-	draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
-	draw_rect(cur_game, GAME_X + 16, GAME_Y + 16, 28*16 + 2, 18 + 2, SDL_TRUE, black, SDL_TRUE, white);
-	draw_sentence(cur_game, GAME_X + 16 + 1, GAME_Y + 16 + 1, "Which direction?");
-	render_present(cur_game);
 	
 	/* Wait for user input */
 	SDL_Event event;
 	SDL_bool finished = SDL_FALSE;
-	while (finished == SDL_FALSE && SDL_WaitEvent(&event)) {
+	while (finished == SDL_FALSE) {
+		/* Draw screen */
+		draw_game(cur_game, map, cur_player);
+		draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
+		draw_rect(cur_game, GAME_X + 16, GAME_Y + 16, 28*16 + 2, 18 + 2, SDL_TRUE, black, SDL_TRUE, white);
+		draw_sentence(cur_game, GAME_X + 16 + 1, GAME_Y + 16 + 1, "Which direction?");
+		render_present(cur_game);
+		SDL_Delay(10);
+		/* Check for user input */
+		if (SDL_PollEvent(&event) == 0) continue;
 		if (event.type == SDL_KEYDOWN) {
 			switch (event.key.keysym.sym) {
 				case SDLK_UP: /* throw up */
@@ -238,6 +245,9 @@ throw_item(struct game *cur_game, struct worldmap *map, struct player *cur_playe
 				case SDLK_LEFT: /* throw left */
 				case SDLK_a:
 					finished = handle_throw(cur_game, map, cur_player, -1, 0, cur_player->quantity[(int) cur_game->cursor]);
+					break;
+				case SDLK_i:
+					toggle_inv(cur_game);
 					break;
 				default:
 					finished = SDL_TRUE;
@@ -405,14 +415,16 @@ swap_item(struct game *cur_game, struct worldmap *map, struct player *cur_player
 	/* Wait for user input */
 	SDL_Event event;
 	SDL_bool finished = SDL_FALSE;
-	while (finished == SDL_FALSE && SDL_WaitEvent(&event)) {
-		/* Ask for which spot you wanna put it in */
+	while (finished == SDL_FALSE) {
+		/* Draw screen */
 		draw_game(cur_game, map, cur_player);
 		draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
 		draw_rect(cur_game, GAME_X + 16, GAME_Y + 16, 28*10 + 2, 18 + 2, SDL_TRUE, black, SDL_TRUE, white);
 		draw_sentence(cur_game, GAME_X + 16 + 1, GAME_Y + 16 + 1, "Put where?");
 		render_present(cur_game);
-
+		SDL_Delay(10);
+		/* Poll for input */
+		if (SDL_PollEvent(&event) == 0) continue;
 		if (event.type == SDL_KEYDOWN) {
 			switch (event.key.keysym.sym) {
 				case SDLK_i: /* toggle inventory */

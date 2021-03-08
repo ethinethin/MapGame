@@ -53,17 +53,19 @@ get_harvest_input(struct game *cur_game, struct worldmap *map, struct player *cu
 	char white[3] = { 255, 255, 255 };
 	char black[3] = { 0, 0, 0 };
 
-	/* Prompt for direction and render */
-	draw_game(cur_game, map, cur_player);
-	draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
-	draw_rect(cur_game, GAME_X + 16, GAME_Y + 16, 28*16 + 2, 18 + 2, SDL_TRUE, black, SDL_TRUE, white);
-	draw_sentence(cur_game, GAME_X + 16 + 1, GAME_Y + 16 + 1, "Which direction?");
-	render_present(cur_game);
-	
 	/* Wait for user input */
 	SDL_Event event;
 	SDL_bool finished = SDL_FALSE;
-	while (finished == SDL_FALSE && SDL_WaitEvent(&event)) {
+	while (finished == SDL_FALSE) {
+		/* Draw screen */
+		draw_game(cur_game, map, cur_player);
+		draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
+		draw_rect(cur_game, GAME_X + 16, GAME_Y + 16, 28*16 + 2, 18 + 2, SDL_TRUE, black, SDL_TRUE, white);
+		draw_sentence(cur_game, GAME_X + 16 + 1, GAME_Y + 16 + 1, "Which direction?");
+		render_present(cur_game);
+		SDL_Delay(10);
+		/* Poll for input */
+		if (SDL_PollEvent(&event) == 0) continue;
 		if (event.type == SDL_KEYDOWN) {
 			switch (event.key.keysym.sym) {
 				case SDLK_UP: /* pickup up */
@@ -81,6 +83,9 @@ get_harvest_input(struct game *cur_game, struct worldmap *map, struct player *cu
 				case SDLK_LEFT: /* pickup left */
 				case SDLK_a:
 					finished = harvest_item(cur_game, map, cur_player, cur_player->x-1, cur_player->y);
+					break;
+				case SDLK_i:
+					toggle_inv(cur_game);
 					break;
 			default:
 					finished = SDL_TRUE;
@@ -287,42 +292,14 @@ harvest_loop(struct game *cur_game, struct worldmap *map, struct player *cur_pla
 	int counter;
 	SDL_Event event;
 	SDL_bool finished = SDL_FALSE;
-	SDL_Rect rect = { 0, 0, WIN_W, WIN_H };
-	SDL_Texture *texture;
-	
-	/* output screen to a texture */
-	texture = SDL_CreateTexture(cur_game->screen.renderer, SDL_PIXELFORMAT_RGBA8888,
-				    SDL_TEXTUREACCESS_TARGET, WIN_W, WIN_H);
-	SDL_SetRenderTarget(cur_game->screen.renderer, texture);
-	draw_game(cur_game, map, cur_player);
-	draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
-	SDL_SetRenderTarget(cur_game->screen.renderer, NULL);
 	
 	/* Enter input loop */	
 	counter = 0;
 	while (finished == SDL_FALSE) {
-		/* Check for input */
-		SDL_PollEvent(&event);
-		if (event.type == SDL_KEYDOWN) {
-			if (event.key.keysym.sym == SDLK_i) {
-				/* toggle inventory and re-render screen */
-				toggle_inv(cur_game);
-				SDL_DestroyTexture(texture);
-				texture = SDL_CreateTexture(cur_game->screen.renderer, SDL_PIXELFORMAT_RGBA8888,
-							    SDL_TEXTUREACCESS_TARGET, WIN_W, WIN_H);
-				SDL_SetRenderTarget(cur_game->screen.renderer, texture);
-				draw_game(cur_game, map, cur_player);
-				draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
-				SDL_SetRenderTarget(cur_game->screen.renderer, NULL);
-			} else {
-				return SDL_FALSE;
-			}
-		} else if (event.type == SDL_MOUSEBUTTONDOWN) {
-			return SDL_FALSE;
-		}
-		/* Output screen */
-		SDL_RenderCopy(cur_game->screen.renderer, texture, NULL, &rect); 
-		// Draw bar above player
+		/* Redraw screen */
+		draw_game(cur_game, map, cur_player);
+		draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
+		/* Draw bar above player */
 		draw_rect(cur_game,
 		          GAME_X + 32 * cur_player->winpos_x - 16,
 		          GAME_Y + 32 * cur_player->winpos_y - 16,
@@ -331,14 +308,25 @@ harvest_loop(struct game *cur_game, struct worldmap *map, struct player *cur_pla
 		          GAME_X + 32 * cur_player->winpos_x - 15,
 		          GAME_Y + 32 * cur_player->winpos_y - 15,
 		          62 * counter/100, 8, SDL_TRUE, blue, SDL_FALSE, NULL);
-		/* Render screen */
-		render_present(cur_game);		
-		/* Delay 10 and increment counter */
+		render_present(cur_game);
 		SDL_Delay(10);
+		/* Increment bar */
 		counter++;
 		if (counter == 100) break;
+
+		/* Check for input */
+		if (SDL_PollEvent(&event) == 0) continue;
+		if (event.type == SDL_KEYDOWN) {
+			if (event.key.keysym.sym == SDLK_i) {
+				/* toggle inventory and re-render screen */
+				toggle_inv(cur_game);
+			} else {
+				return SDL_FALSE;
+			}
+		} else if (event.type == SDL_MOUSEBUTTONDOWN) {
+			return SDL_FALSE;
+		}
 	}
-	SDL_DestroyTexture(texture);
 	return SDL_TRUE;
 }
 

@@ -56,8 +56,12 @@ main()
 	
 	/* enter main game loop */
 	SDL_Event event;
-	while (GAME.running && SDL_WaitEvent(&event)) {
+	while (GAME.running) {
+		/* draw map, player, and render */
+		draw_all(&GAME, &MAP, &PLAYER);
 		SDL_Delay(10);
+		/* poll for an event */
+		if (SDL_PollEvent(&event) == 0) continue;
 		if (event.type == SDL_QUIT) { /* exit button pressed */
 			GAME.running = SDL_FALSE;
 		} else if (event.type == SDL_KEYDOWN) {
@@ -135,8 +139,6 @@ main()
 		} else if (event.type == SDL_MOUSEBUTTONDOWN) {
 			mouse_click(&GAME, &MAP, &PLAYER, event.button.x, event.button.y, event.button.button);
 		}
-		/* draw map, player, and render */
-		draw_all(&GAME, &MAP, &PLAYER);
 	}
 	/* quit game and exit normally */
 	game_quit();

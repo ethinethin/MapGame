@@ -74,7 +74,7 @@ move_player(struct game *cur_game, struct worldmap *map, struct player *cur_play
 	/* check if tile is impassable */
 	if (is_passable(*(*(map->tile+new_y)+new_x),
 	                *(*(map->biome+new_y)+new_x)) == IMPASSABLE ||
-	    is_loot_passable(*(*(map->loot+new_y)+new_x)) == IMPASSABLE) {
+	    (is_loot_passable(*(*(map->loot+new_y)+new_x)) == IMPASSABLE && *(*(map->quantity+new_y)+new_x) == 1)) {
 	    	return;
 	}
 	/* move player */

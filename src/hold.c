@@ -140,7 +140,6 @@ void
 open_chest(struct game *cur_game, struct worldmap *map, struct player *cur_player, int x, int y)
 {
 	char white[3] = { 255, 255, 255 };
-	SDL_Rect rect = { 0, 0, WIN_W, WIN_H };
 	struct item_clicked item_click;
 	struct item_clicked item_drop;
 	
@@ -148,29 +147,25 @@ open_chest(struct game *cur_game, struct worldmap *map, struct player *cur_playe
 	item_click.holder = get_holder(x, y);
 	item_drop.holder = item_click.holder;
 	item_click.loot = 0;
-	/* Draw screen to texture */
-	SDL_Texture *texture;
-	texture = SDL_CreateTexture(cur_game->screen.renderer, SDL_PIXELFORMAT_RGBA8888,
-				    SDL_TEXTUREACCESS_TARGET, WIN_W, WIN_H);
-	SDL_SetRenderTarget(cur_game->screen.renderer, texture);
-	draw_game(cur_game, map, cur_player);
-	draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
-	draw_chest(cur_game, map, x, y, item_click.holder);
-	SDL_SetRenderTarget(cur_game->screen.renderer, NULL);
-	/* Draw screen */
-	SDL_RenderCopy(cur_game->screen.renderer, texture, NULL, &rect); 
-	render_present(cur_game);
 	/* Enter input loop */
 	SDL_Event event;
 	SDL_bool finished = SDL_FALSE;
-	SDL_bool redraw = SDL_TRUE;
-	while(finished == SDL_FALSE && SDL_WaitEvent(&event)) {
+	while(finished == SDL_FALSE) {
+		/* Redraw screen */
+		draw_game(cur_game, map, cur_player);
+		draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
+		draw_chest(cur_game, map, x, y, item_click.holder);
+		if (MOUSE.mdown == SDL_TRUE && item_click.loot != 0) {
+			drag_item(cur_game, item_click.loot);
+		}
+		render_present(cur_game);
+		SDL_Delay(10);
 		/* Check for input */
+		if (SDL_PollEvent(&event) == 0) continue;
 		switch (event.type) {
 			case SDL_KEYDOWN:
 				if (event.key.keysym.sym == SDLK_i) {
 					toggle_inv(cur_game);
-					redraw = SDL_TRUE;
 				} else {
 					finished = SDL_TRUE;
 				}
@@ -205,7 +200,6 @@ open_chest(struct game *cur_game, struct worldmap *map, struct player *cur_playe
 						place_in_hold(cur_game, map, cur_player, x, y, &item_click);
 						item_click.loot = 0;
 						MOUSE.mdown = SDL_FALSE;
-						redraw = SDL_TRUE;
 					}
 				}
 				break;
@@ -219,31 +213,9 @@ open_chest(struct game *cur_game, struct worldmap *map, struct player *cur_playe
 				}
 				MOUSE.mdown = SDL_FALSE;
 				item_click.loot = 0;
-				redraw = SDL_TRUE;
 				break;	
 		}
-		/* Redraw screen to texture if necessary */
-		if (redraw == SDL_TRUE) {
-			SDL_DestroyTexture(texture);
-			texture = SDL_CreateTexture(cur_game->screen.renderer, SDL_PIXELFORMAT_RGBA8888,
-				    SDL_TEXTUREACCESS_TARGET, WIN_W, WIN_H);
-			SDL_SetRenderTarget(cur_game->screen.renderer, texture);
-			draw_game(cur_game, map, cur_player);
-			draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
-			draw_chest(cur_game, map, x, y, item_click.holder);
-			/* Render screen */
-			SDL_SetRenderTarget(cur_game->screen.renderer, NULL);
-			redraw = SDL_FALSE;
-		}
-		SDL_RenderCopy(cur_game->screen.renderer, texture, NULL, &rect); 
-		/* Draw cursor? */
-		if (MOUSE.mdown == SDL_TRUE && item_click.loot != 0) {
-			drag_item(cur_game, item_click.loot);
-		}
-		render_present(cur_game);
-		SDL_Delay(10);
 	}
-	SDL_DestroyTexture(texture);
 }
 
 static void
@@ -496,47 +468,27 @@ static void
 place_in_hold(struct game *cur_game, struct worldmap *map, struct player *cur_player, int x, int y, struct item_clicked *item_click)
 {
 	char white[3] = { 255, 255, 255 };
-	SDL_Rect rect = { 0, 0, WIN_W, WIN_H };
 	struct item_clicked item_drop;
 	
 	/* Set drop holder equal to the holder being viewed */
 	item_drop.holder = item_click->holder;
 
-	/* Draw screen to texture */
-	SDL_Texture *texture;
-	texture = SDL_CreateTexture(cur_game->screen.renderer, SDL_PIXELFORMAT_RGBA8888,
-				    SDL_TEXTUREACCESS_TARGET, WIN_W, WIN_H);
-	SDL_SetRenderTarget(cur_game->screen.renderer, texture);
-	draw_game(cur_game, map, cur_player);
-	draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
-	draw_chest(cur_game, map, x, y, item_click->holder);
-	SDL_SetRenderTarget(cur_game->screen.renderer, NULL);
 	/* Enter input loop */
 	SDL_Event event;
 	SDL_bool finished = SDL_FALSE;
-	SDL_bool redraw = SDL_TRUE;
-	while(finished == SDL_FALSE && SDL_WaitEvent(&event)) {
-		/* Redraw screen to texture if necessary */
-		if (redraw == SDL_TRUE) {
-			SDL_DestroyTexture(texture);
-			texture = SDL_CreateTexture(cur_game->screen.renderer, SDL_PIXELFORMAT_RGBA8888,
-				    SDL_TEXTUREACCESS_TARGET, WIN_W, WIN_H);
-			SDL_SetRenderTarget(cur_game->screen.renderer, texture);
-			draw_game(cur_game, map, cur_player);
-			draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
-			draw_chest(cur_game, map, x, y, item_click->holder);
-			SDL_SetRenderTarget(cur_game->screen.renderer, NULL);
-			redraw = SDL_FALSE;
-		}
-		SDL_RenderCopy(cur_game->screen.renderer, texture, NULL, &rect); 
+	while(finished == SDL_FALSE) {
+		/* Redraw screen */
+		draw_game(cur_game, map, cur_player);
+		draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
+		draw_chest(cur_game, map, x, y, item_click->holder);
 		drag_item(cur_game, item_click->loot);
 		render_present(cur_game);
 		SDL_Delay(10);
 		
 		/* Poll for mouse state */
+		if (SDL_PollEvent(&event) == 0) continue;
 		switch (event.type) {
 			case SDL_KEYDOWN:
-				redraw = SDL_TRUE;
 				switch (event.key.keysym.sym) {
 					case SDLK_i:
 						toggle_inv(cur_game);
@@ -573,7 +525,6 @@ place_in_hold(struct game *cur_game, struct worldmap *map, struct player *cur_pl
 					}
 					if (item_drop.click_location != 0) {
 						handle_hold_swap(cur_game, cur_player, item_click, &item_drop, 1);
-						redraw = SDL_TRUE;
 						/* Update quantity in item_drop */
 						update_quantity(item_click, cur_player);
 						/* Item stack depleted */
@@ -587,7 +538,6 @@ place_in_hold(struct game *cur_game, struct worldmap *map, struct player *cur_pl
 				break;
 		}
 	}
-	SDL_DestroyTexture(texture);
 }
 
 static void

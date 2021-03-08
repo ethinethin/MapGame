@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <SDL2/SDL.h>
+#include "harv.h"
 #include "loot.h"
 #include "maps.h"
 #include "rand.h"
@@ -20,6 +21,15 @@ char cyan[3] = { 0, 255, 255 };
 char white[3] = { 255, 255, 255 };
 char black[3] = { 26, 26, 26 };
 
+/* Custom grassland colors */
+char grass[3] = {0x19, 0xB3, 0x4D};
+char tall_grass[3] = {0x15, 0x95, 0x40};
+char brush[3] = {0x11, 0x77, 0x33};
+char tall_brush[3] = {0x0D, 0x59, 0x26};
+char rocky_grass[3] = {0x6A, 0xEA, 0x95};
+char big_rock[3] = {0xA6, 0xF2, 0xBF};
+
+
 /* Structure for tiles */
 struct biome {
 	char *name;
@@ -33,16 +43,16 @@ struct biome {
 };
 
 /* Biomes */
-struct biome BIOMES[6] = {{
+struct biome BIOMES[] = {{
 	"grassland",
 	{
 		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-		{"grass", 5, lightgreen, PASSABLE, {0, 92, 5, 3, 0, 0, 0, 0, 0}},
-		{"mountain", 12, grey, IMPASSABLE, {0, 23, 75, 0, 2, 0, 0, 0, 0}},
-		{"water", 2, blue, IMPASSABLE, {0, 0, 0, 75, 0, 25, 0, 0, 0}},
-		{"lava", 143, red, IMPASSABLE, {0, 0, 90, 0, 10, 0, 0, 0, 0}},
-		{"sand", 31, yellow, PASSABLE, {0, 45, 0, 35, 0, 20, 0, 0, 0}},
-		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{"grass", 512, grass, PASSABLE, {0, 80, 10, 5, 0, 5, 0, 0, 0}},
+		{"tall grass", 514, tall_grass, PASSABLE, {0, 10, 80, 4, 4, 2, 0, 0, 0}},
+		{"brush", 516, brush, PASSABLE, {0, 10, 20, 50, 15, 5, 0, 0, 0}},
+		{"tall brush", 518, tall_brush, PASSABLE, {0, 5, 10, 25, 50, 10, 0, 0, 0}},
+		{"rocky grass", 520, rocky_grass, PASSABLE, {0, 10, 15, 15, 5, 50, 5, 0, 0}},
+		{"big rock", 522, big_rock, IMPASSABLE, {0, 20, 20, 20, 20, 20, 0, 0, 0}},
 		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
 		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}}
 	}},
@@ -97,7 +107,7 @@ struct biome BIOMES[6] = {{
 	{"map_generator",
 	{
 		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-		{"grassland", 0, black, IMPASSABLE, {0, 90, 2, 2, 6, 0, 0, 0, 0}},
+		{"grassland", 0, black, IMPASSABLE, {0, 100, 0, 0, 0, 0, 0, 0, 0}},
 		{"tundra", 0, black, IMPASSABLE, {0, 5, 90, 0, 5, 0, 0, 0, 0}},
 		{"desert", 0, black, IMPASSABLE, {0, 10, 0, 90, 0, 0, 0, 0, 0}},
 		{"forest", 0, black, IMPASSABLE, {0, 5, 5, 0, 90, 0, 0, 0, 0}},
@@ -124,6 +134,8 @@ create_map(struct worldmap *map, int row_size, int col_size)
 	/* Save dimensions to structure */
 	map->col_size = col_size;
 	map->row_size = row_size;
+	map->frame_speed = FRAME_SPEED;
+
 	/* Allocate space for map and zero out */
 	map->tile = malloc(sizeof(*(map->tile))*row_size);
 	map->biome = malloc(sizeof(*(map->biome))*row_size);
@@ -132,6 +144,8 @@ create_map(struct worldmap *map, int row_size, int col_size)
 	map->harvestable = malloc(sizeof(*(map->harvestable))*row_size);
 	map->ground = malloc(sizeof(*(map->ground))*row_size);
 	map->roof = malloc(sizeof(*(map->roof))*row_size);
+	map->frame = malloc(sizeof(*(map->frame))*row_size);
+	map->frame_count = malloc(sizeof(*(map->frame_count))*row_size);
 	for (rows = 0; rows < row_size; rows++) {
 		*(map->tile+rows) = malloc(sizeof(**map->tile)*col_size);
 		*(map->biome+rows) = malloc(sizeof(**map->biome)*col_size);
@@ -140,6 +154,8 @@ create_map(struct worldmap *map, int row_size, int col_size)
 		*(map->ground+rows) = malloc(sizeof(**map->ground)*col_size);
 		*(map->roof+rows) = malloc(sizeof(**map->roof)*col_size);
 		*(map->harvestable+rows) = malloc(sizeof(**map->harvestable)*col_size);
+		*(map->frame+rows) = malloc(sizeof(**map->frame)*col_size);
+		*(map->frame_count+rows) = malloc(sizeof(**map->frame_count)*col_size);
 		for (cols = 0; cols < col_size; cols++) {
 			*(*(map->tile+rows)+cols) = 0;
 			*(*(map->biome+rows)+cols) = 0;
@@ -148,6 +164,12 @@ create_map(struct worldmap *map, int row_size, int col_size)
 			*(*(map->ground+rows)+cols) = 0;
 			*(*(map->roof+rows)+cols) = 0;
 			*(*(map->harvestable+rows)+cols) = SDL_TRUE;
+			*(*(map->frame+rows)+cols) = rand_num(0, 1);
+			if (*(*(map->frame+rows)+cols) == 0) {
+				*(*(map->frame_count+rows)+cols) = rand_num(map->frame_speed, map->frame_speed*2);
+			} else {
+				*(*(map->frame_count+rows)+cols) = rand_num(map->frame_speed/2, map->frame_speed);
+			}
 		}
 	}
 }
@@ -166,6 +188,8 @@ free_map(struct worldmap *map)
 		free(*(map->ground+rows));
 		free(*(map->roof+rows));
 		free(*(map->harvestable+rows));
+		free(*(map->frame+rows));
+		free(*(map->frame_count+rows));
 	}
 	free(map->tile);
 	free(map->biome);
@@ -174,6 +198,8 @@ free_map(struct worldmap *map)
 	free(map->ground);
 	free(map->roof);
 	free(map->harvestable);
+	free(map->frame);
+	free(map->frame_count);
 }
 
 void
@@ -322,4 +348,32 @@ char *
 get_tile_name(int tile, short int biome)
 {
 	return BIOMES[biome].tiles[tile].name;
+}
+
+void
+process_frames(struct worldmap *map, int row, int col)
+{
+	int rows, cols;
+	for (rows = row; rows < row + WIN_ROWS; rows++) {
+		for (cols = col; cols < col + WIN_COLS; cols++) {
+			/* count down the frame count */
+			if (is_harvestable(map, cols, rows) == SDL_FALSE) continue;
+			*(*(map->frame_count+rows)+cols) -= 1;
+			/* if frame count is 0, change the frame */
+			if (*(*(map->frame_count+rows)+cols) <= 0) {
+				switch(*(*(map->frame+rows)+cols)) {
+					case 0:
+						*(*(map->frame+rows)+cols) = 1;
+						*(*(map->frame_count+rows)+cols) = rand_num(map->frame_speed/2, map->frame_speed);
+						break;
+					case 1:
+						*(*(map->frame+rows)+cols) = 0;
+						*(*(map->frame_count+rows)+cols) = rand_num(map->frame_speed, map->frame_speed*2);
+						break;						
+					default:
+						break;
+				}
+			}
+		}
+	}
 }
