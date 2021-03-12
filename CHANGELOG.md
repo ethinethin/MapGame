@@ -1,6 +1,14 @@
 Changelog
 -
 
+2021-03-11
+-
+
+- Changed tile rendering size from 32x32 to 64x64
+- Optimized code for dynamic tile size rendering
+- Changed blinking indicator size
+- Added puddles and swamp sprites in grassland
+
 2021-03-07
 -
 

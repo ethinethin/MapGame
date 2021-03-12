@@ -28,7 +28,7 @@ char brush[3] = {0x11, 0x77, 0x33};
 char tall_brush[3] = {0x0D, 0x59, 0x26};
 char rocky_grass[3] = {0x6A, 0xEA, 0x95};
 char big_rock[3] = {0xA6, 0xF2, 0xBF};
-
+char puddles[3] = {0x88, 0xEE, 0xAA};
 
 /* Structure for tiles */
 struct biome {
@@ -47,14 +47,14 @@ struct biome BIOMES[] = {{
 	"grassland",
 	{
 		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-		{"grass", 512, grass, PASSABLE, {0, 80, 10, 5, 0, 5, 0, 0, 0}},
+		{"grass", 512, grass, PASSABLE, {0, 80, 8, 5, 0, 5, 0, 2, 0}},
 		{"tall grass", 514, tall_grass, PASSABLE, {0, 10, 80, 4, 4, 2, 0, 0, 0}},
 		{"brush", 516, brush, PASSABLE, {0, 10, 20, 50, 15, 5, 0, 0, 0}},
 		{"tall brush", 518, tall_brush, PASSABLE, {0, 5, 10, 25, 50, 10, 0, 0, 0}},
 		{"rocky grass", 520, rocky_grass, PASSABLE, {0, 10, 15, 15, 5, 50, 5, 0, 0}},
 		{"big rock", 522, big_rock, IMPASSABLE, {0, 20, 20, 20, 20, 20, 0, 0, 0}},
-		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}}
+		{"puddles", 524, puddles, PASSABLE, {0, 75, 7, 3, 0, 0, 0, 10, 5}},
+		{"swamp", 526, puddles, IMPASSABLE, {0, 30, 7, 3, 0, 0, 0, 50, 10}}
 	}},
 	{"tundra",
 	{

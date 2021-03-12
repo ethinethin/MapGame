@@ -25,39 +25,38 @@ struct game {
 /* Map dimensions */
 #define MAP_ROWS 512
 #define MAP_COLS 1024
-#define WIN_ROWS 21
-#define WIN_COLS 39
+#define WIN_ROWS 11
+#define WIN_COLS 19
+#define WIN_SCALE 2
 #define SPRITE_W 32
 #define SPRITE_H 32
 
 /* Screen dimensions values */
 #define WIN_W 1280
 #define WIN_H 720
-#define GAME_X 16
-#define GAME_Y 24
-#define GAME_W 1248
-#define GAME_H 672
+#define GAME_X 32
+#define GAME_Y 8
+#define GAME_W 1216
+#define GAME_H 704
 #define MAP_X 128
 #define MAP_Y 104
 #define MAP_W 1024
 #define MAP_H 512
 
 /* Constants for inventory and quickbar */
-#define INV_X (WIN_W - GAME_X - 16 - 192)
-#define INV_Y (GAME_Y + 16 + 18)
-#define INV_W (48*4 + 1)
-#define INV_H (60*8 + 1)
-#define QB_X (WIN_W/2 - 48*8/2)
-#define QB_Y (WIN_H - GAME_Y - 60 - 16)
-#define QB_W (48*8)
-#define QB_H 60
-
+#define INV_W (SPRITE_W * WIN_SCALE * 4 + 1)
+#define INV_H ((SPRITE_H * WIN_SCALE + (SPRITE_H * WIN_SCALE / 4)) * 8 + 1)
+#define INV_X (WIN_W - GAME_X - 16 - INV_W)
+#define INV_Y (WIN_H - GAME_Y - 16 - INV_H)
+#define QB_X (WIN_W/2 - (SPRITE_W * WIN_SCALE*8)/2)
+#define QB_Y (WIN_H - GAME_Y - 16 - (SPRITE_H * WIN_SCALE * 1.25))
+#define QB_W (SPRITE_W * WIN_SCALE * 8)
+#define QB_H (SPRITE_H * WIN_SCALE * 1.25)
 /* Constants for holders */
-#define HOLDER_X (WIN_W/2 - 48*10/2)
-#define HOLDER_Y (WIN_H/2 - 60*4/2)
-#define HOLDER_W (48*10 + 1)
-#define HOLDER_H (60*4 + 1)
-
+#define HOLDER_W (SPRITE_W * WIN_SCALE * 10)
+#define HOLDER_H (SPRITE_H * WIN_SCALE * 4 * 1.25)
+#define HOLDER_X QB_X + QB_W - HOLDER_W
+#define HOLDER_Y QB_Y - HOLDER_H - SPRITE_H * WIN_SCALE * 1.25
 
 /* Constants for loot */
 #define MAX_STACK 999

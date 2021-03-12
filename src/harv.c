@@ -301,13 +301,13 @@ harvest_loop(struct game *cur_game, struct worldmap *map, struct player *cur_pla
 		draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
 		/* Draw bar above player */
 		draw_rect(cur_game,
-		          GAME_X + 32 * cur_player->winpos_x - 16,
-		          GAME_Y + 32 * cur_player->winpos_y - 16,
-		          64, 10, SDL_TRUE, black, SDL_TRUE, white);
+		          GAME_X + SPRITE_W * WIN_SCALE * cur_player->winpos_x - SPRITE_W * WIN_SCALE / 2,
+		          GAME_Y + SPRITE_H * WIN_SCALE * cur_player->winpos_y - 40,
+		          SPRITE_W * WIN_SCALE * 2, 20, SDL_TRUE, black, SDL_TRUE, white);
 		draw_rect(cur_game,
-		          GAME_X + 32 * cur_player->winpos_x - 15,
-		          GAME_Y + 32 * cur_player->winpos_y - 15,
-		          62 * counter/100, 8, SDL_TRUE, blue, SDL_FALSE, NULL);
+		          GAME_X + SPRITE_W * WIN_SCALE * cur_player->winpos_x - SPRITE_W * WIN_SCALE / 2 + 1,
+		          GAME_Y + SPRITE_H * WIN_SCALE * cur_player->winpos_y - 40 + 1,
+		          (SPRITE_W * WIN_SCALE * 2 - 2) * counter / 100, 20 - 2, SDL_TRUE, blue, SDL_FALSE, NULL);
 		render_present(cur_game);
 		SDL_Delay(10);
 		/* Increment bar */

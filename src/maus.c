@@ -144,9 +144,9 @@ move_cursor_qb(struct game *cur_game, int x, int y)
 {
 	int i;
 	for (i = 0; i < 8; i++) {
-		if (x > i*48 && x <= (i+1)*48) {
+		if (x > i * SPRITE_W * WIN_SCALE && x <= (i+1) * SPRITE_W * WIN_SCALE) {
 			cur_game->cursor = i;
-			MOUSE.offset_x = x - i*48;
+			MOUSE.offset_x = x - i * SPRITE_W * WIN_SCALE;
 			MOUSE.offset_y = y;
 			return SDL_TRUE;
 		}
@@ -160,11 +160,11 @@ move_cursor_inv(struct game *cur_game, int x, int y)
 	int rows, cols;
 	for (cols = 0; cols < 4; cols++) {
 		for (rows = 0; rows < 8; rows++) {
-			if (x > cols*48 && x <= (cols+1)*48 &&
-				y > rows*60 && y <= (rows+1)*60) {
+			if (x > cols * SPRITE_W * WIN_SCALE && x <= (cols+1) * SPRITE_W * WIN_SCALE &&
+				y > rows * SPRITE_H * WIN_SCALE * 1.25 && y <= (rows+1) * SPRITE_H * WIN_SCALE * 1.25) {
 				cur_game->cursor = rows+(cols*8)+8;
-				MOUSE.offset_x = x - cols*48;
-				MOUSE.offset_y = y - rows*60;
+				MOUSE.offset_x = x - cols * SPRITE_W * WIN_SCALE;
+				MOUSE.offset_y = y - rows * SPRITE_H * WIN_SCALE * 1.25;
 				return SDL_TRUE;
 			}
 		}
@@ -175,7 +175,7 @@ move_cursor_inv(struct game *cur_game, int x, int y)
 static void
 drag_item(struct game *cur_game, struct player *cur_player)
 {
-	draw_tile(cur_game, MOUSE.x - MOUSE.offset_x, MOUSE.y - MOUSE.offset_y, 48, 48,
+	draw_tile(cur_game, MOUSE.x - MOUSE.offset_x, MOUSE.y - MOUSE.offset_y, SPRITE_W * WIN_SCALE, SPRITE_H * WIN_SCALE,
 	          get_loot_sprite(cur_player->loot[(short int) cur_game->cursor]), 192);
 }
 
@@ -184,8 +184,8 @@ get_click_coordinates(struct player *cur_player)
 {
 	struct coords pos;
 	/* get window position based on mouse coords */
-	pos.x = (MOUSE.x - GAME_X)/32;
-	pos.y = (MOUSE.y - GAME_Y)/32;
+	pos.x = (MOUSE.x - GAME_X)/(SPRITE_W * WIN_SCALE);
+	pos.y = (MOUSE.y - GAME_Y)/(SPRITE_W * WIN_SCALE);
 	/* get position relative to player */
 	pos.x -= cur_player->winpos_x;
 	pos.y -= cur_player->winpos_y;
@@ -250,8 +250,8 @@ drop_preview(struct game *cur_game, struct player *cur_player)
 	}
 	
 	draw_tile(cur_game,
-		  GAME_X + cur_player->winpos_x*32 + pos.x * 32,
-		  GAME_Y + cur_player->winpos_y*32 + pos.y * 32, 32, 32,
+		  GAME_X + cur_player->winpos_x * SPRITE_W * WIN_SCALE + pos.x * SPRITE_W * WIN_SCALE,
+		  GAME_Y + cur_player->winpos_y * SPRITE_H * WIN_SCALE + pos.y * SPRITE_H * WIN_SCALE, SPRITE_W * WIN_SCALE, SPRITE_H * WIN_SCALE,
 		  get_loot_sprite(cur_player->loot[(short int) cur_game->cursor]), 144);
 
 	return pos;

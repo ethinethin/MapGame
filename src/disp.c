@@ -178,15 +178,15 @@ draw_game(struct game *cur_game, struct worldmap *map, struct player *cur_player
 				}
 			}
 			/* Draw ground tile */
-			draw_tile(cur_game, (cols - win.x) * SPRITE_W + GAME_X, (rows - win.y) * SPRITE_H + GAME_Y, SPRITE_W, SPRITE_H, sprite_index, alpha); 
+			draw_tile(cur_game, (cols - win.x) * SPRITE_W * WIN_SCALE + GAME_X, (rows - win.y) * SPRITE_H * WIN_SCALE + GAME_Y, SPRITE_W * WIN_SCALE, SPRITE_H * WIN_SCALE, sprite_index, alpha); 
 			/* Draw loot */
 			if (*(*(map->loot+rows)+cols) != 0) {
 				sprite_index = get_loot_sprite(*(*(map->loot+rows)+cols));
 				loot_type = get_loot_type(*(*(map->loot+rows)+cols));
 				if (*(*(map->quantity+rows)+cols) > 1 || loot_type == ITEM || loot_type == GROUND || loot_type == ROOF) {
-					draw_tile(cur_game, (cols - win.x) * SPRITE_W + GAME_X + 4, (rows - win.y) * SPRITE_H + GAME_Y + 4, SPRITE_W*3/4, SPRITE_H*3/4, sprite_index, 255); 
+					draw_tile(cur_game, (cols - win.x) * SPRITE_W * WIN_SCALE + GAME_X + SPRITE_W * WIN_SCALE / 4, (rows - win.y) * SPRITE_H * WIN_SCALE + GAME_Y + SPRITE_W * WIN_SCALE / 4, SPRITE_W * WIN_SCALE / 2, SPRITE_H * WIN_SCALE / 2, sprite_index, 255); 
 				} else if (loot_type == WALL || loot_type == C_DOOR || loot_type == O_DOOR || loot_type == HOLDER) {
-					draw_tile(cur_game, (cols - win.x) * SPRITE_W + GAME_X, (rows - win.y) * SPRITE_H + GAME_Y, SPRITE_W, SPRITE_H, sprite_index, 255); 
+					draw_tile(cur_game, (cols - win.x) * SPRITE_W * WIN_SCALE + GAME_X, (rows - win.y) * SPRITE_H * WIN_SCALE + GAME_Y, SPRITE_W * WIN_SCALE, SPRITE_H * WIN_SCALE, sprite_index, 255); 
 				}
 			}
 			/* Check if there's a roof and draw it */
@@ -197,7 +197,7 @@ draw_game(struct game *cur_game, struct worldmap *map, struct player *cur_player
 					alpha = 64;
 				}
 				sprite_index = get_loot_sprite(*(*(map->roof+rows)+cols));
-				draw_tile(cur_game, (cols - win.x) * SPRITE_W + GAME_X, (rows - win.y) * SPRITE_H + GAME_Y, SPRITE_W, SPRITE_H, sprite_index, alpha); 
+				draw_tile(cur_game, (cols - win.x) * SPRITE_W * WIN_SCALE + GAME_X, (rows - win.y) * SPRITE_H * WIN_SCALE + GAME_Y, SPRITE_W * WIN_SCALE, SPRITE_H * WIN_SCALE, sprite_index, alpha); 
 			}
 		}
 	}
@@ -211,16 +211,16 @@ static void
 draw_player(struct game *cur_game, struct player *cur_player, struct win_pos win)
 {	
 	draw_tile(cur_game,
-		  cur_player->x * SPRITE_W - win.x * SPRITE_W + GAME_X,
-		  cur_player->y * SPRITE_H - win.y * SPRITE_H + GAME_Y,
-		  SPRITE_W, SPRITE_H, 334, 255);
+		  cur_player->x * SPRITE_W * WIN_SCALE - win.x * SPRITE_W * WIN_SCALE + GAME_X,
+		  cur_player->y * SPRITE_H * WIN_SCALE - win.y * SPRITE_H * WIN_SCALE + GAME_Y,
+		  SPRITE_W * WIN_SCALE, SPRITE_H * WIN_SCALE, 334, 255);
 }
 
 static void
 update_winpos(struct player *cur_player, struct win_pos win)
 {
-	cur_player->winpos_x = (cur_player->x * SPRITE_W - win.x * SPRITE_W)/32;
-	cur_player->winpos_y = (cur_player->y * SPRITE_H - win.y * SPRITE_H)/32;
+	cur_player->winpos_x = (cur_player->x - win.x);
+	cur_player->winpos_y = (cur_player->y - win.y);
 }
 
 static void
@@ -238,33 +238,33 @@ draw_inv(struct game *cur_game, struct player *cur_player)
 	draw_rect(cur_game, QB_X, QB_Y, QB_W + 1, QB_H, SDL_TRUE, black, SDL_TRUE, white);
 	for (i = 0; i < 8; i++) {
 		draw_line(cur_game,
-			  QB_X + i*48,
+			  QB_X + i * SPRITE_W * WIN_SCALE,
 			  QB_Y,
-			  QB_X + i*48,
-			  QB_Y + 60,
+			  QB_X + i * SPRITE_W * WIN_SCALE,
+			  QB_Y + SPRITE_H * WIN_SCALE * 1.25,
 			  white);
 		if (cur_player->loot[i] != 0) {
 			sprite_index = get_loot_sprite(cur_player->loot[i]);
 			draw_tile(cur_game,
-				  QB_X + i*48 + 1,
+				  QB_X + i * SPRITE_W * WIN_SCALE + 1,
 				  QB_Y + 2,
-				  SPRITE_W * 1.5, SPRITE_H * 1.5,
+				  SPRITE_W * WIN_SCALE, SPRITE_H * WIN_SCALE,
 				  sprite_index,
 				  255);
 			stackable = is_loot_stackable(cur_player->loot[i]);
 			if (stackable == STACKABLE) {
 				sprintf(quantity, "%3d", cur_player->quantity[i]);
 				draw_small_sentence(cur_game,
-						    QB_X + i*48 + 1,
-						    QB_Y + 48,
+						    QB_X + i * SPRITE_W * WIN_SCALE + 18,
+						    QB_Y + SPRITE_H * WIN_SCALE + 4,
 						    quantity);
 			}
 		}
 	}
 	/* Draw cursor */
 	if (cur_game->cursor <= 7) {
-		for (i = 0; i < 3; i++) {
-			draw_rect(cur_game, WIN_W/2 - (48*8)/2 - i - 1 + 48 * cur_game->cursor, WIN_H - GAME_Y - 16 - 60 - i - 1, 48+3+i*2, 60+2+i*2, SDL_FALSE, darkred, SDL_FALSE, NULL);
+		for (i = 1; i < 5; i++) {
+			draw_rect(cur_game, QB_X + SPRITE_W * WIN_SCALE * cur_game->cursor - i, QB_Y - i, SPRITE_W * WIN_SCALE + 1 + i*2, SPRITE_H * WIN_SCALE * 1.25 + i*2, SDL_FALSE, darkred, SDL_FALSE, NULL);
 		}
 	}
 
@@ -280,13 +280,13 @@ draw_inv(struct game *cur_game, struct player *cur_player)
 	/* Draw grid */
 	for (i = 0; i < 8; i++) {
 		draw_line(cur_game,
-			  INV_X, INV_Y + 60 * i,
-			  INV_X + INV_W, INV_Y + 60 * i, white);
+			  INV_X, INV_Y + SPRITE_H * WIN_SCALE * 1.25 * i,
+			  INV_X + INV_W, INV_Y + SPRITE_H * WIN_SCALE * 1.25 * i, white);
 	}
 	for (i = 1; i < 4; i++) {
 		draw_line(cur_game,
-			  INV_X + i * 48, INV_Y,
-			  INV_X + i * 48, INV_Y + INV_H, white);
+			  INV_X + i * SPRITE_W * WIN_SCALE, INV_Y,
+			  INV_X + i * SPRITE_W * WIN_SCALE, INV_Y + INV_H, white);
 	}
 	
 	/* Draw items */
@@ -295,22 +295,23 @@ draw_inv(struct game *cur_game, struct player *cur_player)
 			if (cur_player->loot[j+i*8+8] != 0) {
 				sprite_index = get_loot_sprite(cur_player->loot[j+i*8+8]);
 				draw_tile(cur_game,
-					  INV_X + 48 * i + 1,
-					  INV_Y + 60 * j + 2, 
-					  SPRITE_W * 1.5, SPRITE_H * 1.5,
+					  INV_X + SPRITE_W * WIN_SCALE * i + 1,
+					  INV_Y + SPRITE_H * WIN_SCALE * 1.25 * j + 2,
+					  SPRITE_W * WIN_SCALE, SPRITE_H * WIN_SCALE,
 					  sprite_index,
 					  255);
 				stackable = is_loot_stackable(cur_player->loot[j+i*8+8]);
 				if (stackable == STACKABLE) {
 					sprintf(quantity, "%3d", cur_player->quantity[j+i*8+8]);
 					draw_small_sentence(cur_game,
-							    INV_X + 48 * i + 1,
-							    INV_Y + 60 * j + 48,
+							    INV_X + i * SPRITE_W * WIN_SCALE + 18,
+							    INV_Y + SPRITE_H * WIN_SCALE * 1.25 * j + 4 + SPRITE_H * WIN_SCALE,
 							    quantity);
 				}
 			}
 		}
 	}
+	
 	
 	/* Draw cursor */
 	if (cur_game->cursor > 7) {
@@ -318,19 +319,19 @@ draw_inv(struct game *cur_game, struct player *cur_player)
 		if (cur_game->cursor >= 8 && cur_game->cursor < 16) {
 			j = INV_X;
 		} else if (cur_game->cursor >= 16 && cur_game->cursor < 24) {
-			j = INV_X + 48;
+			j = INV_X + SPRITE_W * WIN_SCALE;
 		} else if (cur_game->cursor >= 24 && cur_game->cursor < 32) {
-			j = INV_X + 96;
+			j = INV_X + SPRITE_W * WIN_SCALE * 2;
 		} else if (cur_game->cursor >= 32 && cur_game->cursor < 40) {
-			j = INV_X + 144;
+			j = INV_X + SPRITE_W * WIN_SCALE * 3;
 		} else {
 			return;
 		}
 		/* Determine vertical position */
-		i = INV_Y + 60 * (cur_game->cursor % 8);
+		i = INV_Y + SPRITE_H * WIN_SCALE * 1.25 * (cur_game->cursor % 8);
 		/* Draw cursor */
-		for (k = 0; k < 3; k++) {
-			draw_rect(cur_game, j - k - 1, i - k - 1, 48+3+k*2, 60+2+k*2 + 1, SDL_FALSE, darkred, SDL_FALSE, NULL);
+		for (k = 1; k < 5; k++) {
+			draw_rect(cur_game, j - k, i - k, SPRITE_W * WIN_SCALE + k*2 + 1, SPRITE_H * WIN_SCALE * 1.25 + k*2 + 1, SDL_FALSE, darkred, SDL_FALSE, NULL);
 		}
 	}
 }
@@ -358,8 +359,8 @@ draw_player_indicator(struct game *cur_game, struct win_pos win, int size)
 	int h_size;
 	
 	/* Draw player indicator */
-	w_size = size*1;
-	h_size = size*21/39;
+	w_size = size * 1;
+	h_size = size * WIN_ROWS / WIN_COLS;
 	draw_rect(cur_game, MAP_X + win.x + WIN_COLS/2 - w_size/2, MAP_Y + win.y + WIN_ROWS/2 - h_size/2, w_size, h_size, SDL_FALSE, red, SDL_FALSE, NULL);
 	draw_rect(cur_game, MAP_X + win.x + WIN_COLS/2 - w_size/2 - 1, MAP_Y + win.y + WIN_ROWS/2 - h_size/2 - 1, w_size+2, h_size+2, SDL_FALSE, red, SDL_FALSE, NULL);
 }
@@ -368,6 +369,8 @@ static struct win_pos
 find_win_pos(struct worldmap *map, struct player *cur_player)
 {
 	struct win_pos win;
+	
+	/* Find where the window position starts; x/y values = world x/y */
 	win.x = cur_player->x - WIN_COLS/2;
 	win.y = cur_player->y - WIN_ROWS/2;
 	
@@ -418,10 +421,10 @@ worldmap(struct game *cur_game, struct worldmap *map, struct player *cur_player)
 		render_present(cur_game);
 		SDL_Delay(10);
 		size += size_change;
-		if (size >= 39) {
-			size_change = -3; 
+		if (size >= WIN_COLS) {
+			size_change = -2; 
 		} else if (size <= 1) {
-			size_change = 3;
+			size_change = 2;
 		}
 		/* Poll for input */
 		if (SDL_PollEvent(&event) == 0) continue;
@@ -446,8 +449,8 @@ load_sprites(struct game *cur_game)
 			tiles[(i*32)+j] = SDL_CreateRGBSurface(0, SPRITE_W, SPRITE_H, 24, 0x00, 0x00, 0x00, 0x00);
 			SDL_SetColorKey(tiles[(i*32)+j], 1, 0x000000);
 			SDL_FillRect(tiles[(i*32)+j], 0, 0x000000);
-			rect.x = j * 32;
-			rect.y = i * 32;
+			rect.x = j * SPRITE_W;
+			rect.y = i * SPRITE_H;
 			SDL_BlitSurface(surface, &rect, tiles[(i*32)+j], NULL);
 			cur_game->sprite_textures[(i*32)+j] = SDL_CreateTextureFromSurface(cur_game->screen.renderer, tiles[(i*32)+j]);
 		}
@@ -460,7 +463,7 @@ load_sprites(struct game *cur_game)
 		tiles[512+i] = SDL_CreateRGBSurface(0, SPRITE_W, SPRITE_H, 24, 0x00, 0x00, 0x00, 0x00);
 		SDL_SetColorKey(tiles[512+i], 1, 0x000000);
 		SDL_FillRect(tiles[512+i], 0, 0x000000);
-		rect.x = i * 32;
+		rect.x = i * SPRITE_W;
 		SDL_BlitSurface(surface, &rect, tiles[512+i], NULL);
 		cur_game->sprite_textures[512+i] = SDL_CreateTextureFromSurface(cur_game->screen.renderer, tiles[512+i]);
 	}

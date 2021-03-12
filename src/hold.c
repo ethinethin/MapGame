@@ -225,12 +225,12 @@ item_click_qb(struct item_clicked *cur_click, struct player *cur_player)
 	
 	cur_click->click_location = QB_CLICK;
 	for (i = 0; i < 8; i++) {
-		if (MOUSE.x > QB_X + 48*i && MOUSE.x <= QB_X + 48*(i+1)) {
+		if (MOUSE.x > QB_X + SPRITE_W * WIN_SCALE * i && MOUSE.x <= QB_X + SPRITE_W * WIN_SCALE * (i+1)) {
 			cur_click->loot_location = i;
 			cur_click->loot = cur_player->loot[i];
 			cur_click->quantity = cur_player->quantity[i];
 			/* set mouse offset */
-			MOUSE.offset_x = MOUSE.x - QB_X - i*48;
+			MOUSE.offset_x = MOUSE.x - QB_X - i * SPRITE_W * WIN_SCALE;
 			MOUSE.offset_y = MOUSE.y - QB_Y;
 			break;
 		}
@@ -245,13 +245,13 @@ item_click_inv(struct item_clicked *cur_click, struct player *cur_player)
 	cur_click->click_location = INV_CLICK;
 	for (j = 0; j < 4; j++) {
 		for (i = 0; i < 8; i++) {
-			if (MOUSE.x > INV_X + j*48 && MOUSE.x <= INV_X + (j+1)*48 && MOUSE.y > INV_Y + i*60 && MOUSE.y <= INV_Y + (i+1)*60) {
+			if (MOUSE.x > INV_X + j * SPRITE_W * WIN_SCALE && MOUSE.x <= INV_X + (j+1) * SPRITE_W * WIN_SCALE && MOUSE.y > INV_Y + i * SPRITE_H * WIN_SCALE * 1.25 && MOUSE.y <= INV_Y + (i+1) * SPRITE_H * WIN_SCALE * 1.25) {
 				cur_click->loot_location = 8*j+i+8;
 				cur_click->loot = cur_player->loot[8*j+i+8];
 				cur_click->quantity = cur_player->quantity[8*j+i+8];
 				/* set mouse offset */
-				MOUSE.offset_x = MOUSE.x - INV_X - j*48;
-				MOUSE.offset_y = MOUSE.y - INV_Y - i*60;
+				MOUSE.offset_x = MOUSE.x - INV_X - j * SPRITE_W * WIN_SCALE;
+				MOUSE.offset_y = MOUSE.y - INV_Y - i * SPRITE_H * WIN_SCALE * 1.25;
 				break;
 			}
 		}
@@ -266,13 +266,13 @@ item_click_hold(struct item_clicked *cur_click)
 	cur_click->click_location = HOLD_CLICK;
 	for (j = 0; j < 10; j++) {
 		for (i = 0; i < 4; i++) {
-			if (MOUSE.x > HOLDER_X + j*48 && MOUSE.x <= HOLDER_X + (j+1)*48 && MOUSE.y > HOLDER_Y + i*60 && MOUSE.y <= HOLDER_Y + (i+1)*60) {
+			if (MOUSE.x > HOLDER_X + j * SPRITE_W * WIN_SCALE && MOUSE.x <= HOLDER_X + (j+1) * SPRITE_W * WIN_SCALE && MOUSE.y > HOLDER_Y + i * SPRITE_H * WIN_SCALE * 1.25 && MOUSE.y <= HOLDER_Y + (i+1) * SPRITE_H * WIN_SCALE * 1.25) {
 				cur_click->loot_location = 4*j+i;
 				cur_click->loot = cur_click->holder->loot[4*j+i];
 				cur_click->quantity = cur_click->holder->quantity[4*j+i];
 				/* set mouse offset */
-				MOUSE.offset_x = MOUSE.x - HOLDER_X - j*48;
-				MOUSE.offset_y = MOUSE.y - HOLDER_Y - i*60;
+				MOUSE.offset_x = MOUSE.x - (HOLDER_X + j * SPRITE_W * WIN_SCALE);
+				MOUSE.offset_y = MOUSE.y - (HOLDER_Y + i * SPRITE_H * WIN_SCALE * 1.25);
 				break;
 			}
 		}
@@ -375,17 +375,17 @@ draw_chest(struct game *cur_game, struct worldmap *map, int x, int y, struct hol
 	draw_rect(cur_game, HOLDER_X, HOLDER_Y, HOLDER_W, HOLDER_H, SDL_TRUE, black, SDL_TRUE, white);
 	for (i = 0; i < 10; i++) {
 		draw_line(cur_game,
-			  HOLDER_X + i*48,
+			  HOLDER_X + i * SPRITE_W * WIN_SCALE,
 			  HOLDER_Y,
-			  HOLDER_X + i*48,
+			  HOLDER_X + i * SPRITE_W * WIN_SCALE,
 			  HOLDER_Y + HOLDER_H,
 			  white);
-		if (i < 5) {
+		if (i < 4) {
 			draw_line(cur_game,
 				  HOLDER_X,
-				  HOLDER_Y + i*60,
+				  HOLDER_Y + i * SPRITE_W * WIN_SCALE * 1.25,
 				  HOLDER_X + HOLDER_W,
-				  HOLDER_Y + i*60,
+				  HOLDER_Y + i * SPRITE_W * WIN_SCALE * 1.25,
 				  white);
 		}
 	}
@@ -400,17 +400,17 @@ draw_chest(struct game *cur_game, struct worldmap *map, int x, int y, struct hol
 			if (cur_holder->loot[j*4+i] != 0) {
 				sprite_index = get_loot_sprite(cur_holder->loot[j*4+i]);
 				draw_tile(cur_game,
-					  HOLDER_X + j*48 + 1,
-					  HOLDER_Y + i*60 + 2,
-					  SPRITE_W * 1.5, SPRITE_H * 1.5,
+					  HOLDER_X + j * SPRITE_W * WIN_SCALE + 1,
+					  HOLDER_Y + i * SPRITE_H * WIN_SCALE * 1.25 + 2,
+					  SPRITE_W * WIN_SCALE, SPRITE_H * WIN_SCALE,
 					  sprite_index,
 					  255);
 				stackable = is_loot_stackable(cur_holder->loot[j*4+i]);
 				if (stackable == STACKABLE) {
 					sprintf(quantity, "%3d", cur_holder->quantity[j*4+i]);
 					draw_small_sentence(cur_game,
-							    HOLDER_X + j*48 + 1,
-							    HOLDER_Y + i*60 + 48,
+							    HOLDER_X + j * SPRITE_W * WIN_SCALE + 1 + 18,
+							    HOLDER_Y + i * SPRITE_H * WIN_SCALE * 1.25 + SPRITE_H * WIN_SCALE + 4,
 							    quantity);
 				}
 			}
@@ -460,7 +460,7 @@ get_holder(int x, int y)
 static void
 drag_item(struct game *cur_game, short int loot)
 {
-	draw_tile(cur_game, MOUSE.x - MOUSE.offset_x, MOUSE.y - MOUSE.offset_y, 48, 48,
+	draw_tile(cur_game, MOUSE.x - MOUSE.offset_x, MOUSE.y - MOUSE.offset_y, SPRITE_W * WIN_SCALE, SPRITE_H * WIN_SCALE,
 	          get_loot_sprite(loot), 192);
 }
 
