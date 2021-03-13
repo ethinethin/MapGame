@@ -21,13 +21,14 @@ Piece of cake! In-game keys are:
 
 - ESC: quit game
 - Arrow keys and WASD: move around
-- M: show world map
-- R: pickup item
-- T: throw item
+- M: show world [M]ap
+- R: pickup ([R]etrieve) item
+- T: drop ([T]hrow) item
 - F: swap item in inventory
-- I: toggle inventory on/off
+- I: toggle [I]nventory on/off
 - Q and E: move cursor in quickbar/inventory
 - Z: harvest from tiles
+- L: toggle scan[L]ines
 
 Mouse controls:
 

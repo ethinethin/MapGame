@@ -1,6 +1,13 @@
 Changelog
 -
 
+2021-03-12
+-
+
+- Added scanlines & scanline toggling
+- Designed two desert tile sets
+- Added variable number of animation frames according to tile
+
 2021-03-11
 -
 

@@ -27,9 +27,11 @@ struct game GAME = {
 	NULL,			/* font */
 	NULL,			/* sprite_textures */
 	NULL,			/* map_texture */
+	NULL,			/* scanlines texture */
 	0,			/* cursor */
 	SDL_FALSE,		/* inventory */
-	SDL_FALSE		/* fullscreen */
+	SDL_FALSE,		/* fullscreen */
+	SDL_TRUE		/* scanlines enabled */
 };
 
 /* Global player construct */
@@ -108,6 +110,9 @@ main()
 					break;
 				case SDLK_z: /*harvest item */
 					get_harvest_input(&GAME, &MAP, &PLAYER);
+					break;
+				case SDLK_l: /* toggle scanLines */
+					toggle_scanlines(&GAME);
 					break;
 				case SDLK_1: /* move to quickbar slot 1 */
 					move_cursor(&GAME, 0 - GAME.cursor);

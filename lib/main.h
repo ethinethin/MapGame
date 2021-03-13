@@ -17,9 +17,11 @@ struct game {
 	SDL_Surface **font;
 	SDL_Texture **sprite_textures;
 	SDL_Texture *map_texture;
+	SDL_Texture *scanlines;
 	char cursor;
 	SDL_bool inventory;
 	SDL_bool fullscreen;
+	SDL_bool scanlines_on;
 };
 
 /* Map dimensions */

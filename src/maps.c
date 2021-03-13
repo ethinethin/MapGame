@@ -29,6 +29,9 @@ char tall_brush[3] = {0x0D, 0x59, 0x26};
 char rocky_grass[3] = {0x6A, 0xEA, 0x95};
 char big_rock[3] = {0xA6, 0xF2, 0xBF};
 char puddles[3] = {0x88, 0xEE, 0xAA};
+/* Custom desert colors */
+char sand1[3] = {0xEB, 0xE0, 0xAD};
+char sand2[3] = {0xD6, 0xC2, 0x5C};
 
 /* Structure for tiles */
 struct biome {
@@ -38,6 +41,7 @@ struct biome {
 		short int sprite;
 		char *col;
 		char passable;
+		unsigned short int max_frame;
 		short int prob[9];
 	} tiles[9];
 };
@@ -46,75 +50,75 @@ struct biome {
 struct biome BIOMES[] = {{
 	"grassland",
 	{
-		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-		{"grass", 512, grass, PASSABLE, {0, 80, 8, 5, 0, 5, 0, 2, 0}},
-		{"tall grass", 514, tall_grass, PASSABLE, {0, 10, 80, 4, 4, 2, 0, 0, 0}},
-		{"brush", 516, brush, PASSABLE, {0, 10, 20, 50, 15, 5, 0, 0, 0}},
-		{"tall brush", 518, tall_brush, PASSABLE, {0, 5, 10, 25, 50, 10, 0, 0, 0}},
-		{"rocky grass", 520, rocky_grass, PASSABLE, {0, 10, 15, 15, 5, 50, 5, 0, 0}},
-		{"big rock", 522, big_rock, IMPASSABLE, {0, 20, 20, 20, 20, 20, 0, 0, 0}},
-		{"puddles", 524, puddles, PASSABLE, {0, 75, 7, 3, 0, 0, 0, 10, 5}},
-		{"swamp", 526, puddles, IMPASSABLE, {0, 30, 7, 3, 0, 0, 0, 50, 10}}
-	}},
-	{"tundra",
-	{
-		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-		{"snow", 77, white, PASSABLE, {0, 92, 5, 1, 2, 0, 0, 0, 0}},
-		{"mountain", 13, grey, IMPASSABLE, {0, 25, 75, 0, 0, 0, 0, 0, 0}},
-		{"water", 2, blue, IMPASSABLE, {0, 10, 0, 25, 65, 0, 0, 0, 0}},
-		{"ice", 3, cyan, PASSABLE, {0, 10, 0, 25, 65, 0, 0, 0, 0}},
-		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}}
+		{NULL, 0, black, IMPASSABLE, 0, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{"grass", 512, grass, PASSABLE, 2, {0, 80, 8, 5, 0, 5, 0, 2, 0}},
+		{"tall grass", 514, tall_grass, PASSABLE, 2, {0, 10, 80, 4, 4, 2, 0, 0, 0}},
+		{"brush", 516, brush, PASSABLE, 2, {0, 10, 20, 50, 15, 5, 0, 0, 0}},
+		{"tall brush", 518, tall_brush, PASSABLE, 2, {0, 5, 10, 25, 50, 10, 0, 0, 0}},
+		{"rocky grass", 520, rocky_grass, PASSABLE, 2, {0, 10, 15, 15, 5, 50, 5, 0, 0}},
+		{"big rock", 522, big_rock, IMPASSABLE, 2, {0, 20, 20, 20, 20, 20, 0, 0, 0}},
+		{"puddles", 524, puddles, PASSABLE, 2, {0, 20, 7, 3, 0, 0, 0, 50, 30}},
+		{"swamp", 526, puddles, IMPASSABLE, 2, {0, 15, 7, 3, 0, 0, 0, 40, 35}}
 	}},
 	{"desert",
 	{
-		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-		{"sand 1", 30, yellow, PASSABLE, {0, 160, 30, 8, 1, 0, 0, 0, 0}},
-		{"sand 2", 31, khaki, PASSABLE, {0, 30, 160, 8, 1, 0, 0, 0, 0}},
-		{"cactus", 47, green, IMPASSABLE, {0, 47, 47, 3, 1, 0, 0, 0, 0}},
-		{"water", 2, blue, IMPASSABLE, {0, 5, 5, 0, 70, 20, 0, 0, 0}},
-		{"tree", 46, darkgreen, IMPASSABLE, {0, 30, 30, 30, 5, 5, 0, 0, 0}},
-		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}}
+		{NULL, 0, black, IMPASSABLE, 0, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{"sand 1", 528, sand1, PASSABLE, 4, {0, 70, 30, 0, 0, 0, 0, 0, 0}},
+		{"sand 2", 532, sand2, PASSABLE, 4, {0, 70, 30, 0, 0, 0, 0, 0, 0}},
+		{"small cacti", 0, green, IMPASSABLE, 4, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{"large cactus", 0, blue, IMPASSABLE, 4, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{"little rocks", 0, darkgreen, IMPASSABLE, 4, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{"big rock", 0, black, IMPASSABLE, 4, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{"desert tree", 0, black, IMPASSABLE, 4, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{"oasis", 0, black, IMPASSABLE, 4, {0, 0, 0, 0, 0, 0, 0, 0, 0}}
+	}},
+	{"tundra",
+	{
+		{NULL, 0, black, IMPASSABLE, 0, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{"snow", 77, white, PASSABLE, 2, {0, 92, 5, 1, 2, 0, 0, 0, 0}},
+		{"mountain", 13, grey, IMPASSABLE, 2, {0, 25, 75, 0, 0, 0, 0, 0, 0}},
+		{"water", 2, blue, IMPASSABLE, 2, {0, 10, 0, 25, 65, 0, 0, 0, 0}},
+		{"ice", 3, cyan, PASSABLE, 2, {0, 10, 0, 25, 65, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, 2, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, 2, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, 2, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, 2, {0, 0, 0, 0, 0, 0, 0, 0, 0}}
 	}},
 	{"forest",
 	{
-		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-		{"grass", 6, lightgreen, PASSABLE, {0, 20, 50, 15, 0, 0, 15, 0, 0}},
-		{"underbrush", 8, green, PASSABLE, {0, 10, 40, 20, 20, 0, 10, 0, 0}},
-		{"light trees", 9, medgreen, PASSABLE, {0, 10, 30, 30, 30, 0, 0, 0, 0}},
-		{"heavy trees", 10, darkgreen, IMPASSABLE, {0, 0, 10, 40, 50, 0, 0, 0, 0}},
-		{"shallow water", 4, blue, PASSABLE, {0, 50, 20, 0, 0, 20, 10, 0, 0}},
-		{"deep water", 2, darkblue, IMPASSABLE, {0, 20, 0, 0, 0, 70, 10, 0, 0}},
-		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}}
+		{NULL, 0, black, IMPASSABLE, 2, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{"grass", 6, lightgreen, PASSABLE, 2, {0, 20, 50, 15, 0, 0, 15, 0, 0}},
+		{"underbrush", 8, green, PASSABLE, 2, {0, 10, 40, 20, 20, 0, 10, 0, 0}},
+		{"light trees", 9, medgreen, PASSABLE, 2, {0, 10, 30, 30, 30, 0, 0, 0, 0}},
+		{"heavy trees", 10, darkgreen, IMPASSABLE, 2, {0, 0, 10, 40, 50, 0, 0, 0, 0}},
+		{"shallow water", 4, blue, PASSABLE, 2, {0, 50, 20, 0, 0, 20, 10, 0, 0}},
+		{"deep water", 2, darkblue, IMPASSABLE, 2, {0, 20, 0, 0, 0, 70, 10, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, 2, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, 2, {0, 0, 0, 0, 0, 0, 0, 0, 0}}
 	}},
 	{"ocean",
 	{
-		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}}
+		{NULL, 0, black, IMPASSABLE, 0, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, 2, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, 2, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, 2, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, 2, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, 2, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, 2, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, 2, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, 2, {0, 0, 0, 0, 0, 0, 0, 0, 0}}
 	}},
 	{"map_generator",
 	{
-		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-		{"grassland", 0, black, IMPASSABLE, {0, 100, 0, 0, 0, 0, 0, 0, 0}},
-		{"tundra", 0, black, IMPASSABLE, {0, 5, 90, 0, 5, 0, 0, 0, 0}},
-		{"desert", 0, black, IMPASSABLE, {0, 10, 0, 90, 0, 0, 0, 0, 0}},
-		{"forest", 0, black, IMPASSABLE, {0, 5, 5, 0, 90, 0, 0, 0, 0}},
-		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-		{NULL, 0, black, IMPASSABLE, {0, 0, 0, 0, 0, 0, 0, 0, 0}}
+		{NULL, 0, black, IMPASSABLE, 0, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{"grassland", 0, black, IMPASSABLE, 0, {0, 90, 10, 0, 0, 0, 0, 0, 0}},
+		{"desert", 0, black, IMPASSABLE, 0, {0, 10, 90, 0, 0, 0, 0, 0, 0}},
+		{"tundra", 0, black, IMPASSABLE, 0, {0, 5, 90, 0, 5, 0, 0, 0, 0}},
+		{"forest", 0, black, IMPASSABLE, 0, {0, 5, 5, 0, 90, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, 0, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, 0, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, 0, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{NULL, 0, black, IMPASSABLE, 0, {0, 0, 0, 0, 0, 0, 0, 0, 0}}
 	}}
 };
 
@@ -165,11 +169,7 @@ create_map(struct worldmap *map, int row_size, int col_size)
 			*(*(map->roof+rows)+cols) = 0;
 			*(*(map->harvestable+rows)+cols) = SDL_TRUE;
 			*(*(map->frame+rows)+cols) = rand_num(0, 1);
-			if (*(*(map->frame+rows)+cols) == 0) {
-				*(*(map->frame_count+rows)+cols) = rand_num(map->frame_speed, map->frame_speed*2);
-			} else {
-				*(*(map->frame_count+rows)+cols) = rand_num(map->frame_speed/2, map->frame_speed);
-			}
+			*(*(map->frame_count+rows)+cols) = rand_num(map->frame_speed + 1, map->frame_speed*2);
 		}
 	}
 }
@@ -354,24 +354,25 @@ void
 process_frames(struct worldmap *map, int row, int col)
 {
 	int rows, cols;
+	unsigned short int biome, tile, max_frame;
+	
 	for (rows = row; rows < row + WIN_ROWS; rows++) {
 		for (cols = col; cols < col + WIN_COLS; cols++) {
-			/* count down the frame count */
+			/* count down the frame count if the tile is still harvestable */
 			if (is_harvestable(map, cols, rows) == SDL_FALSE) continue;
 			*(*(map->frame_count+rows)+cols) -= 1;
 			/* if frame count is 0, change the frame */
 			if (*(*(map->frame_count+rows)+cols) <= 0) {
-				switch(*(*(map->frame+rows)+cols)) {
-					case 0:
-						*(*(map->frame+rows)+cols) = 1;
-						*(*(map->frame_count+rows)+cols) = rand_num(map->frame_speed/2, map->frame_speed);
-						break;
-					case 1:
-						*(*(map->frame+rows)+cols) = 0;
-						*(*(map->frame_count+rows)+cols) = rand_num(map->frame_speed, map->frame_speed*2);
-						break;						
-					default:
-						break;
+				/* Add 1 to the frame */
+				*(*(map->frame+rows)+cols) += 1;
+				/* Set random speed for frame */
+				*(*(map->frame_count+rows)+cols) = rand_num(map->frame_speed, map->frame_speed*2);
+				/* Are you over the max frame? */
+				biome = *(*(map->biome+rows)+cols);
+				tile = *(*(map->tile+rows)+cols);
+				max_frame = BIOMES[biome].tiles[tile].max_frame;
+				if (*(*(map->frame+rows)+cols) >= max_frame) {
+					*(*(map->frame+rows)+cols) = 0;
 				}
 			}
 		}

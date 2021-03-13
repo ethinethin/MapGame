@@ -50,6 +50,8 @@ display_init(struct game *cur_game)
 	load_font(cur_game);
 	/* Initialize worldmap */
 	map_init(cur_game);
+	/* Setup scanlines */
+	setup_scanlines(cur_game);
 	/* Clear screen */
 	SDL_SetRenderDrawColor(cur_game->screen.renderer, 0, 0, 0, 255);
 	SDL_RenderClear(cur_game->screen.renderer);
@@ -67,8 +69,9 @@ display_quit(struct game *cur_game)
 	/* Unload sprites and font */
 	unload_sprites(cur_game);
 	unload_font(cur_game);
-	/* Kill the world map */
+	/* Kill the world map and scanlines */
 	map_destroy(cur_game);
+	SDL_DestroyTexture(cur_game->scanlines);
 	/* SDL quit */
 	SDL_Quit();
 }
@@ -97,6 +100,12 @@ render_clear(struct game *cur_game)
 void
 render_present(struct game *cur_game)
 {
+	SDL_Rect rect = {0, 0, cur_game->screen.w, cur_game->screen.h};
+	
+	/* draw scanlines */
+	if (cur_game->scanlines_on == SDL_TRUE) {
+		SDL_RenderCopy(cur_game->screen.renderer, cur_game->scanlines, NULL, &rect);
+	}
 	SDL_RenderPresent(cur_game->screen.renderer);
 }
 
@@ -136,7 +145,7 @@ draw_all(struct game *cur_game, struct worldmap *map, struct player *cur_player)
 	char white[3] = { 255, 255, 255 };
 
 	draw_game(cur_game, map, cur_player);
-	draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
+	draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);	
 	render_present(cur_game);
 }
 
@@ -434,14 +443,39 @@ worldmap(struct game *cur_game, struct worldmap *map, struct player *cur_player)
 	}
 }
 
+void
+setup_scanlines(struct game *cur_game)
+{
+	unsigned int i;
+	
+	/* Destroy scanlines if they already exist */
+	if (cur_game->scanlines != NULL) SDL_DestroyTexture(cur_game->scanlines);
+	/* Create scanlines as a texture */
+	cur_game->scanlines = SDL_CreateTexture(cur_game->screen.renderer, SDL_PIXELFORMAT_RGBA8888,
+				      SDL_TEXTUREACCESS_TARGET, cur_game->screen.w, cur_game->screen.h);
+	SDL_SetRenderTarget(cur_game->screen.renderer, cur_game->scanlines);
+	SDL_SetTextureBlendMode(cur_game->scanlines, SDL_BLENDMODE_BLEND);
+	SDL_SetRenderDrawColor(cur_game->screen.renderer, 0, 0, 0, 128);
+	for (i = 0; i < cur_game->screen.h; i += 3) {
+		SDL_RenderDrawLine(cur_game->screen.renderer, 0, i, cur_game->screen.w, i);
+	}
+	SDL_SetRenderTarget(cur_game->screen.renderer, NULL);
+}
+
+void
+toggle_scanlines(struct game *cur_game)
+{
+	cur_game->scanlines_on = !cur_game->scanlines_on;
+}
+
 static void
 load_sprites(struct game *cur_game)
 {
 	/* Load placeholder sprites */
 	SDL_Surface *surface = SDL_LoadBMP("art/sprites.bmp");
 	SDL_Surface **tiles;
-	tiles = (SDL_Surface**) malloc(sizeof(SDL_Surface*)*528);
-	cur_game->sprite_textures = (SDL_Texture**) malloc(sizeof(SDL_Texture*)*528);
+	tiles = (SDL_Surface**) malloc(sizeof(SDL_Surface*)*536);
+	cur_game->sprite_textures = (SDL_Texture**) malloc(sizeof(SDL_Texture*)*536);
 	int i, j;
 	SDL_Rect rect = {0, 0, SPRITE_W, SPRITE_H};
 	for (i = 0; i < 16; i++) {
@@ -467,8 +501,21 @@ load_sprites(struct game *cur_game)
 		SDL_BlitSurface(surface, &rect, tiles[512+i], NULL);
 		cur_game->sprite_textures[512+i] = SDL_CreateTextureFromSurface(cur_game->screen.renderer, tiles[512+i]);
 	}
+	SDL_FreeSurface(surface);
+	/* Load custom sprites I designed */
+	surface = SDL_LoadBMP("art/desert.bmp");
+	rect.y = 0;
+	for (i = 0; i < 8; i++) {
+		tiles[528+i] = SDL_CreateRGBSurface(0, SPRITE_W, SPRITE_H, 24, 0x00, 0x00, 0x00, 0x00);
+		SDL_SetColorKey(tiles[528+i], 1, 0x000000);
+		SDL_FillRect(tiles[528+i], 0, 0x000000);
+		rect.x = i * SPRITE_W;
+		SDL_BlitSurface(surface, &rect, tiles[528+i], NULL);
+		cur_game->sprite_textures[528+i] = SDL_CreateTextureFromSurface(cur_game->screen.renderer, tiles[528+i]);
+	}
 	/* Free surface tiles from memory */
-	for (i = 0; i < 528; i++) {
+	SDL_FreeSurface(surface);
+	for (i = 0; i < 536; i++) {
 		SDL_FreeSurface(tiles[i]);
 	}
 	free(tiles);
@@ -481,7 +528,7 @@ unload_sprites(struct game *cur_game)
 	int i;
 
 	/* Free all sprites */
-	for (i = 0; i < 528; i++) {
+	for (i = 0; i < 536; i++) {
 		SDL_DestroyTexture(cur_game->sprite_textures[i]);
 	}
 	free(cur_game->sprite_textures);
@@ -508,7 +555,7 @@ loading_bar(struct game *cur_game, char *title, int percentage)
 	/* Draw percentage bar */
 	draw_rect(cur_game, 20, 30, 1000, 40, SDL_TRUE, black, SDL_TRUE, white);
 	draw_rect(cur_game, 21, 31, percentage*10-2, 38, SDL_TRUE, blue, SDL_FALSE, NULL);
-	SDL_RenderPresent(cur_game->screen.renderer);
+	render_present(cur_game);
 }
 
 static void
