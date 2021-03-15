@@ -468,14 +468,15 @@ toggle_scanlines(struct game *cur_game)
 	cur_game->scanlines_on = !cur_game->scanlines_on;
 }
 
+#define TMP_NUMSPRITES 548
 static void
 load_sprites(struct game *cur_game)
 {
 	/* Load placeholder sprites */
 	SDL_Surface *surface = SDL_LoadBMP("art/sprites.bmp");
 	SDL_Surface **tiles;
-	tiles = (SDL_Surface**) malloc(sizeof(SDL_Surface*)*536);
-	cur_game->sprite_textures = (SDL_Texture**) malloc(sizeof(SDL_Texture*)*536);
+	tiles = (SDL_Surface**) malloc(sizeof(SDL_Surface*)*TMP_NUMSPRITES);
+	cur_game->sprite_textures = (SDL_Texture**) malloc(sizeof(SDL_Texture*)*TMP_NUMSPRITES);
 	int i, j;
 	SDL_Rect rect = {0, 0, SPRITE_W, SPRITE_H};
 	for (i = 0; i < 16; i++) {
@@ -505,7 +506,7 @@ load_sprites(struct game *cur_game)
 	/* Load custom sprites I designed */
 	surface = SDL_LoadBMP("art/desert.bmp");
 	rect.y = 0;
-	for (i = 0; i < 8; i++) {
+	for (i = 0; i < 20; i++) {
 		tiles[528+i] = SDL_CreateRGBSurface(0, SPRITE_W, SPRITE_H, 24, 0x00, 0x00, 0x00, 0x00);
 		SDL_SetColorKey(tiles[528+i], 1, 0x000000);
 		SDL_FillRect(tiles[528+i], 0, 0x000000);
@@ -515,7 +516,7 @@ load_sprites(struct game *cur_game)
 	}
 	/* Free surface tiles from memory */
 	SDL_FreeSurface(surface);
-	for (i = 0; i < 536; i++) {
+	for (i = 0; i < TMP_NUMSPRITES; i++) {
 		SDL_FreeSurface(tiles[i]);
 	}
 	free(tiles);
@@ -528,7 +529,7 @@ unload_sprites(struct game *cur_game)
 	int i;
 
 	/* Free all sprites */
-	for (i = 0; i < 536; i++) {
+	for (i = 0; i < TMP_NUMSPRITES; i++) {
 		SDL_DestroyTexture(cur_game->sprite_textures[i]);
 	}
 	free(cur_game->sprite_textures);

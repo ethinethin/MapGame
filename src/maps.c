@@ -32,6 +32,9 @@ char puddles[3] = {0x88, 0xEE, 0xAA};
 /* Custom desert colors */
 char sand1[3] = {0xEB, 0xE0, 0xAD};
 char sand2[3] = {0xD6, 0xC2, 0x5C};
+char cactus1[3] = {0x6D, 0x5F, 0x1B};
+char cactus2[3] = {0x88, 0x77, 0x22};
+char littlerocks[3] = {0x6D, 0x5F, 0x1B};
 
 /* Structure for tiles */
 struct biome {
@@ -63,11 +66,11 @@ struct biome BIOMES[] = {{
 	{"desert",
 	{
 		{NULL, 0, black, IMPASSABLE, 0, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-		{"sand 1", 528, sand1, PASSABLE, 4, {0, 70, 30, 0, 0, 0, 0, 0, 0}},
-		{"sand 2", 532, sand2, PASSABLE, 4, {0, 70, 30, 0, 0, 0, 0, 0, 0}},
-		{"small cacti", 0, green, IMPASSABLE, 4, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-		{"large cactus", 0, blue, IMPASSABLE, 4, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-		{"little rocks", 0, darkgreen, IMPASSABLE, 4, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
+		{"sand 1", 528, sand1, PASSABLE, 4, {0, 71, 23, 2, 1, 4, 0, 0, 0}},
+		{"sand 2", 532, sand2, PASSABLE, 4, {0, 23, 71, 2, 1, 4, 0, 0, 0}},
+		{"small cacti", 536, cactus1, IMPASSABLE, 4, {0, 45, 45, 4, 2, 4, 0, 0, 0}},
+		{"large cactus", 540, cactus2, IMPASSABLE, 4, {0, 45, 45, 4, 2, 4, 0, 0, 0}},
+		{"little rocks", 544, littlerocks, PASSABLE, 4, {0, 43, 43, 4, 2, 8, 0, 0, 0}},
 		{"big rock", 0, black, IMPASSABLE, 4, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
 		{"desert tree", 0, black, IMPASSABLE, 4, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
 		{"oasis", 0, black, IMPASSABLE, 4, {0, 0, 0, 0, 0, 0, 0, 0, 0}}
