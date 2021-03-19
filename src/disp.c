@@ -37,7 +37,7 @@ display_init(struct game *cur_game)
 	}
 	/* Create the main window and renderer */
 	cur_game->screen.window = SDL_CreateWindow(cur_game->screen.name,
-						   100, 100,
+						   0, 0,
 						   //SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
 						   cur_game->screen.w, cur_game->screen.h, 0);
 	cur_game->screen.renderer = SDL_CreateRenderer(cur_game->screen.window, -1, SDL_RENDERER_ACCELERATED);
@@ -468,7 +468,7 @@ toggle_scanlines(struct game *cur_game)
 	cur_game->scanlines_on = !cur_game->scanlines_on;
 }
 
-#define TMP_NUMSPRITES 548
+#define TMP_NUMSPRITES 575
 static void
 load_sprites(struct game *cur_game)
 {
@@ -506,13 +506,25 @@ load_sprites(struct game *cur_game)
 	/* Load custom sprites I designed */
 	surface = SDL_LoadBMP("art/desert.bmp");
 	rect.y = 0;
-	for (i = 0; i < 20; i++) {
+	for (i = 0; i < 32; i++) {
 		tiles[528+i] = SDL_CreateRGBSurface(0, SPRITE_W, SPRITE_H, 24, 0x00, 0x00, 0x00, 0x00);
 		SDL_SetColorKey(tiles[528+i], 1, 0x000000);
 		SDL_FillRect(tiles[528+i], 0, 0x000000);
 		rect.x = i * SPRITE_W;
 		SDL_BlitSurface(surface, &rect, tiles[528+i], NULL);
 		cur_game->sprite_textures[528+i] = SDL_CreateTextureFromSurface(cur_game->screen.renderer, tiles[528+i]);
+	}
+	SDL_FreeSurface(surface);
+	/* Load custom sprites I designed */
+	surface = SDL_LoadBMP("art/grass_items.bmp");
+	rect.y = 0;
+	for (i = 0; i < 15; i++) {
+		tiles[560+i] = SDL_CreateRGBSurface(0, SPRITE_W, SPRITE_H, 24, 0x00, 0x00, 0x00, 0x00);
+		SDL_SetColorKey(tiles[560+i], 1, 0xFF00FF);
+		SDL_FillRect(tiles[560+i], 0, 0xFF00FF);
+		rect.x = i * SPRITE_W;
+		SDL_BlitSurface(surface, &rect, tiles[560+i], NULL);
+		cur_game->sprite_textures[560+i] = SDL_CreateTextureFromSurface(cur_game->screen.renderer, tiles[560+i]);
 	}
 	/* Free surface tiles from memory */
 	SDL_FreeSurface(surface);

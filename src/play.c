@@ -91,10 +91,10 @@ update_seen(struct game *cur_game, struct worldmap *map, struct player *cur_play
 	int rows, cols;
 	int rows_i, cols_i, rows_f, cols_f;
 	
-	rows_i = cur_player->y - 9;
-	cols_i = cur_player->x - 19;
-	rows_f = cur_player->y + 9;
-	cols_f = cur_player->x + 19;
+	rows_i = cur_player->y - 5;
+	cols_i = cur_player->x - 9;
+	rows_f = cur_player->y + 5;
+	cols_f = cur_player->x + 9;
 	
 	/* Check boundaries for loop */
 	if (rows_i < 0) {

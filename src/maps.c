@@ -34,7 +34,8 @@ char sand1[3] = {0xEB, 0xE0, 0xAD};
 char sand2[3] = {0xD6, 0xC2, 0x5C};
 char cactus1[3] = {0x6D, 0x5F, 0x1B};
 char cactus2[3] = {0x88, 0x77, 0x22};
-char littlerocks[3] = {0x6D, 0x5F, 0x1B};
+char little_rocks[3] = {0x6D, 0x5F, 0x1B};
+char big_rock_desert[3] = {0xF8, 0xF5, 0xE4};
 
 /* Structure for tiles */
 struct biome {
@@ -66,14 +67,14 @@ struct biome BIOMES[] = {{
 	{"desert",
 	{
 		{NULL, 0, black, IMPASSABLE, 0, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-		{"sand 1", 528, sand1, PASSABLE, 4, {0, 71, 23, 2, 1, 4, 0, 0, 0}},
-		{"sand 2", 532, sand2, PASSABLE, 4, {0, 23, 71, 2, 1, 4, 0, 0, 0}},
+		{"sand 1", 528, sand1, PASSABLE, 4, {0, 70, 23, 2, 1, 4, 0, 1, 0}},
+		{"sand 2", 532, sand2, PASSABLE, 4, {0, 23, 70, 2, 1, 4, 0, 0, 1}},
 		{"small cacti", 536, cactus1, IMPASSABLE, 4, {0, 45, 45, 4, 2, 4, 0, 0, 0}},
 		{"large cactus", 540, cactus2, IMPASSABLE, 4, {0, 45, 45, 4, 2, 4, 0, 0, 0}},
-		{"little rocks", 544, littlerocks, PASSABLE, 4, {0, 43, 43, 4, 2, 8, 0, 0, 0}},
-		{"big rock", 0, black, IMPASSABLE, 4, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-		{"desert tree", 0, black, IMPASSABLE, 4, {0, 0, 0, 0, 0, 0, 0, 0, 0}},
-		{"oasis", 0, black, IMPASSABLE, 4, {0, 0, 0, 0, 0, 0, 0, 0, 0}}
+		{"little rocks", 544, little_rocks, PASSABLE, 4, {0, 39, 39, 4, 1, 6, 5, 3, 3}},
+		{"big rock", 548, big_rock_desert, IMPASSABLE, 4, {0, 23, 23, 10, 0, 40, 0, 2, 2}},
+		{"weedy sand1", 552, sand1, PASSABLE, 4, {0, 70, 23, 2, 1, 4, 0, 0, 1}},
+		{"weedy sand2", 556, sand2, PASSABLE, 4, {0, 23, 70, 2, 1, 4, 0, 1, 0}}
 	}},
 	{"tundra",
 	{

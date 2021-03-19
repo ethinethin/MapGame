@@ -40,10 +40,20 @@ give_me_floors(struct player *cur_player)
 	cur_player->quantity[3] = 10;
 	cur_player->loot[4] = 13;
 	cur_player->quantity[4] = 10;
-	cur_player->loot[8] = 8;
-	cur_player->quantity[8] = 999;
-	cur_player->loot[9] = 9;
-	cur_player->quantity[9] = 99;
-	cur_player->loot[14] = 10;
-	cur_player->quantity[14] = 9;
+	cur_player->loot[8] = 14;
+	cur_player->quantity[8] = 100;
+	cur_player->loot[9] = 15;
+	cur_player->quantity[9] = 100;
+	cur_player->loot[10] = 16;
+	cur_player->quantity[10] = 100;
+	cur_player->loot[11] = 17;
+	cur_player->quantity[11] = 100;
+	cur_player->loot[12] = 18;
+	cur_player->quantity[12] = 100;
+	cur_player->loot[13] = 19;
+	cur_player->quantity[13] = 100;
+	cur_player->loot[14] = 20;
+	cur_player->quantity[14] = 100;
+	cur_player->loot[15] = 21;
+	cur_player->quantity[15] = 100;
 }

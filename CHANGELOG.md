@@ -1,6 +1,22 @@
 Changelog
 -
 
+2021-03-19
+-
+
+- Worked on grassland harvestable item set
+- Fixed update_seen for revealing worldmap
+
+2021-03-18
+-
+
+- Finished desert tile sprites
+
+2021-03-14
+-
+
+- Designed more desert tile sprites
+
 2021-03-12
 -
 
