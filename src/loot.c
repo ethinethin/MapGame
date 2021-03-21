@@ -24,14 +24,21 @@ struct loot LOOT[] = {
 	{"open door", 220, STACKABLE, PASSABLE, O_DOOR},
 	{"treasure chest", 424, STACKABLE, IMPASSABLE, HOLDER},
 	/* grassland sprites */
+	{"grass weeds", 560, STACKABLE, PASSABLE, ITEM},//14
+	{"grass seeds", 561, STACKABLE, PASSABLE, ITEM},
 	{"beetle husk", 562, STACKABLE, PASSABLE, ITEM},
 	{"live beetle", 563, STACKABLE, PASSABLE, ITEM},
+	{"grassland stone", 564, STACKABLE, PASSABLE, ITEM},
 	{"spider silk", 565, STACKABLE, PASSABLE, ITEM},
 	{"live spider", 566, STACKABLE, PASSABLE, ITEM},
+	{"branch", 567, STACKABLE, PASSABLE, ITEM},
+	{"flint", 568, STACKABLE, PASSABLE, ITEM},
 	{"worm", 569, STACKABLE, PASSABLE, ITEM},
+	{"slate", 570, STACKABLE, PASSABLE, ITEM},
 	{"grassland ore", 571, STACKABLE, PASSABLE, ITEM},
 	{"grassland gem", 572, STACKABLE, PASSABLE, ITEM},
-	{"fly", 573, STACKABLE, PASSABLE, ITEM}
+	{"fly", 573, STACKABLE, PASSABLE, ITEM},
+	{"smooth stone", 574, STACKABLE, PASSABLE, ITEM}
 };
 
 short int
