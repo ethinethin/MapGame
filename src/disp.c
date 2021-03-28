@@ -264,7 +264,7 @@ draw_inv(struct game *cur_game, struct player *cur_player)
 			if (stackable == STACKABLE) {
 				sprintf(quantity, "%3d", cur_player->quantity[i]);
 				draw_small_sentence(cur_game,
-						    QB_X + i * SPRITE_W * WIN_SCALE + 18,
+						    QB_X + i * SPRITE_W * WIN_SCALE + 32,
 						    QB_Y + SPRITE_H * WIN_SCALE + 4,
 						    quantity);
 			}
@@ -313,7 +313,7 @@ draw_inv(struct game *cur_game, struct player *cur_player)
 				if (stackable == STACKABLE) {
 					sprintf(quantity, "%3d", cur_player->quantity[j+i*8+8]);
 					draw_small_sentence(cur_game,
-							    INV_X + i * SPRITE_W * WIN_SCALE + 18,
+							    INV_X + i * SPRITE_W * WIN_SCALE + 32,
 							    INV_Y + SPRITE_H * WIN_SCALE * 1.25 * j + 4 + SPRITE_H * WIN_SCALE,
 							    quantity);
 				}

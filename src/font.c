@@ -7,7 +7,7 @@ static void	draw_char(struct game *cur_game, int x, int y, int letter, float sca
 static void
 draw_char(struct game *cur_game, int x, int y, int letter, float scale)
 {
-	SDL_Rect rect = {x, y, 28 * scale, 18 * scale};
+	SDL_Rect rect = {x, y, 16 * scale, 18 * scale};
 	SDL_Texture* texture = SDL_CreateTextureFromSurface(cur_game->screen.renderer, cur_game->font[letter]);
 	SDL_RenderCopyEx(cur_game->screen.renderer, texture, NULL, &rect, 0, NULL, 0);
 	SDL_DestroyTexture(texture);
@@ -22,7 +22,7 @@ draw_sentence(struct game *cur_game, int x, int y, const char *sentence)
 
 	for (i = 0, len = strlen(sentence); i < len; i++) {
 		draw_char(cur_game, x, y, sentence[i] - 32, 1);
-		x += 28;
+		x += 16;
 		if (x >= WIN_W - GAME_X) {
 			x = start_x;
 			y = y + 18;
@@ -40,7 +40,7 @@ draw_small_sentence(struct game *cur_game, int x, int y, const char *sentence)
 
 	for (i = 0, len = strlen(sentence); i < len; i++) {
 		draw_char(cur_game, x, y, sentence[i] - 32, scale);
-		x += 28 * scale - 4;
+		x += 16 * scale;
 		if (x >= WIN_W - GAME_X) {
 			x = start_x;
 			y = y + 18 * scale;
@@ -52,24 +52,23 @@ void
 load_font(struct game *cur_game)
 {
 	int i, j;
-	int count = 0;
 	SDL_Surface* surface;
-	SDL_Rect rect = {1, 1, 28, 18};
+	SDL_Rect rect = {0, 0, 16, 18};
 
 	/* Allocate memory for 96 font characters */
-	cur_game->font = (SDL_Surface**) malloc(sizeof(SDL_Surface*)*96);
+	cur_game->font = (SDL_Surface**) malloc(sizeof(SDL_Surface*)*95);
 	/* Load sprite sheet */
 	surface = SDL_LoadBMP("art/font.bmp");
 	/* Load all sprites */
-	for (i = 0; i < 6; i++) {
-		for (j = 0; j < 16; j++) {
-			rect.x = i*28 + i + 1;
-			rect.y = j*18 + j + 1;
-			cur_game->font[count] = SDL_CreateRGBSurface(0, 28, 18, 24, 0, 0, 0, 0);
-			SDL_SetColorKey(cur_game->font[count], 1, 0x000000);
-			SDL_FillRect(cur_game->font[count], 0, 0x000000);
-			SDL_BlitSurface(surface, &rect, cur_game->font[count], NULL);
-			count++;
+	for (i = 0; i < 10; i++) {
+		for (j = 0; j < 10; j++) {
+			if (i*10+j == 95) break;
+			rect.x = j*16;
+			rect.y = i*18;
+			cur_game->font[i*10+j] = SDL_CreateRGBSurface(0, 16, 18, 24, 0, 0, 0, 0);
+			SDL_SetColorKey(cur_game->font[i*10+j], 1, 0xFF00FF);
+			SDL_FillRect(cur_game->font[i*10+j], 0, 0xFF00FF);
+			SDL_BlitSurface(surface, &rect, cur_game->font[i*10+j], NULL);
 		}
 	}
 	SDL_FreeSurface(surface);
