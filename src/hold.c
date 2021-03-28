@@ -409,8 +409,8 @@ draw_chest(struct game *cur_game, struct worldmap *map, int x, int y, struct hol
 				if (stackable == STACKABLE) {
 					sprintf(quantity, "%3d", cur_holder->quantity[j*4+i]);
 					draw_small_sentence(cur_game,
-							    HOLDER_X + j * SPRITE_W * WIN_SCALE + 1 + 32,
-							    HOLDER_Y + i * SPRITE_H * WIN_SCALE * 1.25 + SPRITE_H * WIN_SCALE + 4,
+							    HOLDER_X + j * SPRITE_W * WIN_SCALE + 1 + 30,
+							    HOLDER_Y + i * SPRITE_H * WIN_SCALE * 1.25 + SPRITE_H * WIN_SCALE + 2,
 							    quantity);
 				}
 			}

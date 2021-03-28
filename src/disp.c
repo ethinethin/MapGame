@@ -264,8 +264,8 @@ draw_inv(struct game *cur_game, struct player *cur_player)
 			if (stackable == STACKABLE) {
 				sprintf(quantity, "%3d", cur_player->quantity[i]);
 				draw_small_sentence(cur_game,
-						    QB_X + i * SPRITE_W * WIN_SCALE + 32,
-						    QB_Y + SPRITE_H * WIN_SCALE + 4,
+						    QB_X + i * SPRITE_W * WIN_SCALE + 30,
+						    QB_Y + SPRITE_H * WIN_SCALE + 2,
 						    quantity);
 			}
 		}
@@ -283,7 +283,7 @@ draw_inv(struct game *cur_game, struct player *cur_player)
 	draw_rect(cur_game, INV_X, INV_Y, INV_W, INV_H, SDL_TRUE, black, SDL_TRUE, white);
 	/* Draw "Items" text box */
 	draw_rect(cur_game, INV_X, INV_Y - 20, INV_W, 18 + 3, SDL_TRUE, black, SDL_TRUE, white);
-	draw_small_sentence(cur_game, INV_X + 2, INV_Y - 17, "Inventory");
+	draw_small_sentence(cur_game, INV_X + 2, INV_Y - 17, "INVENTORY");
 	draw_line(cur_game, INV_X + INV_W - 15, INV_Y - 15, INV_X + INV_W - 5, INV_Y - 5, white);
 	draw_line(cur_game, INV_X + INV_W - 6, INV_Y - 15, INV_X + INV_W - 16, INV_Y - 5, white);
 	/* Draw grid */
@@ -313,8 +313,8 @@ draw_inv(struct game *cur_game, struct player *cur_player)
 				if (stackable == STACKABLE) {
 					sprintf(quantity, "%3d", cur_player->quantity[j+i*8+8]);
 					draw_small_sentence(cur_game,
-							    INV_X + i * SPRITE_W * WIN_SCALE + 32,
-							    INV_Y + SPRITE_H * WIN_SCALE * 1.25 * j + 4 + SPRITE_H * WIN_SCALE,
+							    INV_X + i * SPRITE_W * WIN_SCALE + 30,
+							    INV_Y + SPRITE_H * WIN_SCALE * 1.25 * j + 2 + SPRITE_H * WIN_SCALE,
 							    quantity);
 				}
 			}
@@ -422,7 +422,7 @@ worldmap(struct game *cur_game, struct worldmap *map, struct player *cur_player)
 		draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
 		/* Write "Map" at the top of the screen with an X */
 		draw_rect(cur_game, MAP_X, MAP_Y-20, MAP_W, 18+2+1, SDL_TRUE, black, SDL_TRUE, white);
-		draw_sentence(cur_game, MAP_X+1, MAP_Y-19, "World Map");
+		draw_sentence(cur_game, MAP_X+1, MAP_Y-19, "WORLD MAP");
 		draw_line(cur_game, MAP_X + MAP_W - 15, MAP_Y - 15, MAP_X + MAP_W - 5, MAP_Y - 5, white);
 		draw_line(cur_game, MAP_X + MAP_W - 6, MAP_Y - 15, MAP_X + MAP_W - 16, MAP_Y - 5, white);
 		/* Draw player indicator, render, and change size */

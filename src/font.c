@@ -36,7 +36,7 @@ draw_small_sentence(struct game *cur_game, int x, int y, const char *sentence)
 	int i;
 	int start_x = x;
 	int len;
-	float scale = 0.65;
+	float scale = 0.70;
 
 	for (i = 0, len = strlen(sentence); i < len; i++) {
 		draw_char(cur_game, x, y, sentence[i] - 32, scale);
@@ -80,7 +80,7 @@ unload_font(struct game *cur_game)
 	int i;
 
 	/* Free all font characters */
-	for (i = 0; i < 96; i++) {
+	for (i = 0; i < 95; i++) {
 		SDL_FreeSurface(cur_game->font[i]);
 	}
 	free(cur_game->font);
