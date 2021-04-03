@@ -468,7 +468,7 @@ toggle_scanlines(struct game *cur_game)
 	cur_game->scanlines_on = !cur_game->scanlines_on;
 }
 
-#define TMP_NUMSPRITES 575
+#define TMP_NUMSPRITES 584
 static void
 load_sprites(struct game *cur_game)
 {
@@ -525,6 +525,18 @@ load_sprites(struct game *cur_game)
 		rect.x = i * SPRITE_W;
 		SDL_BlitSurface(surface, &rect, tiles[560+i], NULL);
 		cur_game->sprite_textures[560+i] = SDL_CreateTextureFromSurface(cur_game->screen.renderer, tiles[560+i]);
+	}
+	SDL_FreeSurface(surface);
+	/* Load custom sprites I designed */
+	surface = SDL_LoadBMP("art/items.bmp");
+	rect.y = 0;
+	for (i = 0; i < 9; i++) {
+		tiles[575+i] = SDL_CreateRGBSurface(0, SPRITE_W, SPRITE_H, 24, 0x00, 0x00, 0x00, 0x00);
+		SDL_SetColorKey(tiles[575+i], 1, 0xFF00FF);
+		SDL_FillRect(tiles[575+i], 0, 0xFF00FF);
+		rect.x = i * SPRITE_W;
+		SDL_BlitSurface(surface, &rect, tiles[575+i], NULL);
+		cur_game->sprite_textures[575+i] = SDL_CreateTextureFromSurface(cur_game->screen.renderer, tiles[575+i]);
 	}
 	/* Free surface tiles from memory */
 	SDL_FreeSurface(surface);

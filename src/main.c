@@ -190,7 +190,6 @@ static void
 generate_farts(struct game *cur_game, struct worldmap *main_map)
 {
 	int rows, cols;
-	int rando;
 	struct worldmap biomes;
 	struct worldmap fart;
 
@@ -215,24 +214,6 @@ generate_farts(struct game *cur_game, struct worldmap *main_map)
 	}
 	/* Free the biome plan */
 	free_map(&biomes);
-	
-	// Add a bunch of random items
-	// Remove later
-	for (rows = 0; rows < main_map->row_size - 1; rows++) {
-		for (cols = 0; cols < main_map->col_size - 1; cols++) {
-			rando = rand_num(1, 100);
-			if (rando == 100 && is_passable(*(*(main_map->tile+rows)+cols),
-						     *(*(main_map->biome+rows)+cols)) == PASSABLE) {
-				rando = rand_num(1, 8);
-				*(*(main_map->loot+rows)+cols) = rando;
-				if (is_loot_stackable(rando) == STACKABLE) {
-					*(*(main_map->quantity+rows)+cols) = rand_num(30,50);
-				} else {
-					*(*(main_map->quantity+rows)+cols) = 1;
-				}
-			}
-		}
-	}
 }
 
 static void

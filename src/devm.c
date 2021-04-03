@@ -30,14 +30,20 @@ reveal_map(struct game *cur_game, struct worldmap *map, struct player *cur_playe
 void
 give_me_floors(struct player *cur_player)
 {
-	cur_player->loot[0] = 8;
+	cur_player->loot[0] = 1;
 	cur_player->quantity[0] = 999;
-	cur_player->loot[1] = 9;
+	cur_player->loot[1] = 2;
 	cur_player->quantity[1] = 999;
-	cur_player->loot[2] = 10;
+	cur_player->loot[2] = 3;
 	cur_player->quantity[2] = 999;
-	cur_player->loot[3] = 11;
+	cur_player->loot[3] = 4;
 	cur_player->quantity[3] = 10;
-	cur_player->loot[4] = 13;
+	cur_player->loot[4] = 6;
 	cur_player->quantity[4] = 10;
+	cur_player->loot[5] = 7;
+	cur_player->quantity[5] = 10;
+	cur_player->loot[6] = 8;
+	cur_player->quantity[6] = 10;
+	cur_player->loot[7] = 9;
+	cur_player->quantity[7] = 10;
 }
