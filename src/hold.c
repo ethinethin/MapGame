@@ -42,7 +42,6 @@ struct item_clicked {
 };
 
 /* Function prototypes */
-
 static void		 item_click_qb(struct item_clicked *cur_click, struct player *cur_player);
 static void		 item_click_inv(struct item_clicked *cur_click, struct player *cur_player);
 static void		 item_click_hold(struct item_clicked *cur_click);

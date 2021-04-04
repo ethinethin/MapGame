@@ -8,6 +8,7 @@
 #include "hold.h"
 #include "loot.h"
 #include "main.h"
+#include "make.h"
 #include "maps.h"
 #include "maus.h"
 #include "play.h"
@@ -108,8 +109,11 @@ main()
 				case SDLK_f: /* swap item */
 					swap_item(&GAME, &MAP, &PLAYER);
 					break;
-				case SDLK_z: /*harvest item */
+				case SDLK_z: /* harvest item */
 					get_harvest_input(&GAME, &MAP, &PLAYER);
+					break;
+				case SDLK_c: /* craft item */
+					make_stuff(&GAME, &MAP, &PLAYER);
 					break;
 				case SDLK_l: /* toggle scanLines */
 					toggle_scanlines(&GAME);

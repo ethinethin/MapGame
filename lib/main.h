@@ -47,7 +47,8 @@ struct game {
 
 /* Constants for inventory and quickbar */
 #define INV_W (SPRITE_W * WIN_SCALE * 4 + 1)
-#define INV_H ((SPRITE_H * WIN_SCALE + (SPRITE_H * WIN_SCALE / 4)) * 8 + 1)
+//#define INV_H ((SPRITE_H * WIN_SCALE + (SPRITE_H * WIN_SCALE / 4)) * 8 + 1)
+#define INV_H (SPRITE_H * WIN_SCALE * 1.25 * 8 + 1)
 #define INV_X (WIN_W - GAME_X - 16 - INV_W)
 #define INV_Y (WIN_H - GAME_Y - 16 - INV_H)
 #define QB_X (WIN_W/2 - (SPRITE_W * WIN_SCALE*8)/2)
@@ -59,6 +60,11 @@ struct game {
 #define HOLDER_H (SPRITE_H * WIN_SCALE * 4 * 1.25)
 #define HOLDER_X QB_X + QB_W - HOLDER_W
 #define HOLDER_Y QB_Y - HOLDER_H - SPRITE_H * WIN_SCALE * 1.25
+/* Constants for making */
+#define MAKER_W (SPRITE_W * WIN_SCALE * 8)
+#define MAKER_H (SPRITE_H * WIN_SCALE * 1.25 * 6)
+#define MAKER_X (WIN_W / 2 - MAKER_W / 2)
+#define MAKER_Y (WIN_H - GAME_Y - 16 - INV_H)
 
 /* Constants for loot */
 #define MAX_STACK 999

@@ -28,6 +28,7 @@ Piece of cake! In-game keys are:
 - I: toggle [I]nventory on/off
 - Q and E: move cursor in quickbar/inventory
 - Z: harvest from tiles
+- C: open crafting window
 - L: toggle scan[L]ines
 
 Mouse controls:

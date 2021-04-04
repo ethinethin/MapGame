@@ -1,6 +1,27 @@
 Changelog
 -
 
+2021-04-04
+-
+
+- Started on crafting system
+
+2021-04-02
+-
+
+- Made new sprites for stone walls, floors, roofs, and others
+
+2021-03-28
+-
+
+- Made custom font
+
+2021-03-21
+-
+
+- Finished grassland items
+- Added grassland items to harvest table
+
 2021-03-19
 -
 
