@@ -29,6 +29,7 @@ struct game GAME = {
 	NULL,			/* sprite_textures */
 	NULL,			/* map_texture */
 	NULL,			/* scanlines texture */
+	NULL,			/* craft texture */
 	0,			/* cursor */
 	SDL_FALSE,		/* inventory */
 	SDL_FALSE,		/* fullscreen */

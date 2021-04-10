@@ -1,6 +1,15 @@
 Changelog
 -
 
+2021-04-09
+-
+
+- Cursor is drawn around selected recipe
+- Player can click on recipes to select
+- Player can enter quantity to craft
+- Made craft button placeholder sprites
+- Crafting maximum can be determined allowing for max button usage and “Insufficient Materials” notification
+
 2021-04-04
 -
 
