@@ -1,6 +1,14 @@
 Changelog
 -
 
+2021-04-11
+-
+
+- Added extra crafting buttons
+- Greyed out CRAFT button when insufficient material
+- Added crafting logic - players can craft items now
+- Made a modular recipe book structure
+
 2021-04-09
 -
 

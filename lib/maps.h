@@ -6,7 +6,7 @@
 /* Defines for map properties */
 #define IMPASSABLE 0
 #define PASSABLE 1
-#define FRAME_SPEED 30
+#define FRAME_SPEED 15
 
 /* Structure for map */
 struct worldmap {

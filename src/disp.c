@@ -545,18 +545,26 @@ load_sprites(struct game *cur_game)
 	}
 	free(tiles);
 	/* Load crafting buttons */
+	cur_game->craft = (SDL_Texture**) malloc(sizeof(SDL_Texture*)*2);
 	surface = SDL_LoadBMP("art/craft.bmp");
-	rect.x = 0;
-	rect.y = 0;
-	rect.w = 451;
-	rect.h = 141;
-	tile = SDL_CreateRGBSurface(0, 451, 141, 24, 0x00, 0x00, 0x00, 0x00);
+	rect.x = 0; rect.y = 0; rect.w = 451; rect.h = 287;
+	tile = SDL_CreateRGBSurface(0, 451, 287, 24, 0x00, 0x00, 0x00, 0x00);
 	SDL_SetColorKey(tile, 1, 0xFF00FF);
 	SDL_FillRect(tile, 0, 0xFF00FF);
 	SDL_BlitSurface(surface, &rect, tile, NULL);
-	cur_game->craft = SDL_CreateTextureFromSurface(cur_game->screen.renderer, tile);
+	cur_game->craft[0] = SDL_CreateTextureFromSurface(cur_game->screen.renderer, tile);
 	SDL_FreeSurface(surface);
 	SDL_FreeSurface(tile);
+	/* No crafting buttons */
+	surface = SDL_LoadBMP("art/no_craft.bmp");
+	tile = SDL_CreateRGBSurface(0, 451, 287, 24, 0x00, 0x00, 0x00, 0x00);
+	SDL_SetColorKey(tile, 1, 0xFF00FF);
+	SDL_FillRect(tile, 0, 0xFF00FF);
+	SDL_BlitSurface(surface, &rect, tile, NULL);
+	cur_game->craft[1] = SDL_CreateTextureFromSurface(cur_game->screen.renderer, tile);
+	SDL_FreeSurface(surface);
+	SDL_FreeSurface(tile);
+
 }
 
 static void
@@ -569,7 +577,9 @@ unload_sprites(struct game *cur_game)
 		SDL_DestroyTexture(cur_game->sprite_textures[i]);
 	}
 	free(cur_game->sprite_textures);
-	SDL_DestroyTexture(cur_game->craft);
+	SDL_DestroyTexture(cur_game->craft[0]);
+	SDL_DestroyTexture(cur_game->craft[1]);
+	free(cur_game->craft);
 }
 
 int LAST = 0;

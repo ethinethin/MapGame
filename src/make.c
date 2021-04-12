@@ -1,30 +1,47 @@
 #include <SDL2/SDL.h>
 #include "disp.h"
 #include "font.h"
+#include "loot.h"
 #include "main.h"
 #include "make.h"
 #include "maps.h"
 #include "play.h"
 
 /* Structure for crafting parameters */
-struct CRAFT_PAR {
+struct craft_par {
 	unsigned short int current;
 	unsigned short int quantity;
 	SDL_bool enter_text;
 	SDL_bool sufficient;
 };
 
+/* Structure for recipe table */
+struct r_data {
+	unsigned short int item_id;
+	unsigned short int mat1;
+	unsigned short int mat2;
+	unsigned short int need1;
+	unsigned short int need2;
+} R_TABLE[] = {
+	{1, 18, 0, 1, 0},
+	{2, 18, 0, 1, 0},
+	{3, 24, 0, 1, 0},
+	{9, 19, 21, 1, 1},
+	{-1, 0, 0, 0, 0}
+};
+
 /* Function prototypes */
-static void			draw_make(struct game *cur_game, struct player *cur_player, struct CRAFT_PAR *cur_craft);
-static void			mouse_click_craft(int x, int y, struct player *cur_player, struct CRAFT_PAR *cur_craft);
-static void	 		change_quantity(int number, struct CRAFT_PAR *cur_craft);
-static unsigned short int	determine_max(struct player *cur_player, struct CRAFT_PAR *cur_craft);
+static void			draw_make(struct game *cur_game, struct player *cur_player, struct craft_par *cur_craft);
+static void			mouse_click_craft(int x, int y, struct player *cur_player, struct craft_par *cur_craft);
+static void	 		change_quantity(int number, struct craft_par *cur_craft);
+static unsigned short int	determine_max(struct player *cur_player, struct craft_par *cur_craft);
+static void			craft_it(struct player *cur_player, struct craft_par *cur_craft);
 
 void
 make_stuff(struct game *cur_game, struct worldmap *map, struct player *cur_player)
 {
 	char white[3] = { 255, 255, 255 };
-	struct CRAFT_PAR crafting = { 1, 1, SDL_FALSE, SDL_TRUE };
+	struct craft_par crafting = { 1, 1, SDL_FALSE, SDL_TRUE };
 	SDL_bool finished = SDL_FALSE;
 	SDL_Event event;
 	
@@ -57,12 +74,13 @@ make_stuff(struct game *cur_game, struct worldmap *map, struct player *cur_playe
 }
 
 static void
-draw_make(struct game *cur_game, struct player *cur_player, struct CRAFT_PAR *cur_craft)
+draw_make(struct game *cur_game, struct player *cur_player, struct craft_par *cur_craft)
 {
 	char black[3] = { 0, 0, 0};
 	char white[3] = { 255, 255, 255 };
 	char darkred[3] = { 128, 0, 0 };
 	char amount[10];
+	char recipe[128];
 	int i;
 	
 	/* Draw main crafting window */
@@ -77,14 +95,13 @@ draw_make(struct game *cur_game, struct player *cur_player, struct CRAFT_PAR *cu
 	draw_rect(cur_game, MAKER_X + 10, MAKER_Y + 10, SPRITE_W * WIN_SCALE * 4, 20, SDL_TRUE, black, SDL_TRUE, white);
 	draw_small_sentence(cur_game, MAKER_X + 10 + 2, MAKER_Y + 10 + 2, "RECIPES");
 	/* Draw current recipes */
-	char *names[] = {"STONE WALL", "STONE FLOOR", "SLATE ROOF", "FISHING ROD"};
-	char *recipes[] = {"1x stone", "1x stone", "1x slate", "1x branch\n1x spider silk"};
-	unsigned short int sprites[] = { 576, 575, 579, 583 };
 	for (i = 0; i < 4; i++) {
 		draw_rect(cur_game, MAKER_X + 10 + 10, MAKER_Y + 10 + 20 + 10 + i*SPRITE_H*WIN_SCALE + i*42, SPRITE_W * WIN_SCALE, SPRITE_H * WIN_SCALE, SDL_TRUE, black, SDL_TRUE, white);
-		draw_small_sentence(cur_game, MAKER_X + 10 + 10 + 80, MAKER_Y + 10 + 20 + 10 + i*SPRITE_H*WIN_SCALE + i*42, names[i]);
-		draw_small_sentence(cur_game, MAKER_X + 10 + 10 + 80, MAKER_Y + 10 + 20 + 10 + i*SPRITE_H*WIN_SCALE + i*42 + 20, recipes[i]);
-		draw_tile(cur_game, MAKER_X + 10 + 10 + 3, MAKER_Y + 10 + 20 + 10 + i*SPRITE_H*WIN_SCALE + i*42 + 3, SPRITE_W * WIN_SCALE * 0.9, SPRITE_H * WIN_SCALE * 0.9, sprites[i], 255);
+		draw_small_sentence(cur_game, MAKER_X + 10 + 10 + 80, MAKER_Y + 10 + 20 + 10 + i*SPRITE_H*WIN_SCALE + i*42, get_loot_name(R_TABLE[i].item_id));
+		sprintf(recipe, "%dx %s", R_TABLE[i].need1, get_loot_name(R_TABLE[i].mat1));
+		if (R_TABLE[i].mat2 != 0) sprintf(recipe, "%s\n%dx %s", recipe, R_TABLE[i].need2, get_loot_name(R_TABLE[i].mat2));	
+		draw_small_sentence(cur_game, MAKER_X + 10 + 10 + 80, MAKER_Y + 10 + 20 + 10 + i*SPRITE_H*WIN_SCALE + i*42 + 20, recipe);
+		draw_tile(cur_game, MAKER_X + 10 + 10 + 3, MAKER_Y + 10 + 20 + 10 + i*SPRITE_H*WIN_SCALE + i*42 + 3, SPRITE_W * WIN_SCALE * 0.9, SPRITE_H * WIN_SCALE * 0.9, get_loot_sprite(R_TABLE[i].item_id), 255);
 		if (cur_craft->current - 1 == i) {
 			draw_rect(cur_game, MAKER_X + 10 + 10 - 3, MAKER_Y + 10 + 20 + 10 + i*SPRITE_H*WIN_SCALE + i*42 - 3, SPRITE_W * WIN_SCALE + 6, SPRITE_H * WIN_SCALE + 6, SDL_FALSE, darkred, SDL_FALSE, NULL);
 			draw_rect(cur_game, MAKER_X + 10 + 10 - 2, MAKER_Y + 10 + 20 + 10 + i*SPRITE_H*WIN_SCALE + i*42 - 2, SPRITE_W * WIN_SCALE + 4, SPRITE_H * WIN_SCALE + 4, SDL_FALSE, darkred, SDL_FALSE, NULL);
@@ -95,7 +112,7 @@ draw_make(struct game *cur_game, struct player *cur_player, struct CRAFT_PAR *cu
 	draw_small_sentence(cur_game, MAKER_X + 10 + SPRITE_W * WIN_SCALE * 4 + 10 + 2, MAKER_Y + 10 + 2, "CURRENT:");
 	draw_rect(cur_game, MAKER_X + 10 + SPRITE_W * WIN_SCALE * 4 + 10 + 15, MAKER_Y + 10 + 20, SPRITE_W * WIN_SCALE * 3 + 2, SPRITE_H * WIN_SCALE * 3 + 2, SDL_FALSE, white, SDL_FALSE, NULL);
 	if (cur_craft->current != 0) {
-		draw_tile(cur_game, MAKER_X + 10 + SPRITE_W * WIN_SCALE * 4 + 10 + 1 + 15, MAKER_Y + 10 + 20 + 1, SPRITE_W * WIN_SCALE * 3, SPRITE_H * WIN_SCALE * 3, sprites[cur_craft->current - 1], 255);
+		draw_tile(cur_game, MAKER_X + 10 + SPRITE_W * WIN_SCALE * 4 + 10 + 1 + 15, MAKER_Y + 10 + 20 + 1, SPRITE_W * WIN_SCALE * 3, SPRITE_H * WIN_SCALE * 3, get_loot_sprite(R_TABLE[cur_craft->current - 1].item_id), 255);
 	}
 	draw_small_sentence(cur_game, MAKER_X + 10 + SPRITE_W * WIN_SCALE * 4 + 10 + 2, MAKER_Y + 10 + 20 + SPRITE_H * WIN_SCALE * 3 + 2 + 10 + 4, "QUANTITY:");
 	draw_rect(cur_game,
@@ -115,18 +132,23 @@ draw_make(struct game *cur_game, struct player *cur_player, struct CRAFT_PAR *cu
 	}
 	draw_small_sentence(cur_game, MAKER_X + 10 + SPRITE_W * WIN_SCALE * 4 + 10 + 100 + 4, MAKER_Y + 10 + 20 + SPRITE_H * WIN_SCALE * 3 + 2 + 10 + 4, amount);
 	/* Draw the ol' buttonorooni */
-	SDL_Rect rect = {MAKER_X + 10 + SPRITE_W * WIN_SCALE * 4 + 6 + 2, MAKER_Y + 10 + 20 + SPRITE_H * WIN_SCALE * 3 + 2 + 10 + 4 + 20 + 10 + 50, 230, 70};
+	SDL_Rect rect = {MAKER_X + 10 + SPRITE_W * WIN_SCALE * 4 + 6 + 2, MAKER_Y + 10 + 20 + SPRITE_H * WIN_SCALE * 3 + 2 + 10 + 4 + 20 + 10 + 50, 230, 152};
 	/* If quantity is insufficient, say "INSUFFICIENT MATERIALS" */
 	if (cur_craft->quantity > determine_max(cur_player, cur_craft)) {
-		draw_small_sentence(cur_game, MAKER_X + 10 + SPRITE_W * WIN_SCALE * 4 + 10 + 2, MAKER_Y + 10 + 20 + SPRITE_H * WIN_SCALE * 3 + 2 + 10 + 4 + 20, "INSUFFICIENT\n MATERIALS");
+		draw_small_sentence(cur_game, MAKER_X + 10 + SPRITE_W * WIN_SCALE * 4 + 10 + 2, MAKER_Y + 10 + 20 + SPRITE_H * WIN_SCALE * 3 + 2 + 10 + 4 + 20, "\n    INSUFFICIENT\n      MATERIAL");
+		cur_craft->sufficient = SDL_FALSE;
+	} else {
+		cur_craft->sufficient = SDL_TRUE;
 	}
-	
-	/* RENDER */
-	SDL_RenderCopy(cur_game->screen.renderer, cur_game->craft, NULL, &rect);
+	if (cur_craft->sufficient == SDL_TRUE && cur_craft->quantity > 0) {
+		SDL_RenderCopy(cur_game->screen.renderer, cur_game->craft[0], NULL, &rect);
+	} else {
+		SDL_RenderCopy(cur_game->screen.renderer, cur_game->craft[1], NULL, &rect);
+	}
 }
 
 static void
-mouse_click_craft(int x, int y, struct player *cur_player, struct CRAFT_PAR *cur_craft)
+mouse_click_craft(int x, int y, struct player *cur_player, struct craft_par *cur_craft)
 {
 	unsigned short int max;
 	int i;
@@ -150,41 +172,48 @@ mouse_click_craft(int x, int y, struct player *cur_player, struct CRAFT_PAR *cur
 	    y >= MAKER_Y + 10 + 20 + SPRITE_H * WIN_SCALE * 3 + 2 + 10 &&
 	    y <= MAKER_Y + 10 + 20 + SPRITE_H * WIN_SCALE * 3 + 2 + 10 + 22) {
 	    	cur_craft->enter_text = SDL_TRUE;
+	    	return;
 	}
 	
 	/* Clicked on craft buttons */
 	max = determine_max(cur_player, cur_craft);
-	if (x >= 660 && x <= 733 &&
-	    y >= 375 && y <= 409) {
-	    	cur_craft->quantity = 10;
-	    	if (cur_craft->quantity > max) cur_craft->quantity = max;
+	if (x >= 661 && x <= 733 &&
+	    y >= 375 && y <= 411) {
+	    	cur_craft->quantity = 1;
 	} else if (x >= 737 && x <= 809 &&
-		   y >= 375 && y <= 409) {
-	    	cur_craft->quantity = 100;
-	    	if (cur_craft->quantity > max) cur_craft->quantity = max;
+		   y >= 375 && y <= 411) {
+	    	cur_craft->quantity = 10;
 	} else if (x >= 813 && x <= 885 &&
-		   y >= 375 && y <= 409) {
-	    	cur_craft->quantity = 999;
-	    	if (cur_craft->quantity > max) cur_craft->quantity = max;
-	} else if (x >= 660 && x <= 885 &&
-		   y >= 411 && y <= 445) {
-		if (cur_craft->quantity <= max) {
-		    	printf("Hey I'm craftin' here!\n");
-		} else {
-			printf("Hey I can't be craftin' these!\n");
-		}
+		   y >= 375 && y <= 411) {
+	    	cur_craft->quantity = 100;
+	} else if (x >= 661 && x <= 885 &&
+		   y >= 414 && y <= 450) {
+	    	cur_craft->quantity = max;
+	} else if (x >= 661 && x <= 733 &&
+		   y >= 452 && y <= 488) {
+	    	cur_craft->quantity += 1;
+	} else if (x >= 737 && x <= 809 &&
+		   y >= 452 && y <= 488) {
+	    	cur_craft->quantity += 10;
+	} else if (x >= 813 && x <= 885 &&
+		   y >= 452 && y <= 488) {
+	    	cur_craft->quantity += 100;
+	} else if (cur_craft->sufficient == SDL_TRUE &&
+		   x >= 661 && x <= 885 &&
+		   y >= 492 && y <= 527) {
+		craft_it(cur_player, cur_craft);
 	}
 }
 
 static void
-change_quantity(int number, struct CRAFT_PAR *cur_craft)
+change_quantity(int number, struct craft_par *cur_craft)
 {
 	int tmp_quantity;
 		
 	if (number >= 0) {
-		/* Make sure new quantity is not over 999 */
+		/* Make sure new quantity is not over MAX_STACK */
 		tmp_quantity = cur_craft->quantity * 10;
-		if (tmp_quantity >= 999) {
+		if (tmp_quantity >= MAX_STACK) {
 			return;
 		} else {
 			cur_craft->quantity = tmp_quantity += number;
@@ -195,7 +224,7 @@ change_quantity(int number, struct CRAFT_PAR *cur_craft)
 }
 
 static unsigned short int
-determine_max(struct player *cur_player, struct CRAFT_PAR *cur_craft)
+determine_max(struct player *cur_player, struct craft_par *cur_craft)
 {
 	int i;
 	unsigned short int item_id;
@@ -204,40 +233,12 @@ determine_max(struct player *cur_player, struct CRAFT_PAR *cur_craft)
 	int have1 = 0, have2 = 0;
 	unsigned short int max_quantity;
 	
-	/* Which item? */
-	switch(cur_craft->current) {
-		case 1:
-			item_id = 1;
-			mat1 = 18;
-			mat2 = 0;
-			need1 = 1;
-			need2 = 0;
-			break;
-		case 2:
-			item_id = 2;
-			mat1 = 18;
-			mat2 = 0;
-			need1 = 1;
-			need2 = 0;
-			break;
-		case 3:
-			item_id = 3;
-			mat1 = 24;
-			mat2 = 0;
-			need1 = 1;
-			need2 = 0;
-			break;
-		case 4:
-			item_id = 9;
-			mat1 = 19;
-			mat2 = 21;
-			need1 = 1;
-			need2 = 1;
-			break;
-		default:
-			return 0;
-			break;
-	}
+	/* Get recipe from recipe table */
+	item_id = R_TABLE[cur_craft->current - 1].item_id;
+	mat1 = R_TABLE[cur_craft->current - 1].mat1;
+	mat2 = R_TABLE[cur_craft->current - 1].mat2;
+	need1 = R_TABLE[cur_craft->current - 1].need1;
+	need2 = R_TABLE[cur_craft->current - 1].need2;
 	
 	/* Check for first item */
 	for (i = 0; i < MAX_INV; i++) {
@@ -260,7 +261,91 @@ determine_max(struct player *cur_player, struct CRAFT_PAR *cur_craft)
 	} else {
 		max_quantity = have2;
 	}
-	/* Is it over 999? */
-	if (max_quantity > 999) max_quantity = 999;
+	/* Is it over MAX_STACK? */
+	if (max_quantity > MAX_STACK) max_quantity = MAX_STACK;
 	return max_quantity;
+}
+
+static void
+craft_it(struct player *cur_player, struct craft_par *cur_craft)
+{
+	int i;
+	unsigned short int item_id;
+	unsigned short int mat1, mat2;
+	unsigned short int need1, need2;
+	unsigned short int made;
+	
+	/* Get recipe from recipe table */
+	item_id = R_TABLE[cur_craft->current - 1].item_id;
+	mat1 = R_TABLE[cur_craft->current - 1].mat1;
+	mat2 = R_TABLE[cur_craft->current - 1].mat2;
+	need1 = R_TABLE[cur_craft->current - 1].need1;
+	need2 = R_TABLE[cur_craft->current - 1].need2;	
+	
+	/* Place items in inventory */
+	/* Looking for existing stacks and trying to put them in */
+	for (made = 0, i = 0; i < MAX_INV; i++) {
+		if (cur_player->loot[i] == item_id) {
+			if (cur_player->quantity[i] + cur_craft->quantity - made <= MAX_STACK) {
+				cur_player->quantity[i] += cur_craft->quantity - made;
+				made = cur_craft->quantity;
+				break;
+			} else {
+				made += MAX_STACK - cur_player->quantity[i];
+				cur_player->quantity[i] = MAX_STACK;
+			}
+		}
+	}
+	/* Do I have any left to put in empty spaces? */
+	if (made < cur_craft->quantity) {
+		/* Try to put it in empty spots */
+		for (i = 0; i < MAX_INV; i++) {
+			if (cur_player->loot[i] == 0) {
+				cur_player->loot[i] = item_id;
+				cur_player->quantity[i] = cur_craft->quantity - made;
+				made = cur_craft->quantity;
+				break;
+			}
+		}
+	}
+	
+	/* Can't fit any */
+	if (made == 0) {
+		printf("No inventory room!\n");
+		return;
+	}
+
+	/* Calculate needs */
+	need1 *= made;
+	need2 *= made;
+	
+	/* Check for first item */
+	for (i = 0; i < MAX_INV; i++) {
+		if (cur_player->loot[i] == mat1) {
+			if (cur_player->quantity[i] >= need1) {
+				cur_player->quantity[i]	-= need1;
+				need1 = 0;
+				if (cur_player->quantity[i] == 0) cur_player->loot[i] = 0;
+			} else {
+				need1 -= cur_player->quantity[i];
+				cur_player->loot[i] = 0;
+			}
+		} else if (cur_player->loot[i] == mat2) {
+			if (cur_player->quantity[i] >= need2) {
+				cur_player->quantity[i]	-= need2;
+				need2 = 0;
+				if (cur_player->quantity[i] == 0) cur_player->loot[i] = 0;
+			} else {
+				need2 -= cur_player->quantity[i];
+				cur_player->loot[i] = 0;
+			}
+		}
+	}
+	
+	/* If you couldn't craft them all, report it to user */
+	if (made < cur_craft->quantity) {
+		printf("Made some, couldn't fit them all!\n");
+	} else {
+		printf("Crafted everything!\n");
+	}
 }

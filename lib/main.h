@@ -18,7 +18,7 @@ struct game {
 	SDL_Texture **sprite_textures;
 	SDL_Texture *map_texture;
 	SDL_Texture *scanlines;
-	SDL_Texture *craft;
+	SDL_Texture **craft;
 	char cursor;
 	SDL_bool inventory;
 	SDL_bool fullscreen;
