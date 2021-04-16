@@ -1,6 +1,14 @@
 Changelog
 -
 
+2021-04-16
+-
+
+- Added saving/loading functions for:
+	- Player
+	- World map
+	- Harvesting
+
 2021-04-11
 -
 

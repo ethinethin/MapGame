@@ -119,13 +119,11 @@ update_seen(struct game *cur_game, struct worldmap *map, struct player *cur_play
 	/* Set all newly seen values to 1 */
 	for (rows = rows_i; rows <= rows_f; rows++) {
 		for (cols = cols_i; cols <= cols_f; cols++) {
-			if (*(*(cur_player->seen+rows)+cols) == 0) {
-				/* Set tile as seen */
-				*(*(cur_player->seen+rows)+cols) = 1;
-				/* Draw pixel on map texture */
-				tile_col = get_color(*(*(map->tile + rows) + cols), *(*(map->biome + rows) + cols));
-				draw_point(cur_game, cols, rows, tile_col);
-			}
+			/* Set tile as seen */
+			*(*(cur_player->seen+rows)+cols) = 1;
+			/* Draw pixel on map texture */
+			tile_col = get_color(*(*(map->tile + rows) + cols), *(*(map->biome + rows) + cols));
+			draw_point(cur_game, cols, rows, tile_col);
 		}
 	}
 	/* Reset renderer */

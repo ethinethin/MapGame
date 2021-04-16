@@ -3,6 +3,11 @@ MapGame
 
 A procedurally-generated map game written in C and SDL2. I am writing this as part of my "Twitch Game Jam" (rules below), with development being streamed at: https://twitch.tv/ethinethin
 
+WARNING: Saving and Loading
+-
+
+Saving and loading is in a temporary form now so the game currently loads the player, world, and harvest table in the save/save00 directory. It also automatically saves every time the game is quit, so beware, if you run the game right now, it will output 6mb of redundant data.
+
 Installation
 -
 

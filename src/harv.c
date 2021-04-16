@@ -55,7 +55,7 @@ static void		make_unharvestable(struct worldmap *map, int x, int y, short int bi
 static SDL_bool		stash_item(struct player *cur_player, short int item_id, unsigned char quantity);
 static void		drop_item(struct worldmap *map, int x, int y, short int item_id, unsigned char quantity);
 static SDL_bool		harvest_loop(struct game *cur_game, struct worldmap *map, struct player *cur_player);
-static void		add_dtable(struct worldmap *map, int x, int y);
+static void		add_dtable(struct worldmap *map, int x, int y, short int turn, short int prob);
 
 void
 get_harvest_input(struct game *cur_game, struct worldmap *map, struct player *cur_player)
@@ -249,7 +249,7 @@ make_unharvestable(struct worldmap *map, int x, int y, short int biome, short in
 	rando = rand_num(0, 99);
 	if (rando < H_TABLE[i].unharvest_prob) {
 		*(*(map->harvestable+y)+x) = SDL_FALSE;
-		add_dtable(map, x, y);
+		add_dtable(map, x, y, -1, -1);
 	}
 }
 
@@ -352,27 +352,27 @@ setup_dtable(void)
 }
 
 static void
-add_dtable(struct worldmap *map, int x, int y)
+add_dtable(struct worldmap *map, int x, int y, short int turn, short int prob)
 {
 	short int biome;
 	short int tile;
-	short int turn;
-	short int prob;
 	int i;
 	struct d_data *current;
 	struct d_data *tmp;
 
 	/* Look up turn and prob */
-	biome = *(*(map->biome+y)+x);
-	tile = *(*(map->tile+y)+x);
-	for (i = 0; H_TABLE[i].biome != -1; i++) {
-		if (H_TABLE[i].biome == biome && H_TABLE[i].tile == tile) {
-			turn = H_TABLE[i].reharvest_turns;
-			prob = H_TABLE[i].reharvest_prob;
-			break;
+	if (turn == -1) {
+		biome = *(*(map->biome+y)+x);
+		tile = *(*(map->tile+y)+x);
+		for (i = 0; H_TABLE[i].biome != -1; i++) {
+			if (H_TABLE[i].biome == biome && H_TABLE[i].tile == tile) {
+				turn = H_TABLE[i].reharvest_turns;
+				prob = H_TABLE[i].reharvest_prob;
+				break;
+			}
 		}
+		if (H_TABLE[i].biome == -1) return;
 	}
-	if (H_TABLE[i].biome == -1) return;
 					
 	/* Set values in current d_data */
 	current = malloc(sizeof(*current)*1);
@@ -442,4 +442,37 @@ kill_dtable(void)
 			free(tmp);
 		}
 	}	
+}
+
+void
+dump_dtable(FILE *fp)
+{
+	struct d_data *dump;
+	
+	/* Go through every entry in the dump table and output values */
+	dump = D_TABLE;
+	while (SDL_TRUE) {
+		if (dump->next == NULL) {
+			return;
+		} else {
+			dump = dump->next;
+			fprintf(fp, "%d %d %hd %hd\n", dump->x, dump->y, dump->turn, dump->prob);
+		}
+	}
+}
+
+void
+load_dtable(struct worldmap *map, FILE *fp)
+{
+	int x, y;
+	short int turn, prob;
+	struct worldmap *not_used = NULL;
+
+	/* Set up the dtable */
+	setup_dtable();
+	/* Read line from file */
+	while (fscanf(fp, "%d %d %hd %hd\n", &x, &y, &turn, &prob) == 4) {
+		add_dtable(not_used, x, y, turn, prob);
+		*(*(map->harvestable+y)+x) = SDL_FALSE;
+	}
 }

@@ -11,5 +11,7 @@ extern SDL_bool		is_harvestable(struct worldmap *map, int x, int y);
 extern void		setup_dtable(void);
 extern void		check_depleted(struct worldmap *map);
 extern void		kill_dtable(void);
+extern void		dump_dtable(FILE *fp);
+extern void		load_dtable(struct worldmap *map, FILE *fp);
 
 #endif

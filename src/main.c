@@ -1,4 +1,4 @@
-#define DEVMODE
+//#define DEVMODE
 
 #include <stdio.h>
 #include <SDL2/SDL.h>
@@ -13,6 +13,7 @@
 #include "maus.h"
 #include "play.h"
 #include "rand.h"
+#include "save.h"
 
 /* Function prototypes */
 static void	game_init(void);
@@ -151,6 +152,7 @@ main()
 		}
 	}
 	/* quit game and exit normally */
+	save_all(&MAP, &PLAYER);
 	game_quit();
 	return 0;
 }
@@ -163,13 +165,17 @@ game_init(void)
 	/* Seed RNG */
 	seed_rng();
 	/* Set up the worldmap */
-	create_map(&MAP, MAP_ROWS, MAP_COLS);
+	//create_map(&MAP, MAP_ROWS, MAP_COLS);
 	/* Generate farts and copy to worldmap */
-	generate_farts(&GAME, &MAP);
+	//generate_farts(&GAME, &MAP);
 	/* Set up player */
-	player_init(&MAP, &PLAYER);
+	//player_init(&MAP, &PLAYER);
 	/* Set up depleted item table */
-	setup_dtable();
+	//setup_dtable();
+	/***
+	 *** SAVE LOAD BULLSHIT
+	 ***/
+	load_all(&GAME, &MAP, &PLAYER);
 	/* Set up holder table */
 	setup_hold();
 	/* The window is now up and running */
