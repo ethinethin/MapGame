@@ -1,6 +1,13 @@
 Changelog
 -
 
+2021-04-18
+-
+
+- Added saving/loading functions for:
+	- Holders
+- Added title screen
+
 2021-04-16
 -
 

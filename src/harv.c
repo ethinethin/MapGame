@@ -449,7 +449,7 @@ dump_dtable(FILE *fp)
 {
 	struct d_data *dump;
 	
-	/* Go through every entry in the dump table and output values */
+	/* Go through every entry in the depleted table and output values */
 	dump = D_TABLE;
 	while (SDL_TRUE) {
 		if (dump->next == NULL) {

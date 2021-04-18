@@ -351,7 +351,7 @@ handle_throw(struct game *cur_game, struct worldmap *map, struct player *cur_pla
 			cur_player->quantity[(int) cur_game->cursor] = cur_player->quantity[(int) cur_game->cursor] - quantity;
 			if (cur_player->quantity[(int) cur_game->cursor] == 0) cur_player->loot[(int) cur_game->cursor] = 0;
 			if (loot_type == HOLDER) {
-				add_hold(new_x, new_y);
+				add_hold(new_x, new_y, NULL, NULL);
 			}
 			return SDL_TRUE;
 		} else {

@@ -3,11 +3,6 @@ MapGame
 
 A procedurally-generated map game written in C and SDL2. I am writing this as part of my "Twitch Game Jam" (rules below), with development being streamed at: https://twitch.tv/ethinethin
 
-WARNING: Saving and Loading
--
-
-Saving and loading is in a temporary form now so the game currently loads the player, world, and harvest table in the save/save00 directory. It also automatically saves every time the game is quit, so beware, if you run the game right now, it will output 6mb of redundant data.
-
 Installation
 -
 
@@ -22,9 +17,24 @@ Then clone, compile and run with:
     make
     ./mapgame
 
-Piece of cake! In-game keys are:
+Piece of cake!
 
-- ESC: quit game
+Starting a Game
+-
+
+On the title screen, use the keyboard to do the following:
+
+- N: new game
+- C: continue (load game)
+- Q: quit
+
+Controls
+-
+
+In-game keys are:
+
+- ESC: open title screen
+- S (on title screen): Save game
 - Arrow keys and WASD: move around
 - M: show world [M]ap
 - R: pickup ([R]etrieve) item

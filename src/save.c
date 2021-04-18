@@ -2,6 +2,7 @@
 #include <SDL2/SDL.h>
 #include "disp.h"
 #include "harv.h"
+#include "hold.h"
 #include "main.h"
 #include "maps.h"
 #include "play.h"
@@ -10,16 +11,18 @@
 static void	save_map(struct worldmap *map);
 static void	save_player(struct worldmap *map, struct player *cur_player);
 static void	save_harv(void);
+static void	save_holders(struct worldmap *map);
 static void	load_map(struct worldmap *map);
 static void	load_player(struct game *cur_game, struct worldmap *map, struct player *cur_player);
 static void	load_harv(struct worldmap *map);
+static void	load_holders(struct worldmap *map);
 
 void
 save_all(struct worldmap *map, struct player *cur_player)
 {
 	save_map(map);
 	save_harv();
-	//save_holders
+	save_holders(map);
 	save_player(map, cur_player);
 }
 
@@ -104,12 +107,30 @@ save_harv(void)
 	fclose(fp);
 }
 
+#define HOLD_FILE "save/save00/hold.mg"
+static void
+save_holders(struct worldmap *map)
+{
+	FILE *fp;
+	
+	/* Try to open the file */
+	fp = fopen(HOLD_FILE, "w");
+	if (fp == NULL) {
+		printf("Could not open %s\n", HOLD_FILE);
+		exit(1);
+	}
+	/* Dump the holder table to a file */
+	dump_holders(map, fp);
+	/* Close the file */
+	fclose(fp);
+}
+
 void
 load_all(struct game *cur_game, struct worldmap *map, struct player *cur_player)
 {
 	load_map(map);
 	load_harv(map);
-	//load_holders
+	load_holders(map);
 	load_player(cur_game, map, cur_player);
 }
 
@@ -207,6 +228,23 @@ load_harv(struct worldmap *map)
 	}
 	/* Load the harvest table from a file */
 	load_dtable(map, fp);
+	/* Close the file */
+	fclose(fp);
+}
+
+static void
+load_holders(struct worldmap *map)
+{
+	FILE *fp;
+	
+	/* Try to open the file */
+	fp = fopen(HOLD_FILE, "r");
+	if (fp == NULL) {
+		printf("Could not open %s\n", HARV_FILE);
+		exit(1);
+	}
+	/* Load the holders table from the file */
+	undump_holders(map, fp);
 	/* Close the file */
 	fclose(fp);
 }

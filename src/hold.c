@@ -67,19 +67,27 @@ setup_hold(void)
 }
 
 void
-add_hold(int x, int y)
+add_hold(int x, int y, unsigned short int *loot, unsigned short int *quantity)
 {
 	int i;
 	struct holder *new;
 	struct holder *tmp;
-	
 	/* Create and populate a new holder */
 	new = malloc(sizeof(*new)*1);
 	new->x = x;
 	new->y = y;
-	for (i = 0; i < 40; i++) {
-		new->loot[i] = 0;
-		new->quantity[i] = 0;
+	/* If no items are passed, add an empty holder */
+	if (loot == NULL) {
+		for (i = 0; i < 40; i++) {
+			new->loot[i] = 0;
+			new->quantity[i] = 0;
+		}
+	} else {
+		/* Populate holder with values given */
+		for (i = 0; i < 40; i++) {
+			new->loot[i] = loot[i];
+			new->quantity[i] = quantity[i];
+		}
 	}
 	new->next = NULL;
 	
@@ -133,6 +141,51 @@ kill_hold(void)
 			free(tmp);
 		}
 	}		
+}
+
+void
+dump_holders(struct worldmap *map, FILE *fp)
+{
+	int i;
+	struct holder *dump;
+	
+	/* Go through every entry in the holders table and output values to the file */
+	dump = HOLDERS;
+	while (SDL_TRUE) {
+		if (dump->next == NULL) {
+			return;
+		} else {
+			dump = dump->next;
+			fprintf(fp, "%hu %d %d\n", *(*(map->loot+dump->y)+dump->x), dump->x, dump->y);
+			for (i = 0; i < 40; i++) {
+				fprintf(fp, "%hu %hu\n", dump->loot[i], dump->quantity[i]); 
+			}
+		}
+	}
+}
+
+void
+undump_holders(struct worldmap *map, FILE *fp)
+{
+	int i;
+	int x, y;
+	unsigned short int sprite;
+	unsigned short int loot[40], quantity[40];
+
+	/* Set up the holders table */
+	setup_hold();
+	/* Read line from file */
+	while (fscanf(fp, "%hu %d %d\n", &sprite, &x, &y) == 3) {
+		/* Populate the loot and quantity values */
+		for (i = 0; i < 40; i++) {
+			fscanf(fp, "%hu %hu\n", &loot[i], &quantity[i]);
+		}
+		/* Add the holder */
+		add_hold(x, y, loot, quantity);
+		/* Add it to the map */
+		*(*(map->loot+y)+x) = sprite;
+		*(*(map->quantity+y)+x) = 1;
+	}
 }
 
 void
