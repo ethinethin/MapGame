@@ -78,7 +78,7 @@ save_player(struct worldmap *map, struct player *cur_player)
 	/* Save seen */
 	for (i = 0; i < map->row_size; i++) {
 		for (j = 0; j < map->col_size; j++) {
-			fputc(*(*(cur_player->seen+i)+j), fp);
+			fprintf(fp, "%d", *(*(cur_player->seen+i)+j));
 		}
 	}
 	fputc('\n', fp);
@@ -174,7 +174,7 @@ load_player(struct game *cur_game, struct worldmap *map, struct player *cur_play
 	for (i = 0; i < row_size; i++) {
 		*(cur_player->seen+i) = malloc(sizeof(**cur_player->seen)*col_size);
 		for (j = 0; j < col_size; j++) {
-			*(*(cur_player->seen+i)+j) = fgetc(fp);
+			*(*(cur_player->seen+i)+j) = fgetc(fp) - '0';
 			if (*(*(cur_player->seen+i)+j) == 1) {
 				tile_col = get_color(*(*(map->tile+i)+j), *(*(map->biome+i)+j));
 				draw_point(cur_game, j, i, tile_col);

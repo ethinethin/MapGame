@@ -1,4 +1,5 @@
 //#define DEVMODE
+//#define START
 
 #include <stdio.h>
 #include <SDL2/SDL.h>
@@ -164,18 +165,18 @@ game_init(void)
 	display_init(&GAME);
 	/* Seed RNG */
 	seed_rng();
-	/* Set up the worldmap */
-	//create_map(&MAP, MAP_ROWS, MAP_COLS);
-	/* Generate farts and copy to worldmap */
-	//generate_farts(&GAME, &MAP);
-	/* Set up player */
-	//player_init(&MAP, &PLAYER);
-	/* Set up depleted item table */
-	//setup_dtable();
-	/***
-	 *** SAVE LOAD BULLSHIT
-	 ***/
-	load_all(&GAME, &MAP, &PLAYER);
+	#ifdef START
+		/* Set up the worldmap */
+		create_map(&MAP, MAP_ROWS, MAP_COLS);
+		/* Generate farts and copy to worldmap */
+		generate_farts(&GAME, &MAP);
+		/* Set up player */
+		player_init(&MAP, &PLAYER);
+		/* Set up depleted item table */
+		setup_dtable();
+	#else
+		load_all(&GAME, &MAP, &PLAYER);
+	#endif
 	/* Set up holder table */
 	setup_hold();
 	/* The window is now up and running */
