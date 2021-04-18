@@ -17,6 +17,11 @@ Then clone, compile and run with:
     make
     ./mapgame
 
+For the first you run, you need to create a save directory (this will be fixed soon):
+
+    mkdir save
+    mkdir save/save00
+
 Piece of cake!
 
 Starting a Game
