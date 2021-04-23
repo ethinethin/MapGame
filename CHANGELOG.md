@@ -1,6 +1,14 @@
 Changelog
 -
 
+2021-04-23
+-
+
+- Made the title screen background “more efficient”
+- Added functions to check existence of save files
+- Added functions to load multiple saves
+
+
 2021-04-18
 -
 

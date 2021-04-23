@@ -1,4 +1,7 @@
+#include <dirent.h>
+#include <errno.h>
 #include <stdio.h>
+#include <unistd.h>
 #include <SDL2/SDL.h>
 #include "disp.h"
 #include "harv.h"
@@ -12,10 +15,45 @@ static void	save_map(struct worldmap *map);
 static void	save_player(struct worldmap *map, struct player *cur_player);
 static void	save_harv(void);
 static void	save_holders(struct worldmap *map);
-static void	load_map(struct worldmap *map);
-static void	load_player(struct game *cur_game, struct worldmap *map, struct player *cur_player);
-static void	load_harv(struct worldmap *map);
-static void	load_holders(struct worldmap *map);
+static void	load_map(struct worldmap *map, int save);
+static void	load_player(struct game *cur_game, struct worldmap *map, struct player *cur_player, int save);
+static void	load_harv(struct worldmap *map, int save);
+static void	load_holders(struct worldmap *map, int save);
+
+/* Save file existence */
+SDL_bool savefiles[4] = { SDL_FALSE, SDL_FALSE, SDL_FALSE, SDL_FALSE };
+
+SDL_bool
+*check_savefiles(void)
+{
+	char durr_name[12];
+	char file_name[32];
+	char *files[] = {"harv.mg", "hold.mg", "map.mg", "player.mg"};
+
+	int i;
+	int j;
+	DIR *durr;
+	
+	for (i = 0; i < 4; i++) {
+		sprintf(durr_name, "save/save0%d", i);
+		durr = opendir(durr_name);
+		if (durr) {
+			closedir(durr);
+			/* Check each of the four files */
+			savefiles[i] = SDL_TRUE;
+			for (j = 0; j < 4; j++) {
+				sprintf(file_name, "%s/%s", durr_name, files[j]);
+				if (access(file_name, F_OK) != 0) {
+					savefiles[i] = SDL_FALSE;
+					break;
+				}
+			}
+		} else {
+			savefiles[i] = SDL_FALSE;
+		}
+	}
+	return savefiles;
+}
 
 void
 save_all(struct worldmap *map, struct player *cur_player)
@@ -126,25 +164,28 @@ save_holders(struct worldmap *map)
 }
 
 void
-load_all(struct game *cur_game, struct worldmap *map, struct player *cur_player)
+load_all(struct game *cur_game, struct worldmap *map, struct player *cur_player, int save)
 {
-	load_map(map);
-	load_harv(map);
-	load_holders(map);
-	load_player(cur_game, map, cur_player);
+	load_map(map, save);
+	load_harv(map, save);
+	load_holders(map, save);
+	load_player(cur_game, map, cur_player, save);
 }
 
 static void
-load_map(struct worldmap *map)
+load_map(struct worldmap *map, int save)
 {
 	int i, j;
 	int row_size, col_size;
 	FILE *fp = NULL;
+	char filename[32];
+	
+	sprintf(filename, "save/save0%d/map.mg", save);
 	
 	/* Try to open file */
-	fp = fopen(MAP_FILE, "r");
+	fp = fopen(filename, "r");
 	if (fp == NULL) {
-		printf("Can't open %s\n", MAP_FILE);
+		printf("Can't open %s\n", filename);
 		exit(1);
 	}
 	/* Load map dimensions and create an empty map */
@@ -168,17 +209,20 @@ load_map(struct worldmap *map)
 }
 
 static void
-load_player(struct game *cur_game, struct worldmap *map, struct player *cur_player)
+load_player(struct game *cur_game, struct worldmap *map, struct player *cur_player, int save)
 {
 	char *tile_col;
 	int i, j;
 	int row_size, col_size;
 	FILE *fp = NULL;
+	char filename[32];
 	
+	sprintf(filename, "save/save0%d/player.mg", save);
+
 	/* Open file */
-	fp = fopen(PLAYER_FILE, "r");
+	fp = fopen(filename, "r");
 	if (fp == NULL) {
-		printf("Problem opening %s\n", PLAYER_FILE);
+		printf("Problem opening %s\n", filename);
 		exit(1);
 	}
 	/* Load x and y values */
@@ -216,14 +260,17 @@ load_player(struct game *cur_game, struct worldmap *map, struct player *cur_play
 }
 
 static void
-load_harv(struct worldmap *map)
+load_harv(struct worldmap *map, int save)
 {
 	FILE *fp;
+	char filename[32];
 	
+	sprintf(filename, "save/save0%d/harv.mg", save);
+
 	/* Try to open the file */
-	fp = fopen(HARV_FILE, "r");
+	fp = fopen(filename, "r");
 	if (fp == NULL) {
-		printf("Could not open %s\n", HARV_FILE);
+		printf("Could not open %s\n", filename);
 		exit(1);
 	}
 	/* Load the harvest table from a file */
@@ -233,14 +280,17 @@ load_harv(struct worldmap *map)
 }
 
 static void
-load_holders(struct worldmap *map)
+load_holders(struct worldmap *map, int save)
 {
 	FILE *fp;
+	char filename[32];
 	
+	sprintf(filename, "save/save0%d/hold.mg", save);
+
 	/* Try to open the file */
-	fp = fopen(HOLD_FILE, "r");
+	fp = fopen(filename, "r");
 	if (fp == NULL) {
-		printf("Could not open %s\n", HARV_FILE);
+		printf("Could not open %s\n", filename);
 		exit(1);
 	}
 	/* Load the holders table from the file */
