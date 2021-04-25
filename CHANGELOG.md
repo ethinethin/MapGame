@@ -1,6 +1,14 @@
 Changelog
 -
 
+2021-04-25
+-
+
+- Game creates save files and directories if they don’t exist
+- Player can save in any slot
+- Game asks for confirmation for overwriting saves
+- Title screen mouse controls (title, save/load)
+
 2021-04-23
 -
 

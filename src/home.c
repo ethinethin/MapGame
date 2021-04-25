@@ -20,9 +20,10 @@ static void	draw_title_tiles(struct game *cur_game);
 static void	draw_title_tile(struct game *cur_game, int i, int j);
 static void	draw_title_screen(struct game *cur_game, int status);
 static void	draw_bg(struct game *cur_game);
-static void	save_screen(struct worldmap *map, struct player *cur_player);
+static void	save_screen(struct game *cur_game, struct worldmap *map, struct player *cur_player);
 static SDL_bool	load_screen(struct game *cur_game, struct worldmap *map, struct player *cur_player);
-static void	draw_load_screen(struct game *cur_game, SDL_bool *saves);
+static void	draw_saveload_screen(struct game *cur_game, SDL_bool *saves, SDL_bool save);
+static void	draw_yesno_screen(struct game *cur_game, char *message);
 
 void
 title_screen(struct game *cur_game, struct worldmap *map, struct player *cur_player, int status)
@@ -30,6 +31,7 @@ title_screen(struct game *cur_game, struct worldmap *map, struct player *cur_pla
 	SDL_Event event;
 	SDL_bool finished = SDL_FALSE;
 	int new_game;
+	int x, y;
 	
 	/* Setup random tiles and enter input loop */
 	setup_tiles(cur_game);
@@ -53,10 +55,11 @@ title_screen(struct game *cur_game, struct worldmap *map, struct player *cur_pla
 					if (status == GAME_IN_PROGRESS) {
 						new_game = GAME_IN_PROGRESS;
 						finished = SDL_TRUE;
-						save_screen(map, cur_player);
+						save_screen(cur_game, map, cur_player);
 					}
 					break;
 				case SDLK_c: /* CONTINUE */
+				case SDLK_l: /* LOAD GAME */
 				case SDLK_ESCAPE:
 					if (status == STARTING_GAME) {
 						new_game = CONTINUE_GAME;
@@ -69,6 +72,7 @@ title_screen(struct game *cur_game, struct worldmap *map, struct player *cur_pla
 				case SDLK_o: /* OPTIONS */
 					break;
 				case SDLK_q: /* QUIT */
+				case SDLK_x: /* EXIT */
 					finished = SDL_TRUE;
 					new_game = QUITTING_GAME;
 					break;
@@ -76,6 +80,35 @@ title_screen(struct game *cur_game, struct worldmap *map, struct player *cur_pla
 		} else if (event.type == SDL_QUIT) {
 			new_game = QUITTING_GAME;
 			finished = SDL_TRUE;
+		} else if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+			x = event.button.x; y = event.button.y;
+			if (x >= 123 && x <= 219 && y >= 153 && y <= 162) {
+				/* new game or save game */
+				if (status == STARTING_GAME) {
+					new_game = STARTING_GAME;
+					finished = SDL_TRUE;
+				} else if (status == GAME_IN_PROGRESS) {
+					new_game = GAME_IN_PROGRESS;
+					finished = SDL_TRUE;
+					save_screen(cur_game, map, cur_player);
+				}
+			} else if (x >= 123 && x <= 219 && y >= 175 && y <= 183) {
+				/* continue */
+				if (status == STARTING_GAME) {
+					new_game = CONTINUE_GAME;
+					finished = load_screen(cur_game, map, cur_player);
+				} else {
+					new_game = GAME_IN_PROGRESS;
+					finished = SDL_TRUE;
+				}
+			} else if (x >= 123 && x <= 195 && y >= 193 && y <= 203) {
+				/* options */
+				continue;
+			} else if (x >= 123 && x <= 161 && y >= 213 && y <= 222) {
+				/* exit */
+				finished = SDL_TRUE;
+				new_game = QUITTING_GAME;
+			}
 		}
 	}
 	if (new_game == STARTING_GAME) {
@@ -221,7 +254,11 @@ draw_title_screen(struct game *cur_game, int status)
 		draw_small_sentence(cur_game, 120, 150, "SAVE GAME");
 	}
 	/* draw continue */
-	draw_small_sentence(cur_game, 120, 170, "CONTINUE");
+	if (status == STARTING_GAME) {
+		draw_small_sentence(cur_game, 120, 170, "LOAD GAME");
+	} else {
+		draw_small_sentence(cur_game, 120, 170, "CONTINUE");
+	}
 	draw_small_sentence(cur_game, 120, 190, "OPTIONS");
 	draw_small_sentence(cur_game, 120, 210, "EXIT");
 }
@@ -246,18 +283,66 @@ draw_bg(struct game *cur_game)
 }
 
 static void
-save_screen(struct worldmap *map, struct player *cur_player)
+save_screen(struct game *cur_game, struct worldmap *map, struct player *cur_player)
 {
+	int x, y;
+	SDL_bool finished;
 	SDL_bool *saves;
+	SDL_Event event;
 	
 	saves = check_savefiles();
-	save_all(map, cur_player);
-
+	
+	/* Enter input loop */
+	finished = SDL_FALSE;
+	while (finished == SDL_FALSE) {
+		/* Draw saving screen */
+		render_clear(cur_game);
+		draw_saveload_screen(cur_game, saves, SDL_TRUE);
+		render_present(cur_game);
+		SDL_Delay(10);
+		/* Check for input */
+		if (SDL_PollEvent(&event) == 0) continue;
+		if (event.type == SDL_KEYDOWN) {
+			switch (event.key.keysym.sym) {
+				case SDLK_1: /* save 1 */
+					finished = save_all(cur_game, map, cur_player, 0);
+					break;
+				case SDLK_2: /* save 2 */
+					finished = save_all(cur_game, map, cur_player, 1);
+					break;
+				case SDLK_3: /* save 3 */
+					finished = save_all(cur_game, map, cur_player, 2);
+					break;
+				case SDLK_4: /* save 4 */
+					finished = save_all(cur_game, map, cur_player, 3);
+					break;
+				case SDLK_ESCAPE: /* cancel */
+					finished = SDL_TRUE;
+					break;
+				default:
+					break;
+			}
+		} else if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+			x = event.button.x; y = event.button.y;
+			if (x >= 122 && x <= 343) {
+				if (y >= 152 && y <= 163) {
+					finished = save_all(cur_game, map, cur_player, 0);
+				} else if (y >= 172 && y <= 183) {
+					finished = save_all(cur_game, map, cur_player, 1);
+				} else if (y >= 192 && y <= 204) {
+					finished = save_all(cur_game, map, cur_player, 2);
+				} else if (y >= 212 && y <= 224) {
+					finished = save_all(cur_game, map, cur_player, 3);
+				}
+			}
+		}
+	}
 }
 
 static SDL_bool
 load_screen(struct game *cur_game, struct worldmap *map, struct player *cur_player)
 {
+	int x, y;
 	SDL_bool finished, loaded;
 	SDL_bool *saves;
 	SDL_Event event;
@@ -270,7 +355,7 @@ load_screen(struct game *cur_game, struct worldmap *map, struct player *cur_play
 	while (finished == SDL_FALSE) {
 		/* Draw loading screen */
 		render_clear(cur_game);
-		draw_load_screen(cur_game, saves);
+		draw_saveload_screen(cur_game, saves, SDL_FALSE);
 		render_present(cur_game);
 		SDL_Delay(10);
 		/* Check for input */
@@ -311,19 +396,43 @@ load_screen(struct game *cur_game, struct worldmap *map, struct player *cur_play
 				default:
 					break;
 			}
+		} else if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+			x = event.button.x; y = event.button.y;
+			if (x >= 122 && x <= 343) {
+				if (y >= 152 && y <= 163) {
+					load_all(cur_game, map, cur_player, 0);
+					loaded = SDL_TRUE;
+					finished = SDL_TRUE;
+				} else if (y >= 172 && y <= 183) {
+					load_all(cur_game, map, cur_player, 1);
+					loaded = SDL_TRUE;
+					finished = SDL_TRUE;
+				} else if (y >= 192 && y <= 204) {
+					load_all(cur_game, map, cur_player, 2);
+					loaded = SDL_TRUE;
+					finished = SDL_TRUE;
+				} else if (y >= 212 && y <= 224) {
+					load_all(cur_game, map, cur_player, 3);
+					loaded = SDL_TRUE;
+					finished = SDL_TRUE;
+				}
+			}
 		}
 	}
 	return loaded;
-		
 }
 
 static void
-draw_load_screen(struct game *cur_game, SDL_bool *saves)
+draw_saveload_screen(struct game *cur_game, SDL_bool *saves, SDL_bool save)
 {
 	/* Draw background */
 	draw_bg(cur_game);	
 	/* draw game title */
-	draw_sentence(cur_game, 100, 100, "LOAD GAME");
+	if (save == SDL_TRUE) {
+		draw_sentence(cur_game, 100, 100, "SAVE GAME");
+	} else {
+		draw_sentence(cur_game, 100, 100, "LOAD GAME");
+	}
 	/* draw saves */
 	draw_small_sentence(cur_game, 120, 150, "GAME 1");
 	if (saves[0]) draw_small_sentence(cur_game, 220, 150, "SAVE EXISTS");
@@ -333,4 +442,62 @@ draw_load_screen(struct game *cur_game, SDL_bool *saves)
 	if (saves[2]) draw_small_sentence(cur_game, 220, 190, "SAVE EXISTS");
 	draw_small_sentence(cur_game, 120, 210, "GAME 4");
 	if (saves[3]) draw_small_sentence(cur_game, 220, 210, "SAVE EXISTS");
+}
+
+SDL_bool
+yesno_screen(struct game *cur_game, char *message)
+{
+	int x, y;
+	SDL_bool finished;
+	SDL_bool yes_or_no;
+	SDL_Event event;
+	
+	/* Enter input loop */
+	finished = SDL_FALSE;
+	yes_or_no = SDL_FALSE;
+	while (finished == SDL_FALSE) {
+		/* Draw loading screen */
+		render_clear(cur_game);
+		draw_yesno_screen(cur_game, message);
+		render_present(cur_game);
+		SDL_Delay(10);
+		/* Check for input */
+		if (SDL_PollEvent(&event) == 0) continue;
+		if (event.type == SDL_KEYDOWN) {
+			switch (event.key.keysym.sym) {
+				case SDLK_y:
+					yes_or_no = SDL_TRUE;
+					finished = SDL_TRUE;					
+					break;
+				case SDLK_n:
+					yes_or_no = SDL_FALSE;
+					finished = SDL_TRUE;					
+					break;
+				default:
+					break;
+			}
+		} else if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+			x = event.button.x; y = event.button.y;
+			if (x >= 121 && x <= 154 && y >= 152 && y <= 163) {
+				yes_or_no = SDL_TRUE;
+				finished = SDL_TRUE;
+			} else if (x >= 121 && x <= 141 && y >= 173 && y <= 182) {
+				yes_or_no = SDL_FALSE;
+				finished = SDL_TRUE;
+			}
+		}
+	}
+	return yes_or_no;
+}
+
+static void
+draw_yesno_screen(struct game *cur_game, char *message)
+{
+	/* Draw background */
+	draw_bg(cur_game);	
+	/* Draw message */
+	draw_sentence(cur_game, 100, 100, message);
+	/* Draw options */
+	draw_small_sentence(cur_game, 120, 150, "YES");
+	draw_small_sentence(cur_game, 120, 170, "NO");
 }

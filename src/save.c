@@ -1,20 +1,22 @@
 #include <dirent.h>
 #include <errno.h>
 #include <stdio.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <SDL2/SDL.h>
 #include "disp.h"
 #include "harv.h"
 #include "hold.h"
+#include "home.h"
 #include "main.h"
 #include "maps.h"
 #include "play.h"
 
 /* Function prototypes */
-static void	save_map(struct worldmap *map);
-static void	save_player(struct worldmap *map, struct player *cur_player);
-static void	save_harv(void);
-static void	save_holders(struct worldmap *map);
+static void	save_map(struct worldmap *map, int save);
+static void	save_player(struct worldmap *map, struct player *cur_player, int save);
+static void	save_harv(int save);
+static void	save_holders(struct worldmap *map, int save);
 static void	load_map(struct worldmap *map, int save);
 static void	load_player(struct game *cur_game, struct worldmap *map, struct player *cur_player, int save);
 static void	load_harv(struct worldmap *map, int save);
@@ -34,6 +36,19 @@ SDL_bool
 	int j;
 	DIR *durr;
 	
+	/* Check that the save directory exists. If it doesn't, create it */
+	durr = opendir("save");
+	if (durr) {
+		closedir(durr);
+	} else {
+		mkdir("save", 0744);
+		mkdir("save/save00", 0744);
+		mkdir("save/save01", 0744);
+		mkdir("save/save02", 0744);
+		mkdir("save/save03", 0744);
+	}
+		
+	/* Check each folder for files */
 	for (i = 0; i < 4; i++) {
 		sprintf(durr_name, "save/save0%d", i);
 		durr = opendir(durr_name);
@@ -49,32 +64,52 @@ SDL_bool
 				}
 			}
 		} else {
+			mkdir(durr_name, 0744);
 			savefiles[i] = SDL_FALSE;
 		}
 	}
 	return savefiles;
 }
 
-void
-save_all(struct worldmap *map, struct player *cur_player)
+SDL_bool
+save_all(struct game *cur_game, struct worldmap *map, struct player *cur_player, int save)
 {
-	save_map(map);
-	save_harv();
-	save_holders(map);
-	save_player(map, cur_player);
+	SDL_bool ok_to_save;
+	char message[64];
+
+	/* If there's a save in that file, make sure it's okay to overwrite */
+	if (savefiles[save] == SDL_TRUE) {
+		sprintf(message, "SAVE %d EXITS. IS IT OKAY TO OVERWRITE?", save + 1);
+		ok_to_save = yesno_screen(cur_game, message);
+	} else {
+		ok_to_save = SDL_TRUE;
+	}
+	
+	/* If it's okay to save, save, otherwise return */
+	if (ok_to_save == SDL_TRUE) {
+		save_map(map, save);
+		save_harv(save);
+		save_holders(map, save);
+		save_player(map, cur_player, save);
+		return SDL_TRUE;
+	} else {
+		return SDL_FALSE;
+	}
 }
 
-#define MAP_FILE "save/save00/map.mg"
 static void
-save_map(struct worldmap *map)
+save_map(struct worldmap *map, int save)
 {
 	int i, j;
 	FILE *fp = NULL;
+	char filename[32];
+	
+	sprintf(filename, "save/save0%d/map.mg", save);
 	
 	/* Try to open file */
-	fp = fopen(MAP_FILE, "w");
+	fp = fopen(filename, "w");
 	if (fp == NULL) {
-		printf("Can't open %s\n", MAP_FILE);
+		printf("Can't open %s\n", filename);
 		exit(1);
 	}
 	/* Save map dimensions */
@@ -95,17 +130,19 @@ save_map(struct worldmap *map)
 	fclose(fp);
 }
 
-#define PLAYER_FILE "save/save00/player.mg"
 static void
-save_player(struct worldmap *map, struct player *cur_player)
+save_player(struct worldmap *map, struct player *cur_player, int save)
 {
 	int i, j;
 	FILE *fp = NULL;
+	char filename[32];
+	
+	sprintf(filename, "save/save0%d/player.mg", save);
 	
 	/* Open file */
-	fp = fopen(PLAYER_FILE, "w");
+	fp = fopen(filename, "w");
 	if (fp == NULL) {
-		printf("Problem opening %s\n", PLAYER_FILE);
+		printf("Problem opening %s\n", filename);
 		exit(1);
 	}
 	/* Save x and y values */
@@ -127,16 +164,18 @@ save_player(struct worldmap *map, struct player *cur_player)
 	fclose(fp);
 }
 
-#define HARV_FILE "save/save00/harv.mg"
 static void
-save_harv(void)
+save_harv(int save)
 {
 	FILE *fp;
+	char filename[32];
+	
+	sprintf(filename, "save/save0%d/harv.mg", save);
 	
 	/* Try to open the file */
-	fp = fopen(HARV_FILE, "w");
+	fp = fopen(filename, "w");
 	if (fp == NULL) {
-		printf("Could not open %s\n", HARV_FILE);
+		printf("Could not open %s\n", filename);
 		exit(1);
 	}
 	/* Dump the harvest table to a file */
@@ -145,16 +184,18 @@ save_harv(void)
 	fclose(fp);
 }
 
-#define HOLD_FILE "save/save00/hold.mg"
 static void
-save_holders(struct worldmap *map)
+save_holders(struct worldmap *map, int save)
 {
 	FILE *fp;
+	char filename[32];
+	
+	sprintf(filename, "save/save0%d/hold.mg", save);
 	
 	/* Try to open the file */
-	fp = fopen(HOLD_FILE, "w");
+	fp = fopen(filename, "w");
 	if (fp == NULL) {
-		printf("Could not open %s\n", HOLD_FILE);
+		printf("Could not open %s\n", filename);
 		exit(1);
 	}
 	/* Dump the holder table to a file */

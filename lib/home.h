@@ -10,7 +10,7 @@
 #define GAME_IN_PROGRESS 2
 #define QUITTING_GAME 3
 
-
 extern void	title_screen(struct game *cur_game, struct worldmap *map, struct player *cur_player, int status);
+extern SDL_bool	yesno_screen(struct game *cur_game, char *message);
 
 #endif
