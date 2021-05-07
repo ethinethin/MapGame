@@ -1,6 +1,15 @@
 Changelog
 -
 
+2021-05-07
+-
+
+- Added the ability to have more than four recipes
+- Added scrolling through recipe book
+- Added NPCs
+- Created random NPCs and added to linked list
+- Adjusted harvest probabilities and recipes
+
 2021-04-25
 -
 

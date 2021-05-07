@@ -545,7 +545,7 @@ load_sprites(struct game *cur_game)
 	}
 	free(tiles);
 	/* Load crafting buttons */
-	cur_game->craft = (SDL_Texture**) malloc(sizeof(SDL_Texture*)*2);
+	cur_game->craft = (SDL_Texture**) malloc(sizeof(SDL_Texture*)*6);
 	surface = SDL_LoadBMP("art/craft.bmp");
 	rect.x = 0; rect.y = 0; rect.w = 451; rect.h = 287;
 	tile = SDL_CreateRGBSurface(0, 451, 287, 24, 0x00, 0x00, 0x00, 0x00);
@@ -564,7 +564,37 @@ load_sprites(struct game *cur_game)
 	cur_game->craft[1] = SDL_CreateTextureFromSurface(cur_game->screen.renderer, tile);
 	SDL_FreeSurface(surface);
 	SDL_FreeSurface(tile);
-
+	/* Load scroll buttons */
+	surface = SDL_LoadBMP("art/scroll_craft.bmp");
+	rect.x = 0; rect.y = 0; rect.w = 69; rect.h = 69;
+	tile = SDL_CreateRGBSurface(0, 69, 69, 24, 0x00, 0x00, 0x00, 0x00);
+	SDL_SetColorKey(tile, 1, 0xFF00FF);
+	SDL_FillRect(tile, 0, 0xFF00FF);
+	SDL_BlitSurface(surface, &rect, tile, NULL);
+	cur_game->craft[2] = SDL_CreateTextureFromSurface(cur_game->screen.renderer, tile);
+	SDL_FreeSurface(tile);
+	rect.x = 69;
+	tile = SDL_CreateRGBSurface(0, 69, 69, 24, 0x00, 0x00, 0x00, 0x00);
+	SDL_SetColorKey(tile, 1, 0xFF00FF);
+	SDL_FillRect(tile, 0, 0xFF00FF);
+	SDL_BlitSurface(surface, &rect, tile, NULL);
+	cur_game->craft[3] = SDL_CreateTextureFromSurface(cur_game->screen.renderer, tile);
+	SDL_FreeSurface(tile);
+	rect.x = 138;
+	tile = SDL_CreateRGBSurface(0, 69, 69, 24, 0x00, 0x00, 0x00, 0x00);
+	SDL_SetColorKey(tile, 1, 0xFF00FF);
+	SDL_FillRect(tile, 0, 0xFF00FF);
+	SDL_BlitSurface(surface, &rect, tile, NULL);
+	cur_game->craft[4] = SDL_CreateTextureFromSurface(cur_game->screen.renderer, tile);
+	SDL_FreeSurface(tile);
+	rect.x = 207;
+	tile = SDL_CreateRGBSurface(0, 69, 69, 24, 0x00, 0x00, 0x00, 0x00);
+	SDL_SetColorKey(tile, 1, 0xFF00FF);
+	SDL_FillRect(tile, 0, 0xFF00FF);
+	SDL_BlitSurface(surface, &rect, tile, NULL);
+	cur_game->craft[5] = SDL_CreateTextureFromSurface(cur_game->screen.renderer, tile);
+	SDL_FreeSurface(tile);
+	SDL_FreeSurface(surface);
 }
 
 static void
@@ -579,6 +609,10 @@ unload_sprites(struct game *cur_game)
 	free(cur_game->sprite_textures);
 	SDL_DestroyTexture(cur_game->craft[0]);
 	SDL_DestroyTexture(cur_game->craft[1]);
+	SDL_DestroyTexture(cur_game->craft[2]);
+	SDL_DestroyTexture(cur_game->craft[3]);
+	SDL_DestroyTexture(cur_game->craft[4]);
+	SDL_DestroyTexture(cur_game->craft[5]);
 	free(cur_game->craft);
 }
 

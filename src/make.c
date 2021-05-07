@@ -9,6 +9,7 @@
 
 /* Structure for crafting parameters */
 struct craft_par {
+	short int recipe;
 	unsigned short int current;
 	unsigned short int quantity;
 	SDL_bool enter_text;
@@ -23,10 +24,14 @@ struct r_data {
 	unsigned short int need1;
 	unsigned short int need2;
 } R_TABLE[] = {
-	{1, 18, 0, 1, 0},
-	{2, 18, 0, 1, 0},
+	{1, 18, 0, 3, 0},
+	{2, 18, 0, 3, 0},
 	{3, 24, 0, 1, 0},
 	{9, 19, 21, 1, 1},
+	{6, 21, 18, 10, 5},
+	{4, 21, 18, 5, 3},
+	{7, 6, 16, 1, 1},
+	{8, 6, 16, 1, 1},
 	{-1, 0, 0, 0, 0}
 };
 
@@ -41,7 +46,7 @@ void
 make_stuff(struct game *cur_game, struct worldmap *map, struct player *cur_player)
 {
 	char white[3] = { 255, 255, 255 };
-	struct craft_par crafting = { 1, 1, SDL_FALSE, SDL_TRUE };
+	struct craft_par crafting = { 0, 1, 1, SDL_FALSE, SDL_TRUE };
 	SDL_bool finished = SDL_FALSE;
 	SDL_Event event;
 	
@@ -82,6 +87,7 @@ draw_make(struct game *cur_game, struct player *cur_player, struct craft_par *cu
 	char amount[10];
 	char recipe[128];
 	int i;
+	SDL_Rect rect;
 	
 	/* Draw main crafting window */
 	draw_rect(cur_game, MAKER_X, MAKER_Y, MAKER_W, MAKER_H, SDL_TRUE, black, SDL_TRUE, white);
@@ -94,15 +100,31 @@ draw_make(struct game *cur_game, struct player *cur_player, struct craft_par *cu
 	draw_rect(cur_game, MAKER_X + 10, MAKER_Y + 20 + 10, SPRITE_W * WIN_SCALE * 4, MAKER_H - 20 - 10 - 10, SDL_TRUE, black, SDL_TRUE, white);
 	draw_rect(cur_game, MAKER_X + 10, MAKER_Y + 10, SPRITE_W * WIN_SCALE * 4, 20, SDL_TRUE, black, SDL_TRUE, white);
 	draw_small_sentence(cur_game, MAKER_X + 10 + 2, MAKER_Y + 10 + 2, "RECIPES");
+	/* Draw scrolling arrows */
+	rect.x = MAKER_X + 10 + 10 + SPRITE_W * WIN_SCALE * 4 - 80;
+	rect.y = MAKER_Y + 10 + 20 + 10;
+	rect.w = 69;
+	rect.h = 69;
+	if (cur_craft->recipe == 0) {
+		SDL_RenderCopy(cur_game->screen.renderer, cur_game->craft[4], NULL, &rect);
+	} else {
+		SDL_RenderCopy(cur_game->screen.renderer, cur_game->craft[2], NULL, &rect);
+	}
+	rect.y += 5 * SPRITE_H * WIN_SCALE + 40;
+	if (cur_craft->recipe == 4) {	
+		SDL_RenderCopy(cur_game->screen.renderer, cur_game->craft[5], NULL, &rect);
+	} else {
+		SDL_RenderCopy(cur_game->screen.renderer, cur_game->craft[3], NULL, &rect);
+	}
 	/* Draw current recipes */
 	for (i = 0; i < 4; i++) {
 		draw_rect(cur_game, MAKER_X + 10 + 10, MAKER_Y + 10 + 20 + 10 + i*SPRITE_H*WIN_SCALE + i*42, SPRITE_W * WIN_SCALE, SPRITE_H * WIN_SCALE, SDL_TRUE, black, SDL_TRUE, white);
-		draw_small_sentence(cur_game, MAKER_X + 10 + 10 + 80, MAKER_Y + 10 + 20 + 10 + i*SPRITE_H*WIN_SCALE + i*42, get_loot_name(R_TABLE[i].item_id));
-		sprintf(recipe, "%dx %s", R_TABLE[i].need1, get_loot_name(R_TABLE[i].mat1));
-		if (R_TABLE[i].mat2 != 0) sprintf(recipe, "%s\n%dx %s", recipe, R_TABLE[i].need2, get_loot_name(R_TABLE[i].mat2));	
+		draw_small_sentence(cur_game, MAKER_X + 10 + 10 + 80, MAKER_Y + 10 + 20 + 10 + i*SPRITE_H*WIN_SCALE + i*42, get_loot_name(R_TABLE[i + cur_craft->recipe].item_id));
+		sprintf(recipe, "%dx %s", R_TABLE[i + cur_craft->recipe].need1, get_loot_name(R_TABLE[i + cur_craft->recipe].mat1));
+		if (R_TABLE[i + cur_craft->recipe].mat2 != 0) sprintf(recipe, "%s\n%dx %s", recipe, R_TABLE[i + cur_craft->recipe].need2, get_loot_name(R_TABLE[i + cur_craft->recipe].mat2));	
 		draw_small_sentence(cur_game, MAKER_X + 10 + 10 + 80, MAKER_Y + 10 + 20 + 10 + i*SPRITE_H*WIN_SCALE + i*42 + 20, recipe);
-		draw_tile(cur_game, MAKER_X + 10 + 10 + 3, MAKER_Y + 10 + 20 + 10 + i*SPRITE_H*WIN_SCALE + i*42 + 3, SPRITE_W * WIN_SCALE * 0.9, SPRITE_H * WIN_SCALE * 0.9, get_loot_sprite(R_TABLE[i].item_id), 255);
-		if (cur_craft->current - 1 == i) {
+		draw_tile(cur_game, MAKER_X + 10 + 10 + 3, MAKER_Y + 10 + 20 + 10 + i*SPRITE_H*WIN_SCALE + i*42 + 3, SPRITE_W * WIN_SCALE * 0.9, SPRITE_H * WIN_SCALE * 0.9, get_loot_sprite(R_TABLE[i + cur_craft->recipe].item_id), 255);
+		if (cur_craft->current - 1 - cur_craft->recipe == i) {
 			draw_rect(cur_game, MAKER_X + 10 + 10 - 3, MAKER_Y + 10 + 20 + 10 + i*SPRITE_H*WIN_SCALE + i*42 - 3, SPRITE_W * WIN_SCALE + 6, SPRITE_H * WIN_SCALE + 6, SDL_FALSE, darkred, SDL_FALSE, NULL);
 			draw_rect(cur_game, MAKER_X + 10 + 10 - 2, MAKER_Y + 10 + 20 + 10 + i*SPRITE_H*WIN_SCALE + i*42 - 2, SPRITE_W * WIN_SCALE + 4, SPRITE_H * WIN_SCALE + 4, SDL_FALSE, darkred, SDL_FALSE, NULL);
 			draw_rect(cur_game, MAKER_X + 10 + 10 - 1, MAKER_Y + 10 + 20 + 10 + i*SPRITE_H*WIN_SCALE + i*42 - 1, SPRITE_W * WIN_SCALE + 2, SPRITE_H * WIN_SCALE + 2, SDL_FALSE, darkred, SDL_FALSE, NULL);
@@ -132,7 +154,10 @@ draw_make(struct game *cur_game, struct player *cur_player, struct craft_par *cu
 	}
 	draw_small_sentence(cur_game, MAKER_X + 10 + SPRITE_W * WIN_SCALE * 4 + 10 + 100 + 4, MAKER_Y + 10 + 20 + SPRITE_H * WIN_SCALE * 3 + 2 + 10 + 4, amount);
 	/* Draw the ol' buttonorooni */
-	SDL_Rect rect = {MAKER_X + 10 + SPRITE_W * WIN_SCALE * 4 + 6 + 2, MAKER_Y + 10 + 20 + SPRITE_H * WIN_SCALE * 3 + 2 + 10 + 4 + 20 + 10 + 50, 230, 152};
+	rect.x = MAKER_X + 10 + SPRITE_W * WIN_SCALE * 4 + 6 + 2;
+	rect.y = MAKER_Y + 10 + 20 + SPRITE_H * WIN_SCALE * 3 + 2 + 10 + 4 + 20 + 10 + 50;
+	rect.w = 230;
+	rect.h = 152;
 	/* If quantity is insufficient, say "INSUFFICIENT MATERIALS" */
 	if (cur_craft->quantity > determine_max(cur_player, cur_craft)) {
 		draw_small_sentence(cur_game, MAKER_X + 10 + SPRITE_W * WIN_SCALE * 4 + 10 + 2, MAKER_Y + 10 + 20 + SPRITE_H * WIN_SCALE * 3 + 2 + 10 + 4 + 20, "\n    INSUFFICIENT\n      MATERIAL");
@@ -162,10 +187,27 @@ mouse_click_craft(int x, int y, struct player *cur_player, struct craft_par *cur
 		    x <= MAKER_X + 10 + 10 + SPRITE_W * WIN_SCALE &&
 		    y >= MAKER_Y + 10 + 20 + 10 + i*SPRITE_H*WIN_SCALE + i*42 &&
 		    y <= MAKER_Y + 10 + 20 + 10 + i*SPRITE_H*WIN_SCALE + i*42 + SPRITE_H * WIN_SCALE) {
-		    	cur_craft->current = i + 1;
+		    	cur_craft->current = i + 1 + cur_craft->recipe;
 		    	return;
 		}
 	}
+	
+	/* Clicked on scroll arrow */
+	if (x >= MAKER_X + 10 + 10 + SPRITE_W * WIN_SCALE * 4 - 80 &&
+	    x <= MAKER_X + 10 + 10 + SPRITE_W * WIN_SCALE * 4 - 80 + 69) {
+	    	if (y >= MAKER_Y + 10 + 20 + 10 &&
+		    y <= MAKER_Y + 10 + 20 + 10 + 69) {
+		    	/* clicked up */
+		    	cur_craft->recipe -= 1;
+		} else if (y >= MAKER_Y + 10 + 20 + 10 + 5 * SPRITE_H * WIN_SCALE + 40 &&
+			   y <= MAKER_Y + 10 + 20 + 10 + 5 * SPRITE_H * WIN_SCALE + 40 + 69) {
+			/* clicked down */
+			cur_craft->recipe += 1;
+		}
+		if (cur_craft->recipe < 0) cur_craft->recipe = 0;
+		if (cur_craft->recipe > 4) cur_craft->recipe = 4;
+	}
+	
 	/* Clicked on quantity box */
 	if (x >= MAKER_X + 10 + SPRITE_W * WIN_SCALE * 4 + 10 + 100 &&
 	    x <= MAKER_X + 10 + SPRITE_W * WIN_SCALE * 4 + 10 + 100 + 120 &&

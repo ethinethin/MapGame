@@ -12,6 +12,7 @@
 #include "make.h"
 #include "maps.h"
 #include "maus.h"
+#include "npcs.h"
 #include "play.h"
 #include "rand.h"
 #include "save.h"
@@ -176,6 +177,8 @@ game_quit(void)
 	kill_hold();
 	/* Delete depleted item table */
 	kill_dtable();
+	/* Delete NPC table */
+	kill_npcs();
 	/* Free the player */
 	player_quit(&PLAYER);
 	/* Free the world map and exit normally */

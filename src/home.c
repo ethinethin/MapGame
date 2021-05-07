@@ -6,6 +6,7 @@
 #include "home.h"
 #include "main.h"
 #include "maps.h"
+#include "npcs.h"
 #include "play.h"
 #include "rand.h"
 #include "save.h"
@@ -122,6 +123,8 @@ title_screen(struct game *cur_game, struct worldmap *map, struct player *cur_pla
 		setup_dtable();
 		/* Set up holder table */
 		setup_hold();
+		/* Set up NPCs */
+		setup_npcs(map);
 	} else if (new_game == QUITTING_GAME) {
 		cur_game->running = SDL_FALSE;
 	}
