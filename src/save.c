@@ -10,6 +10,7 @@
 #include "home.h"
 #include "main.h"
 #include "maps.h"
+#include "npcs.h"
 #include "play.h"
 
 /* Function prototypes */
@@ -17,10 +18,12 @@ static void	save_map(struct worldmap *map, int save);
 static void	save_player(struct worldmap *map, struct player *cur_player, int save);
 static void	save_harv(int save);
 static void	save_holders(struct worldmap *map, int save);
+static void	save_npcs(int save);
 static void	load_map(struct worldmap *map, int save);
 static void	load_player(struct game *cur_game, struct worldmap *map, struct player *cur_player, int save);
 static void	load_harv(struct worldmap *map, int save);
 static void	load_holders(struct worldmap *map, int save);
+static void	load_npcs(int save);
 
 /* Save file existence */
 SDL_bool savefiles[4] = { SDL_FALSE, SDL_FALSE, SDL_FALSE, SDL_FALSE };
@@ -30,7 +33,7 @@ SDL_bool
 {
 	char durr_name[12];
 	char file_name[32];
-	char *files[] = {"harv.mg", "hold.mg", "map.mg", "player.mg"};
+	char *files[] = {"harv.mg", "hold.mg", "map.mg", "player.mg", "npcs.mg"};
 
 	int i;
 	int j;
@@ -56,7 +59,7 @@ SDL_bool
 			closedir(durr);
 			/* Check each of the four files */
 			savefiles[i] = SDL_TRUE;
-			for (j = 0; j < 4; j++) {
+			for (j = 0; j < 5; j++) {
 				sprintf(file_name, "%s/%s", durr_name, files[j]);
 				if (access(file_name, F_OK) != 0) {
 					savefiles[i] = SDL_FALSE;
@@ -91,6 +94,7 @@ save_all(struct game *cur_game, struct worldmap *map, struct player *cur_player,
 		save_harv(save);
 		save_holders(map, save);
 		save_player(map, cur_player, save);
+		save_npcs(save);
 		return SDL_TRUE;
 	} else {
 		return SDL_FALSE;
@@ -151,8 +155,12 @@ save_player(struct worldmap *map, struct player *cur_player, int save)
 	for (i = 0; i < MAX_INV; i++) {
 		fprintf(fp, "%d %d\n", cur_player->loot[i], cur_player->quantity[i]);
 	}
+	/* Save player recipe knowledge */
+	for (i = 0; i < MAX_RECIPE; i++) {
+		fprintf(fp, "%d ", cur_player->recipe[i]);
+	}
 	/* Save map dimensions */
-	fprintf(fp, "%d %d\n", map->row_size, map->col_size);
+	fprintf(fp, "\n%d %d\n", map->row_size, map->col_size);
 	/* Save seen */
 	for (i = 0; i < map->row_size; i++) {
 		for (j = 0; j < map->col_size; j++) {
@@ -204,6 +212,26 @@ save_holders(struct worldmap *map, int save)
 	fclose(fp);
 }
 
+static void
+save_npcs(int save)
+{
+	FILE *fp;
+	char filename[32];
+	
+	sprintf(filename, "save/save0%d/npcs.mg", save);
+	
+	/* Try to open the file */
+	fp = fopen(filename, "w");
+	if (fp == NULL) {
+		printf("Could not open %s\n", filename);
+		exit(1);
+	}
+	/* Dump the npc table to a file */
+	dump_npcs(fp);
+	/* Close the file */
+	fclose(fp);
+}
+
 void
 load_all(struct game *cur_game, struct worldmap *map, struct player *cur_player, int save)
 {
@@ -211,6 +239,7 @@ load_all(struct game *cur_game, struct worldmap *map, struct player *cur_player,
 	load_harv(map, save);
 	load_holders(map, save);
 	load_player(cur_game, map, cur_player, save);
+	load_npcs(save);
 }
 
 static void
@@ -253,6 +282,7 @@ static void
 load_player(struct game *cur_game, struct worldmap *map, struct player *cur_player, int save)
 {
 	char *tile_col;
+	int recipe;
 	int i, j;
 	int row_size, col_size;
 	FILE *fp = NULL;
@@ -272,8 +302,13 @@ load_player(struct game *cur_game, struct worldmap *map, struct player *cur_play
 	for (i = 0; i < MAX_INV; i++) {
 		fscanf(fp, "%hu %hu\n", &cur_player->loot[i], &cur_player->quantity[i]);
 	}
+	/* Load recipe knowledge */
+	for (i = 0; i < MAX_RECIPE; i++) {
+		fscanf(fp, "%d ", &recipe);
+		cur_player->recipe[i] = (char) recipe;
+	}
 	/* Load map dimensions */
-	fscanf(fp, "%d %d\n", &row_size, &col_size);
+	fscanf(fp, "\n%d %d\n", &row_size, &col_size);
 	/* Allocate memory and load seen, then update map texture as needed */
 	SDL_SetRenderTarget(cur_game->screen.renderer, cur_game->map_texture);
 	cur_player->seen = malloc(sizeof(*cur_player->seen)*row_size);
@@ -338,4 +373,25 @@ load_holders(struct worldmap *map, int save)
 	undump_holders(map, fp);
 	/* Close the file */
 	fclose(fp);
+}
+
+static void
+load_npcs(int save)
+{
+	FILE *fp;
+	char filename[32];
+	
+	sprintf(filename, "save/save0%d/npcs.mg", save);
+	
+	/* Try to open the file */
+	fp = fopen(filename, "r");
+	if (fp == NULL) {
+		printf("Could not open %s\n", filename);
+		exit(1);
+	}
+	/* Load the npc table from the file */
+	undump_npcs(fp);
+	/* Close the file */
+	fclose(fp);
+
 }

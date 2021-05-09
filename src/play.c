@@ -4,6 +4,7 @@
 #include "harv.h"
 #include "loot.h"
 #include "main.h"
+#include "make.h"
 #include "maps.h"
 #include "play.h"
 #include "rand.h"
@@ -37,6 +38,10 @@ player_init(struct worldmap *map, struct player *cur_player)
 		for (cols = 0; cols < WIN_COLS; cols++) {
 			*(*(cur_player->screen_view+rows)+cols) = 0;
 		}
+	}
+	/* Initialize the unknown recipes */
+	for (rows = 0; rows < MAX_RECIPE; rows++) {
+		cur_player->recipe[rows] = 0;
 	}
 }
 
@@ -82,6 +87,8 @@ move_player(struct game *cur_game, struct worldmap *map, struct player *cur_play
 	cur_player->y = new_y;
 	/* Update seen */
 	update_seen(cur_game, map, cur_player);
+	/* Update recipes */
+	check_recipes(cur_player);
 }
 
 static void

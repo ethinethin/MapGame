@@ -19,9 +19,12 @@ struct npc {
 #define FRIENDLY 2
 
 /* Function prototypes */
-extern void	setup_npcs(struct worldmap *map);
-extern void	add_npc(int x, int y, char personality);
-extern void	del_npc(void);
+extern void	setup_npcs(void);
+extern void	populate_npcs(struct worldmap *map);
+extern void	add_npc(int x, int y, char personality, unsigned short int *loot, unsigned short int *quantity);
+extern void	del_npc(int x, int y);
 extern void	kill_npcs(void);
+extern void	dump_npcs(FILE *fp);
+extern void	undump_npcs(FILE *fp);
 
 #endif

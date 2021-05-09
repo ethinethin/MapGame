@@ -1,6 +1,15 @@
 Changelog
 -
 
+2021-05-09
+-
+
+- Unknown recipes show up as a “?”
+- Player can learn recipes from items in inventory
+- Player recipe knowledge is saved and loaded
+- NPCs are saved and loaded
+- NPCs can be deleted from the NPC table
+
 2021-05-07
 -
 

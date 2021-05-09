@@ -4,6 +4,7 @@
 #include "hold.h"
 #include "loot.h"
 #include "main.h"
+#include "make.h"
 #include "maps.h"
 #include "play.h"
 #include "rand.h"
@@ -173,6 +174,7 @@ harvest_item(struct game *cur_game, struct worldmap *map, struct player *cur_pla
 					finished = SDL_FALSE;
 				}
 				make_unharvestable(map, x, y, biome, tile);
+				check_recipes(cur_player);
 			}
 			item = get_item(biome, tile);
 		} while (finished == SDL_TRUE);

@@ -4,6 +4,7 @@
 #include "hold.h"
 #include "loot.h"
 #include "main.h"
+#include "make.h"
 #include "maps.h"
 #include "play.h"
 
@@ -268,6 +269,7 @@ open_chest(struct game *cur_game, struct worldmap *map, struct player *cur_playe
 				break;	
 		}
 	}
+	check_recipes(cur_player);
 }
 
 static void

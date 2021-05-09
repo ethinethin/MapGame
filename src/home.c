@@ -124,7 +124,8 @@ title_screen(struct game *cur_game, struct worldmap *map, struct player *cur_pla
 		/* Set up holder table */
 		setup_hold();
 		/* Set up NPCs */
-		setup_npcs(map);
+		setup_npcs();
+		populate_npcs(map);
 	} else if (new_game == QUITTING_GAME) {
 		cur_game->running = SDL_FALSE;
 	}

@@ -7,5 +7,6 @@
 #include "play.h"
 
 extern void	make_stuff(struct game *cur_game, struct worldmap *map, struct player *cur_player);
+extern void	check_recipes(struct player *cur_player);
 
 #endif

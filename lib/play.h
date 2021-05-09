@@ -6,6 +6,7 @@
 
 /* Maximum player inventory */
 #define MAX_INV 40
+#define MAX_RECIPE 1024
 
 /* Main player structure */
 struct player {
@@ -17,6 +18,7 @@ struct player {
 	unsigned short int loot[MAX_INV];
 	unsigned short int quantity[MAX_INV];
 	char **screen_view;
+	char recipe[MAX_RECIPE];
 };
 
 extern void	player_init(struct worldmap *map, struct player *cur_player);

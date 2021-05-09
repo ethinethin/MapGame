@@ -4,6 +4,7 @@
 #include "hold.h"
 #include "loot.h"
 #include "main.h"
+#include "make.h"
 #include "maps.h"
 #include "maus.h"
 #include "play.h"
@@ -113,11 +114,11 @@ pickup_item(struct game *cur_game, struct worldmap *map, struct player *cur_play
 					break;
 				default:
 					finished = SDL_TRUE;
-					return;
 					break;
 			}
 		}
 	}
+	check_recipes(cur_player);
 }
 
 SDL_bool
