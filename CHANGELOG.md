@@ -1,6 +1,15 @@
 Changelog
 -
 
+2021-05-16
+-
+
+- Fixed Makefile to account for new source files automatically
+- Added options screen
+- Added window resizing
+- Options saving/loading
+- Some sprite scaling based on window size (incomplete)
+
 2021-05-09
 -
 

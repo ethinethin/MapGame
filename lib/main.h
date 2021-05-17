@@ -8,8 +8,13 @@
 struct game {
 	SDL_bool running;
 	struct {
-		unsigned int w;
-		unsigned int h;
+		int w;
+		int h;
+		float scale_x;
+		float scale_y;
+		SDL_bool vsync;
+		SDL_bool fullscreen;
+		SDL_bool scanlines_on;
 		const char *name;
 		SDL_Window *window;
 		SDL_Renderer *renderer;
@@ -21,8 +26,6 @@ struct game {
 	SDL_Texture **craft;
 	char cursor;
 	SDL_bool inventory;
-	SDL_bool fullscreen;
-	SDL_bool scanlines_on;
 };
 
 /* Map dimensions */

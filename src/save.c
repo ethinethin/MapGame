@@ -233,6 +233,22 @@ save_npcs(int save)
 }
 
 void
+save_opts(struct game *cur_game)
+{
+	FILE *fp;
+	
+	fp = fopen("save/opts.mg", "w");
+	if (fp == NULL) {
+		printf("Coult not open save/opts.mg\n");
+		exit(1);
+	}
+	
+	fprintf(fp, "%d %d %f %f ", cur_game->screen.w, cur_game->screen.h, cur_game->screen.scale_x, cur_game->screen.scale_y);
+	fprintf(fp, "%d %d %d\n", cur_game->screen.vsync, cur_game->screen.fullscreen, cur_game->screen.scanlines_on);
+	fclose(fp);
+}
+
+void
 load_all(struct game *cur_game, struct worldmap *map, struct player *cur_player, int save)
 {
 	load_map(map, save);
@@ -394,4 +410,20 @@ load_npcs(int save)
 	/* Close the file */
 	fclose(fp);
 
+}
+
+void
+load_opts(struct game *cur_game)
+{
+	FILE *fp;
+	
+	fp = fopen("save/opts.mg", "r");
+	if (fp == NULL) {
+		/* File does not exist, keep the default values */
+		return;
+	}
+	
+	fscanf(fp, "%d %d %f %f ", &cur_game->screen.w, &cur_game->screen.h, &cur_game->screen.scale_x, &cur_game->screen.scale_y);
+	fscanf(fp, "%d %d %d\n", &cur_game->screen.vsync, &cur_game->screen.fullscreen, &cur_game->screen.scanlines_on);
+	fclose(fp);
 }

@@ -23,8 +23,11 @@ static void	draw_title_screen(struct game *cur_game, int status);
 static void	draw_bg(struct game *cur_game);
 static void	save_screen(struct game *cur_game, struct worldmap *map, struct player *cur_player);
 static SDL_bool	load_screen(struct game *cur_game, struct worldmap *map, struct player *cur_player);
+static void	opts_screen(struct game *cur_game);
 static void	draw_saveload_screen(struct game *cur_game, SDL_bool *saves, SDL_bool save);
+static void	draw_opts_screen(struct game *cur_game);
 static void	draw_yesno_screen(struct game *cur_game, char *message);
+
 
 void
 title_screen(struct game *cur_game, struct worldmap *map, struct player *cur_player, int status)
@@ -71,6 +74,7 @@ title_screen(struct game *cur_game, struct worldmap *map, struct player *cur_pla
 					}
 					break;
 				case SDLK_o: /* OPTIONS */
+					opts_screen(cur_game);
 					break;
 				case SDLK_q: /* QUIT */
 				case SDLK_x: /* EXIT */
@@ -83,7 +87,8 @@ title_screen(struct game *cur_game, struct worldmap *map, struct player *cur_pla
 			finished = SDL_TRUE;
 		} else if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
 			x = event.button.x; y = event.button.y;
-			if (x >= 123 && x <= 219 && y >= 153 && y <= 162) {
+			if (x >= 123  * cur_game->screen.scale_x && x <= 219  * cur_game->screen.scale_x &&
+			    y >= 153 * cur_game->screen.scale_y && y <= 162 * cur_game->screen.scale_y) {
 				/* new game or save game */
 				if (status == STARTING_GAME) {
 					new_game = STARTING_GAME;
@@ -93,7 +98,8 @@ title_screen(struct game *cur_game, struct worldmap *map, struct player *cur_pla
 					finished = SDL_TRUE;
 					save_screen(cur_game, map, cur_player);
 				}
-			} else if (x >= 123 && x <= 219 && y >= 175 && y <= 183) {
+			} else if (x >= 123 * cur_game->screen.scale_x && x <= 219 * cur_game->screen.scale_x &&
+				   y >= 175 * cur_game->screen.scale_y && y <= 183 * cur_game->screen.scale_y) {
 				/* continue */
 				if (status == STARTING_GAME) {
 					new_game = CONTINUE_GAME;
@@ -102,10 +108,13 @@ title_screen(struct game *cur_game, struct worldmap *map, struct player *cur_pla
 					new_game = GAME_IN_PROGRESS;
 					finished = SDL_TRUE;
 				}
-			} else if (x >= 123 && x <= 195 && y >= 193 && y <= 203) {
+			} else if (x >= 123 * cur_game->screen.scale_x && x <= 195 * cur_game->screen.scale_x &&
+				   y >= 193 * cur_game->screen.scale_y && y <= 203 * cur_game->screen.scale_y) {
 				/* options */
+				opts_screen(cur_game);
 				continue;
-			} else if (x >= 123 && x <= 161 && y >= 213 && y <= 222) {
+			} else if (x >= 123 * cur_game->screen.scale_x && x <= 161 * cur_game->screen.scale_x &&
+				   y >= 213 * cur_game->screen.scale_y && y <= 222 * cur_game->screen.scale_y) {
 				/* exit */
 				finished = SDL_TRUE;
 				new_game = QUITTING_GAME;
@@ -225,7 +234,8 @@ draw_title_tiles(struct game *cur_game)
 	draw_rect(cur_game, 0, 0, cur_game->screen.w, cur_game->screen.h, SDL_TRUE, black, SDL_FALSE, NULL);
 	for (i = 0; i < 80; i++) {
 		for (j = 0; j < 45; j++) {
-			draw_tile(cur_game, i*16, j*16, 16, 16, tile[i][j], 128);
+			draw_tile(cur_game, i * 16 * cur_game->screen.scale_x, j * 16 * cur_game->screen.scale_y,
+				  16 * cur_game->screen.scale_x, 16 * cur_game->screen.scale_y, tile[i][j], 128);
 		}
 	}
 	SDL_SetRenderTarget(cur_game->screen.renderer, NULL);
@@ -239,8 +249,8 @@ draw_title_tile(struct game *cur_game, int i, int j)
 	/* Render to texture */
 	SDL_SetRenderTarget(cur_game->screen.renderer, title_screen_tex);
 	SDL_SetTextureBlendMode(title_screen_tex, SDL_BLENDMODE_BLEND);
-	draw_rect(cur_game, i*16, j*16, 16, 16, SDL_TRUE, black, SDL_FALSE, NULL);
-	draw_tile(cur_game, i*16, j*16, 16, 16, tile[i][j], 128);
+	draw_rect(cur_game, i * 16 * cur_game->screen.scale_x, j * 16 * cur_game->screen.scale_y, 16 * cur_game->screen.scale_x, 16 * cur_game->screen.scale_y, SDL_TRUE, black, SDL_FALSE, NULL);
+	draw_tile(cur_game, i * 16 * cur_game->screen.scale_x, j * 16 * cur_game->screen.scale_y, 16 * cur_game->screen.scale_x, 16 * cur_game->screen.scale_y, tile[i][j], 128);
 	SDL_SetRenderTarget(cur_game->screen.renderer, NULL);
 }
 
@@ -250,21 +260,21 @@ draw_title_screen(struct game *cur_game, int status)
 	/* Draw background */
 	draw_bg(cur_game);	
 	/* draw game title */
-	draw_sentence(cur_game, 100, 100, "MAPGAME");
+	draw_sentence(cur_game, 100 * cur_game->screen.scale_x, 100 * cur_game->screen.scale_y, "MAPGAME");
 	/* draw new game */
 	if (status == STARTING_GAME) {
-		draw_small_sentence(cur_game, 120, 150, "NEW GAME");
+		draw_small_sentence(cur_game, 120 * cur_game->screen.scale_x, 150 * cur_game->screen.scale_y, "NEW GAME");
 	} else {
-		draw_small_sentence(cur_game, 120, 150, "SAVE GAME");
+		draw_small_sentence(cur_game, 120 * cur_game->screen.scale_x, 150 * cur_game->screen.scale_y, "SAVE GAME");
 	}
 	/* draw continue */
 	if (status == STARTING_GAME) {
-		draw_small_sentence(cur_game, 120, 170, "LOAD GAME");
+		draw_small_sentence(cur_game, 120 * cur_game->screen.scale_x, 170 * cur_game->screen.scale_y, "LOAD GAME");
 	} else {
-		draw_small_sentence(cur_game, 120, 170, "CONTINUE");
+		draw_small_sentence(cur_game, 120 * cur_game->screen.scale_x, 170 * cur_game->screen.scale_y, "CONTINUE");
 	}
-	draw_small_sentence(cur_game, 120, 190, "OPTIONS");
-	draw_small_sentence(cur_game, 120, 210, "EXIT");
+	draw_small_sentence(cur_game, 120 * cur_game->screen.scale_x, 190 * cur_game->screen.scale_y, "OPTIONS");
+	draw_small_sentence(cur_game, 120 * cur_game->screen.scale_x, 210 * cur_game->screen.scale_y, "EXIT");
 }
 
 static void
@@ -328,14 +338,14 @@ save_screen(struct game *cur_game, struct worldmap *map, struct player *cur_play
 			}
 		} else if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
 			x = event.button.x; y = event.button.y;
-			if (x >= 122 && x <= 343) {
-				if (y >= 152 && y <= 163) {
+			if (x >= 122 * cur_game->screen.scale_x && x <= 343 * cur_game->screen.scale_x) {
+				if (y >= 152 * cur_game->screen.scale_y && y <= 163 * cur_game->screen.scale_y) {
 					finished = save_all(cur_game, map, cur_player, 0);
-				} else if (y >= 172 && y <= 183) {
+				} else if (y >= 172 * cur_game->screen.scale_y && y <= 183 * cur_game->screen.scale_y) {
 					finished = save_all(cur_game, map, cur_player, 1);
-				} else if (y >= 192 && y <= 204) {
+				} else if (y >= 192 * cur_game->screen.scale_y && y <= 204 * cur_game->screen.scale_y) {
 					finished = save_all(cur_game, map, cur_player, 2);
-				} else if (y >= 212 && y <= 224) {
+				} else if (y >= 212 * cur_game->screen.scale_y && y <= 224 * cur_game->screen.scale_y) {
 					finished = save_all(cur_game, map, cur_player, 3);
 				}
 			}
@@ -402,20 +412,20 @@ load_screen(struct game *cur_game, struct worldmap *map, struct player *cur_play
 			}
 		} else if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
 			x = event.button.x; y = event.button.y;
-			if (x >= 122 && x <= 343) {
-				if (y >= 152 && y <= 163) {
+			if (x >= 122 * cur_game->screen.scale_x && x <= 343 * cur_game->screen.scale_x) {
+				if (y >= 152 * cur_game->screen.scale_y && y <= 163 * cur_game->screen.scale_y) {
 					load_all(cur_game, map, cur_player, 0);
 					loaded = SDL_TRUE;
 					finished = SDL_TRUE;
-				} else if (y >= 172 && y <= 183) {
+				} else if (y >= 172 * cur_game->screen.scale_x && y <= 183 * cur_game->screen.scale_y) {
 					load_all(cur_game, map, cur_player, 1);
 					loaded = SDL_TRUE;
 					finished = SDL_TRUE;
-				} else if (y >= 192 && y <= 204) {
+				} else if (y >= 192 * cur_game->screen.scale_x && y <= 204 * cur_game->screen.scale_y) {
 					load_all(cur_game, map, cur_player, 2);
 					loaded = SDL_TRUE;
 					finished = SDL_TRUE;
-				} else if (y >= 212 && y <= 224) {
+				} else if (y >= 212 * cur_game->screen.scale_x && y <= 224 * cur_game->screen.scale_y) {
 					load_all(cur_game, map, cur_player, 3);
 					loaded = SDL_TRUE;
 					finished = SDL_TRUE;
@@ -427,25 +437,136 @@ load_screen(struct game *cur_game, struct worldmap *map, struct player *cur_play
 }
 
 static void
+opts_screen(struct game *cur_game)
+{
+	int x, y;
+	SDL_bool finished;
+	SDL_Event event;
+	SDL_bool changed;
+	
+	/* Enter input loop */
+	changed = SDL_FALSE;
+	finished = SDL_FALSE;
+	while (finished == SDL_FALSE) {
+		/* Draw loading screen */
+		render_clear(cur_game);
+		draw_opts_screen(cur_game);
+		render_present(cur_game);
+		SDL_Delay(10);
+		/* Check for input */
+		if (SDL_PollEvent(&event) == 0) continue;
+		if (event.type == SDL_KEYDOWN) {
+			switch (event.key.keysym.sym) {
+				case SDLK_ESCAPE: /* cancel */
+					finished = SDL_TRUE;
+					break;
+				default:
+					break;
+			}
+		} else if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+			x = event.button.x; y = event.button.y;
+			if (x >= 100 * cur_game->screen.scale_x && x <= 165 * cur_game->screen.scale_x &&
+			    y >= 574 * cur_game->screen.scale_y && y <= 586 * cur_game->screen.scale_y) {
+			    	return;
+			} else if (x >= 190 * cur_game->screen.scale_x && x <= 346 * cur_game->screen.scale_x) {
+				if (y >= 185 * cur_game->screen.scale_y && y <= 199 * cur_game->screen.scale_y &&
+				    cur_game->screen.w != 960 && cur_game->screen.h != 540) {
+					/* 960x540 */
+					cur_game->screen.w = 960;
+					cur_game->screen.h = 540;
+					cur_game->screen.scale_x = 960.0/1280.0;
+					cur_game->screen.scale_y = 960.0/1280.0;
+					changed = SDL_TRUE;
+				} else if (y >= 214 * cur_game->screen.scale_y && y <= 227 * cur_game->screen.scale_y &&
+					   cur_game->screen.w != 1280 && cur_game->screen.h != 720) {
+					/* 1280x720 */
+					cur_game->screen.w = 1280;
+					cur_game->screen.h = 720;
+					cur_game->screen.scale_x = 1.0;
+					cur_game->screen.scale_y = 1.0;
+					changed = SDL_TRUE;
+				} else if (y >= 243 * cur_game->screen.scale_y && y <= 258 * cur_game->screen.scale_y &&
+					   cur_game->screen.w != 1600 && cur_game->screen.h != 900) {
+					/* 1600x900 */
+					cur_game->screen.w = 1600;
+					cur_game->screen.h = 900;
+					cur_game->screen.scale_x = 1600.0/1280.0;
+					cur_game->screen.scale_y = 1600.0/1280.0;
+					changed = SDL_TRUE;
+				} else if (y >= 275 * cur_game->screen.scale_y && y <= 286 * cur_game->screen.scale_y &&
+					   cur_game->screen.w != 1920 && cur_game->screen.h != 1080) {
+					/* 1920x1080 */
+					cur_game->screen.w = 1920;
+					cur_game->screen.h = 1080;
+					cur_game->screen.scale_x = 1920.0/1280.0;
+					cur_game->screen.scale_y = 1920.0/1280.0;
+					changed = SDL_TRUE;
+				} else if (y >= 334 * cur_game->screen.scale_y && y <= 348 * cur_game->screen.scale_y &&
+					   cur_game->screen.fullscreen == SDL_FALSE) {
+					/* Window */
+					cur_game->screen.fullscreen = SDL_TRUE;
+					changed = SDL_TRUE;
+				} else if (y >= 364 * cur_game->screen.scale_y && y <= 378 * cur_game->screen.scale_y &&
+					   cur_game->screen.fullscreen == SDL_TRUE) {
+					cur_game->screen.fullscreen = SDL_FALSE;
+					changed = SDL_TRUE;
+				} else if (y >= 423 * cur_game->screen.scale_y && y <= 436 * cur_game->screen.scale_y &&
+					   cur_game->screen.vsync == SDL_FALSE) {
+					/* Vsync on */
+					cur_game->screen.vsync = SDL_TRUE;
+					changed = SDL_TRUE;
+				} else if (y >= 453 * cur_game->screen.scale_y && y <= 467 * cur_game->screen.scale_y &&
+					   cur_game->screen.vsync == SDL_TRUE) {
+					/* Vsync off */
+					cur_game->screen.vsync = SDL_FALSE;
+					changed = SDL_TRUE;
+				} else if (y >= 514 * cur_game->screen.scale_y && y <= 527 * cur_game->screen.scale_y &&
+					   cur_game->screen.scanlines_on == SDL_FALSE) {
+					/* Scanlines on */
+					cur_game->screen.scanlines_on = SDL_TRUE;
+					changed = SDL_TRUE;
+				} else if (y >= 543 * cur_game->screen.scale_y && y <= 557 * cur_game->screen.scale_y &&
+					   cur_game->screen.scanlines_on == SDL_TRUE) {
+					/* Scanlines off */
+					cur_game->screen.scanlines_on = SDL_FALSE;
+					changed = SDL_TRUE;
+				}
+			}
+		}
+		if (changed == SDL_TRUE) {
+			/* change video settings - reinitialize display */
+			display_quit(cur_game);
+			display_init(cur_game);
+			changed = SDL_FALSE;
+			/* Reset up title screen texture */
+			SDL_DestroyTexture(title_screen_tex);
+			title_screen_tex = NULL;
+			setup_tiles(cur_game);
+			save_opts(cur_game);
+		}
+	}
+}
+
+static void
 draw_saveload_screen(struct game *cur_game, SDL_bool *saves, SDL_bool save)
 {
 	/* Draw background */
 	draw_bg(cur_game);	
-	/* draw game title */
+	/* draw save or load header */
 	if (save == SDL_TRUE) {
-		draw_sentence(cur_game, 100, 100, "SAVE GAME");
+		draw_sentence(cur_game, 100 * cur_game->screen.scale_x, 100 * cur_game->screen.scale_y, "SAVE GAME");
 	} else {
-		draw_sentence(cur_game, 100, 100, "LOAD GAME");
+		draw_sentence(cur_game, 100 * cur_game->screen.scale_x, 100 * cur_game->screen.scale_y, "LOAD GAME");
 	}
 	/* draw saves */
-	draw_small_sentence(cur_game, 120, 150, "GAME 1");
-	if (saves[0]) draw_small_sentence(cur_game, 220, 150, "SAVE EXISTS");
-	draw_small_sentence(cur_game, 120, 170, "GAME 2");
-	if (saves[1]) draw_small_sentence(cur_game, 220, 170, "SAVE EXISTS");
-	draw_small_sentence(cur_game, 120, 190, "GAME 3");
-	if (saves[2]) draw_small_sentence(cur_game, 220, 190, "SAVE EXISTS");
-	draw_small_sentence(cur_game, 120, 210, "GAME 4");
-	if (saves[3]) draw_small_sentence(cur_game, 220, 210, "SAVE EXISTS");
+	draw_small_sentence(cur_game, 120 * cur_game->screen.scale_x, 150 * cur_game->screen.scale_y, "GAME 1");
+	if (saves[0]) draw_small_sentence(cur_game, 220 * cur_game->screen.scale_x, 150 * cur_game->screen.scale_y, "SAVE EXISTS");
+	draw_small_sentence(cur_game, 120 * cur_game->screen.scale_x, 170 * cur_game->screen.scale_y, "GAME 2");
+	if (saves[1]) draw_small_sentence(cur_game, 220 * cur_game->screen.scale_x, 170 * cur_game->screen.scale_y, "SAVE EXISTS");
+	draw_small_sentence(cur_game, 120 * cur_game->screen.scale_x, 190 * cur_game->screen.scale_y, "GAME 3");
+	if (saves[2]) draw_small_sentence(cur_game, 220 * cur_game->screen.scale_x, 190 * cur_game->screen.scale_y, "SAVE EXISTS");
+	draw_small_sentence(cur_game, 120 * cur_game->screen.scale_x, 210 * cur_game->screen.scale_y, "GAME 4");
+	if (saves[3]) draw_small_sentence(cur_game, 220 * cur_game->screen.scale_x, 210 * cur_game->screen.scale_y, "SAVE EXISTS");
 }
 
 SDL_bool
@@ -482,10 +603,12 @@ yesno_screen(struct game *cur_game, char *message)
 			}
 		} else if (event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
 			x = event.button.x; y = event.button.y;
-			if (x >= 121 && x <= 154 && y >= 152 && y <= 163) {
+			if (x >= 121 * cur_game->screen.scale_x && x <= 154 * cur_game->screen.scale_x &&
+			    y >= 152 * cur_game->screen.scale_y && y <= 163 * cur_game->screen.scale_y) {
 				yes_or_no = SDL_TRUE;
 				finished = SDL_TRUE;
-			} else if (x >= 121 && x <= 141 && y >= 173 && y <= 182) {
+			} else if (x >= 121 * cur_game->screen.scale_x && x <= 141 * cur_game->screen.scale_x &&
+				   y >= 173 * cur_game->screen.scale_y && y <= 182 * cur_game->screen.scale_y) {
 				yes_or_no = SDL_FALSE;
 				finished = SDL_TRUE;
 			}
@@ -495,13 +618,50 @@ yesno_screen(struct game *cur_game, char *message)
 }
 
 static void
+draw_opts_screen(struct game *cur_game)
+{
+	/* Draw background */
+	draw_bg(cur_game);	
+	/* draw options header */
+	draw_sentence(cur_game, 100 * cur_game->screen.scale_x, 100 * cur_game->screen.scale_y, "GAME OPTIONS");
+	
+	/* draw saves */
+	draw_sentence(cur_game, 100 * cur_game->screen.scale_x, 150 * cur_game->screen.scale_y, "RESOLUTION");
+	draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 180 * cur_game->screen.scale_y, "    960x540");
+	if (cur_game->screen.w == 960 && cur_game->screen.h == 540) draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 180 * cur_game->screen.scale_y, " ->");
+	draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 210 * cur_game->screen.scale_y, "    1280x720 (RECOMMENDED)");
+	if (cur_game->screen.w == 1280 && cur_game->screen.h == 720) draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 210 * cur_game->screen.scale_y, " ->");
+	draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 240 * cur_game->screen.scale_y, "    1600x900");
+	if (cur_game->screen.w == 1600 && cur_game->screen.h == 900) draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 240 * cur_game->screen.scale_y, " ->");
+	draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 270 * cur_game->screen.scale_y, "    1920x1080");
+	if (cur_game->screen.w == 1920 && cur_game->screen.h == 1080) draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 270 * cur_game->screen.scale_y, " ->");
+	draw_sentence(cur_game, 100 * cur_game->screen.scale_x, 300 * cur_game->screen.scale_y, "MODE");
+	draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 330 * cur_game->screen.scale_y, "    FULLSCREEN");
+	if (cur_game->screen.fullscreen == SDL_TRUE) draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 330 * cur_game->screen.scale_y, " ->");
+	draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 360 * cur_game->screen.scale_y, "    WINDOWED (RECOMMENDED)");
+	if (cur_game->screen.fullscreen == SDL_FALSE) draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 360 * cur_game->screen.scale_y, " ->");
+	draw_sentence(cur_game, 100 * cur_game->screen.scale_x, 390 * cur_game->screen.scale_y, "VSYNC");
+	draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 420 * cur_game->screen.scale_y, "    ON");
+	if (cur_game->screen.vsync == SDL_TRUE) draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 420 * cur_game->screen.scale_y, " ->");
+	draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 450 * cur_game->screen.scale_y, "    OFF (RECOMMENDED)");
+	if (cur_game->screen.vsync == SDL_FALSE) draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 450 * cur_game->screen.scale_y, " ->");
+	draw_sentence(cur_game, 100 * cur_game->screen.scale_x, 480 * cur_game->screen.scale_y, "SCANLINES");
+	draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 510 * cur_game->screen.scale_y, "    ON (RECOMMENDED)");
+	if (cur_game->screen.scanlines_on == SDL_TRUE) draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 510 * cur_game->screen.scale_y, " ->");
+	draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 540 * cur_game->screen.scale_y, "    OFF");
+	if (cur_game->screen.scanlines_on == SDL_FALSE) draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 540 * cur_game->screen.scale_y, " ->");
+	draw_sentence(cur_game, 100 * cur_game->screen.scale_x, 570 * cur_game->screen.scale_y, "DONE");
+	
+}
+
+static void
 draw_yesno_screen(struct game *cur_game, char *message)
 {
 	/* Draw background */
 	draw_bg(cur_game);	
 	/* Draw message */
-	draw_sentence(cur_game, 100, 100, message);
+	draw_sentence(cur_game, 100 * cur_game->screen.scale_x, 100 * cur_game->screen.scale_y, message);
 	/* Draw options */
-	draw_small_sentence(cur_game, 120, 150, "YES");
-	draw_small_sentence(cur_game, 120, 170, "NO");
+	draw_small_sentence(cur_game, 120 * cur_game->screen.scale_x, 150 * cur_game->screen.scale_y, "YES");
+	draw_small_sentence(cur_game, 120 * cur_game->screen.scale_x, 170 * cur_game->screen.scale_y, "NO");
 }

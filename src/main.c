@@ -25,7 +25,18 @@ static void	game_quit(void);
 struct game GAME = {
 	SDL_FALSE,		/* running */
 	/* screen */
-	{ WIN_W, WIN_H, "MapGame", NULL, NULL },
+		{
+		  WIN_W,		/* window width */
+		  WIN_H,		/* window height */
+		  1.0,			/* scale x */
+		  1.0,			/* scale y */
+		  SDL_FALSE,		/* vsync */
+		  SDL_FALSE,		/* fullscreen */
+		  SDL_TRUE,		/* scanlines_on */
+		  "MapGame",		/* window name */
+		  NULL,			/* window */
+		  NULL			/* renderer */
+		},
 	NULL,			/* font */
 	NULL,			/* sprite_textures */
 	NULL,			/* map_texture */
@@ -33,8 +44,6 @@ struct game GAME = {
 	NULL,			/* craft texture */
 	0,			/* cursor */
 	SDL_FALSE,		/* inventory */
-	SDL_FALSE,		/* fullscreen */
-	SDL_TRUE		/* scanlines enabled */
 };
 
 /* Global player construct */
@@ -163,6 +172,13 @@ main()
 static void
 game_init(void)
 {
+	/* Initialize SDL */
+	if (SDL_Init(SDL_INIT_EVERYTHING) != 0) {
+		printf("SDL error: %s\n", SDL_GetError());
+		exit(1);
+	}
+	/* Load display options */
+	load_opts(&GAME);
 	/* Initialize the game */
 	display_init(&GAME);
 	/* Seed RNG */
@@ -184,5 +200,7 @@ game_quit(void)
 	/* Free the world map and exit normally */
 	free_map(&MAP);
 	/* Quit SDL display functions */
-	display_quit(&GAME);	
+	display_quit(&GAME);
+	/* SDL quit */
+	SDL_Quit();
 }
