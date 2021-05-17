@@ -628,30 +628,29 @@ draw_opts_screen(struct game *cur_game)
 	/* draw saves */
 	draw_sentence(cur_game, 100 * cur_game->screen.scale_x, 150 * cur_game->screen.scale_y, "RESOLUTION");
 	draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 180 * cur_game->screen.scale_y, "    960x540");
-	if (cur_game->screen.w == 960 && cur_game->screen.h == 540) draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 180 * cur_game->screen.scale_y, " ->");
+	if (cur_game->screen.w == 960 && cur_game->screen.h == 540) draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 180 * cur_game->screen.scale_y, "  >");
 	draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 210 * cur_game->screen.scale_y, "    1280x720 (RECOMMENDED)");
-	if (cur_game->screen.w == 1280 && cur_game->screen.h == 720) draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 210 * cur_game->screen.scale_y, " ->");
+	if (cur_game->screen.w == 1280 && cur_game->screen.h == 720) draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 210 * cur_game->screen.scale_y, "  >");
 	draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 240 * cur_game->screen.scale_y, "    1600x900");
-	if (cur_game->screen.w == 1600 && cur_game->screen.h == 900) draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 240 * cur_game->screen.scale_y, " ->");
+	if (cur_game->screen.w == 1600 && cur_game->screen.h == 900) draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 240 * cur_game->screen.scale_y, "  >");
 	draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 270 * cur_game->screen.scale_y, "    1920x1080");
-	if (cur_game->screen.w == 1920 && cur_game->screen.h == 1080) draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 270 * cur_game->screen.scale_y, " ->");
+	if (cur_game->screen.w == 1920 && cur_game->screen.h == 1080) draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 270 * cur_game->screen.scale_y, "  >");
 	draw_sentence(cur_game, 100 * cur_game->screen.scale_x, 300 * cur_game->screen.scale_y, "MODE");
 	draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 330 * cur_game->screen.scale_y, "    FULLSCREEN");
-	if (cur_game->screen.fullscreen == SDL_TRUE) draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 330 * cur_game->screen.scale_y, " ->");
-	draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 360 * cur_game->screen.scale_y, "    WINDOWED (RECOMMENDED)");
-	if (cur_game->screen.fullscreen == SDL_FALSE) draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 360 * cur_game->screen.scale_y, " ->");
+	if (cur_game->screen.fullscreen == SDL_TRUE) draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 330 * cur_game->screen.scale_y, "  >");
+	draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 360 * cur_game->screen.scale_y, "    WINDOWED");
+	if (cur_game->screen.fullscreen == SDL_FALSE) draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 360 * cur_game->screen.scale_y, "  >");
 	draw_sentence(cur_game, 100 * cur_game->screen.scale_x, 390 * cur_game->screen.scale_y, "VSYNC");
 	draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 420 * cur_game->screen.scale_y, "    ON");
-	if (cur_game->screen.vsync == SDL_TRUE) draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 420 * cur_game->screen.scale_y, " ->");
-	draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 450 * cur_game->screen.scale_y, "    OFF (RECOMMENDED)");
-	if (cur_game->screen.vsync == SDL_FALSE) draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 450 * cur_game->screen.scale_y, " ->");
+	if (cur_game->screen.vsync == SDL_TRUE) draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 420 * cur_game->screen.scale_y, "  >");
+	draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 450 * cur_game->screen.scale_y, "    OFF");
+	if (cur_game->screen.vsync == SDL_FALSE) draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 450 * cur_game->screen.scale_y, "  >");
 	draw_sentence(cur_game, 100 * cur_game->screen.scale_x, 480 * cur_game->screen.scale_y, "SCANLINES");
 	draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 510 * cur_game->screen.scale_y, "    ON (RECOMMENDED)");
-	if (cur_game->screen.scanlines_on == SDL_TRUE) draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 510 * cur_game->screen.scale_y, " ->");
+	if (cur_game->screen.scanlines_on == SDL_TRUE) draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 510 * cur_game->screen.scale_y, "  >");
 	draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 540 * cur_game->screen.scale_y, "    OFF");
-	if (cur_game->screen.scanlines_on == SDL_FALSE) draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 540 * cur_game->screen.scale_y, " ->");
+	if (cur_game->screen.scanlines_on == SDL_FALSE) draw_sentence(cur_game, 120 * cur_game->screen.scale_x, 540 * cur_game->screen.scale_y, "  >");
 	draw_sentence(cur_game, 100 * cur_game->screen.scale_x, 570 * cur_game->screen.scale_y, "DONE");
-	
 }
 
 static void
