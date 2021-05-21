@@ -7,7 +7,7 @@ static void	draw_char(struct game *cur_game, int x, int y, int letter, float sca
 static void
 draw_char(struct game *cur_game, int x, int y, int letter, float scale)
 {
-	SDL_Rect rect = {x, y, 16 * scale * cur_game->screen.scale_x, 18 * scale * cur_game->screen.scale_y};
+	SDL_Rect rect = {x, y, 16 * scale, 18 * scale};
 	SDL_Texture* texture = SDL_CreateTextureFromSurface(cur_game->screen.renderer, cur_game->font[letter]);
 	SDL_RenderCopyEx(cur_game->screen.renderer, texture, NULL, &rect, 0, NULL, 0);
 	SDL_DestroyTexture(texture);
@@ -23,11 +23,11 @@ draw_sentence(struct game *cur_game, int x, int y, const char *sentence)
 	for (i = 0, len = strlen(sentence); i < len; i++) {
 		if (sentence[i] != '\n') {
 			draw_char(cur_game, x, y, sentence[i] - 32, 1);
-			x += 16 * cur_game->screen.scale_x;
+			x += 16;
 		}
-		if (x >= (WIN_W - GAME_X)  * cur_game->screen.scale_x || sentence[i] == '\n') {
+		if (x >= (WIN_W - GAME_X) || sentence[i] == '\n') {
 			x = start_x;
-			y = y + 18 * cur_game->screen.scale_y;
+			y = y + 18;
 		}
 	}
 }
@@ -43,11 +43,11 @@ draw_small_sentence(struct game *cur_game, int x, int y, const char *sentence)
 	for (i = 0, len = strlen(sentence); i < len; i++) {
 		if (sentence[i] != '\n') {
 			draw_char(cur_game, x, y, sentence[i] - 32, scale);
-			x += 16 * scale * cur_game->screen.scale_x;
+			x += 16 * scale;
 		}
-		if (x >= (WIN_W - GAME_X) * cur_game->screen.scale_x || sentence[i] == '\n') {
+		if (x >= (WIN_W - GAME_X)  || sentence[i] == '\n') {
 			x = start_x;
-			y = y + 18 * scale * cur_game->screen.scale_y;
+			y = y + 18 * scale;
 		}
 	}
 }

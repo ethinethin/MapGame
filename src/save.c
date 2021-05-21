@@ -244,12 +244,9 @@ save_opts(struct game *cur_game)
 	}
 	
 	/* Save the settings from the options screen */
-	fprintf(fp, "w=%d\n", cur_game->screen.w);
-	fprintf(fp, "h=%d\n", cur_game->screen.h);
-	fprintf(fp, "scale_x=%f\n", cur_game->screen.scale_x);
-	fprintf(fp, "scale_y=%f\n", cur_game->screen.scale_y);
+	fprintf(fp, "res=%dx%d\n", cur_game->screen.w, cur_game->screen.h);
 	fprintf(fp, "vsync=%d\n", cur_game->screen.vsync);
-	fprintf(fp, "fullscreen=%d\n", cur_game->screen.fullscreen);
+	fprintf(fp, "displaymode=%d\n", cur_game->screen.displaymode);
 	fprintf(fp, "scanlines=%d\n", cur_game->screen.scanlines_on);
 	fclose(fp);
 }
@@ -430,12 +427,11 @@ load_opts(struct game *cur_game)
 	}
 	
 	/* Load the settings */
-	fscanf(fp, "w=%d\n", &cur_game->screen.w);
-	fscanf(fp, "h=%d\n", &cur_game->screen.h);
-	fscanf(fp, "scale_x=%f\n", &cur_game->screen.scale_x);
-	fscanf(fp, "scale_y=%f\n", &cur_game->screen.scale_y);
+	fscanf(fp, "res=%dx%d\n", &cur_game->screen.w, &cur_game->screen.h);
+	cur_game->screen.scale_x = cur_game->screen.w/1280.0;
+	cur_game->screen.scale_y = cur_game->screen.h/720.0;
 	fscanf(fp, "vsync=%d\n", &cur_game->screen.vsync);
-	fscanf(fp, "fullscreen=%d\n", &cur_game->screen.fullscreen);
+	fscanf(fp, "displaymode=%d\n", &cur_game->screen.displaymode);
 	fscanf(fp, "scanlines=%d\n", &cur_game->screen.scanlines_on);
 	fclose(fp);
 }

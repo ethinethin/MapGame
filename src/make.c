@@ -76,7 +76,7 @@ make_stuff(struct game *cur_game, struct worldmap *map, struct player *cur_playe
 				finished = SDL_TRUE;
 			}
 		} else if (event.type == SDL_MOUSEBUTTONDOWN) {
-			mouse_click_craft(event.motion.x, event.motion.y, cur_player, &crafting);
+			mouse_click_craft(event.motion.x / cur_game->screen.scale_x, event.motion.y / cur_game->screen.scale_y, cur_player, &crafting);
 		}
 	}
 }

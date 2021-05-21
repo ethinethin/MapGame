@@ -113,8 +113,8 @@ mouse_click(struct game *cur_game, struct worldmap *map, struct player *cur_play
 				}
 				break;
 			case SDL_MOUSEMOTION:
-				MOUSE.x = event.motion.x;
-				MOUSE.y = event.motion.y;
+				MOUSE.x = event.motion.x / cur_game->screen.scale_x;
+				MOUSE.y = event.motion.y / cur_game->screen.scale_y;
 				break;
 			case SDL_MOUSEBUTTONUP:
 				MOUSE.mdown = SDL_FALSE;
@@ -317,8 +317,8 @@ place_items(struct game *cur_game, struct worldmap *map, struct player *cur_play
 				}
 				break;
 			case SDL_MOUSEMOTION:
-				MOUSE.x = event.motion.x;
-				MOUSE.y = event.motion.y;
+				MOUSE.x = event.motion.x / cur_game->screen.scale_x;
+				MOUSE.y = event.motion.y / cur_game->screen.scale_y;
 				break;
 			case SDL_MOUSEBUTTONUP:
 				MOUSE.mdown = SDL_FALSE;

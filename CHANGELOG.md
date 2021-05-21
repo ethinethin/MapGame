@@ -1,6 +1,17 @@
 Changelog
 -
 
+2021-05-20
+-
+
+- Removed dynamic scaling from 2021-05-16
+- Output all displays to a texture, which is then stretched to the screen/window size
+- Scaled mouseclicks to the screen/window size
+- Added multiple display modes:
+	- Fullscreen (Desktop resolution)
+	- Fullscreen (User-specified resolution)
+	- Window (User-specified resolution)
+
 2021-05-16
 -
 

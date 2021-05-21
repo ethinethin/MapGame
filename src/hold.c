@@ -224,8 +224,8 @@ open_chest(struct game *cur_game, struct worldmap *map, struct player *cur_playe
 				}
 				break;
 			case SDL_MOUSEMOTION:
-				MOUSE.x = event.motion.x;
-				MOUSE.y = event.motion.y;
+				MOUSE.x = event.motion.x / cur_game->screen.scale_x;
+				MOUSE.y = event.motion.y / cur_game->screen.scale_y;
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 				MOUSE.button = event.button.button;
@@ -554,8 +554,8 @@ place_in_hold(struct game *cur_game, struct worldmap *map, struct player *cur_pl
 				continue;
 				break;
 			case SDL_MOUSEMOTION:
-				MOUSE.x = event.motion.x;
-				MOUSE.y = event.motion.y;
+				MOUSE.x = event.motion.x / cur_game->screen.scale_x;
+				MOUSE.y = event.motion.y / cur_game->screen.scale_y;
 				break;
 			case SDL_MOUSEBUTTONDOWN:
 				/* Find where you clicked */

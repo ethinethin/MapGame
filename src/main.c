@@ -31,11 +31,12 @@ struct game GAME = {
 		  1.0,			/* scale x */
 		  1.0,			/* scale y */
 		  SDL_FALSE,		/* vsync */
-		  SDL_FALSE,		/* fullscreen */
+		  2,			/* displaymode */
 		  SDL_TRUE,		/* scanlines_on */
 		  "MapGame",		/* window name */
 		  NULL,			/* window */
-		  NULL			/* renderer */
+		  NULL,			/* renderer */
+		  NULL			/* output */
 		},
 	NULL,			/* font */
 	NULL,			/* sprite_textures */
@@ -161,7 +162,7 @@ main()
 					break;
 			}
 		} else if (event.type == SDL_MOUSEBUTTONDOWN) {
-			mouse_click(&GAME, &MAP, &PLAYER, event.button.x, event.button.y, event.button.button);
+			mouse_click(&GAME, &MAP, &PLAYER, event.button.x / GAME.screen.scale_x, event.button.y / GAME.screen.scale_y, event.button.button);
 		}
 	}
 	/* quit game and exit normally */

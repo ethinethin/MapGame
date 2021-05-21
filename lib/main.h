@@ -13,11 +13,12 @@ struct game {
 		float scale_x;
 		float scale_y;
 		SDL_bool vsync;
-		SDL_bool fullscreen;
+		int displaymode;
 		SDL_bool scanlines_on;
 		const char *name;
 		SDL_Window *window;
 		SDL_Renderer *renderer;
+		SDL_Texture *output;
 	} screen;
 	SDL_Surface **font;
 	SDL_Texture **sprite_textures;
