@@ -20,6 +20,7 @@
 /* Function prototypes */
 static void	game_init(void);
 static void	game_quit(void);
+static void	display_reloaded(struct game *cur_game, struct worldmap *map, struct player *cur_player);
 
 /* Global game construct */
 struct game GAME = {
@@ -33,6 +34,7 @@ struct game GAME = {
 		  SDL_FALSE,		/* vsync */
 		  2,			/* displaymode */
 		  SDL_TRUE,		/* scanlines_on */
+		  SDL_FALSE,		/* display_reloaded */
 		  "MapGame",		/* window name */
 		  NULL,			/* window */
 		  NULL,			/* renderer */
@@ -76,6 +78,11 @@ main()
 	/* enter main game loop */
 	SDL_Event event;
 	while (GAME.running) {
+		/* check if display was reloaded and act accordingly */
+		if (GAME.screen.display_reloaded == SDL_TRUE) {
+			display_reloaded(&GAME, &MAP, &PLAYER);
+			GAME.screen.display_reloaded = SDL_FALSE;
+		}
 		/* draw map, player, and render */
 		draw_all(&GAME, &MAP, &PLAYER);
 		SDL_Delay(10);
@@ -204,4 +211,30 @@ game_quit(void)
 	display_quit(&GAME);
 	/* SDL quit */
 	SDL_Quit();
+}
+
+static void
+display_reloaded(struct game *cur_game, struct worldmap *map, struct player *cur_player)
+{
+	char *tile_col;
+	int i, j;
+	#ifdef LOADBAR
+	int perc = 0;
+	#endif
+	
+	/* Reloaded map texture */
+	for (i = 0, j = 0; i < map->row_size; i++) {
+		#ifdef LOADBAR
+		perc = 100 * ((i*map->col_size)+j) / (map->col_size * map->row_size);
+		loading_bar(cur_game, "Reloading map texture", perc);
+		#endif
+		for (j = 0 ; j < map->col_size; j++) {
+			if (*(*(cur_player->seen+i)+j) == 1) {
+				SDL_SetRenderTarget(cur_game->screen.renderer, cur_game->map_texture);
+				tile_col = get_color(*(*(map->tile+i)+j), *(*(map->biome+i)+j));
+				draw_point(cur_game, j, i, tile_col);
+			}
+		}
+	}
+	SDL_SetRenderTarget(cur_game->screen.renderer, cur_game->screen.output);
 }

@@ -53,7 +53,7 @@ struct d_data {
 static short int	get_item(short int biome, short int tile);
 static unsigned char	get_quantity(short int biome, short int tile, short int item_id);
 static void		make_unharvestable(struct worldmap *map, int x, int y, short int biome, short int tile);
-static SDL_bool		stash_item(struct player *cur_player, short int item_id, unsigned char quantity);
+static SDL_bool		stash_item(struct game *cur_game, struct player *cur_player, short int item_id, unsigned char quantity);
 static void		drop_item(struct worldmap *map, int x, int y, short int item_id, unsigned char quantity);
 static SDL_bool		harvest_loop(struct game *cur_game, struct worldmap *map, struct player *cur_player);
 static void		add_dtable(struct worldmap *map, int x, int y, short int turn, short int prob);
@@ -122,7 +122,7 @@ harvest_item(struct game *cur_game, struct worldmap *map, struct player *cur_pla
 	if (*(*(map->roof+y)+x) != 0 && *(*(map->roof+cur_player->y)+cur_player->x) == 0) {
 		item = *(*(map->roof+y)+x);
 		/* Try to stash the roof and take off map if stash is successful */
-		if (stash_item(cur_player, item, 1) == SDL_TRUE) {
+		if (stash_item(cur_game, cur_player, item, 1) == SDL_TRUE) {
 			/* Take roof off map */
 			*(*(map->roof+y)+x) = 0;
 		}
@@ -144,7 +144,7 @@ harvest_item(struct game *cur_game, struct worldmap *map, struct player *cur_pla
 		*(*(map->quantity+y)+x) = 0;
 		*(*(map->loot+y)+x) = 0;
 		/* Try to stash the item and drop the remainder */
-		if (stash_item(cur_player, item, quantity) == SDL_FALSE) {
+		if (stash_item(cur_game, cur_player, item, quantity) == SDL_FALSE) {
 			drop_item(map, x, y, item, quantity);
 		}
 		return SDL_TRUE;
@@ -152,7 +152,7 @@ harvest_item(struct game *cur_game, struct worldmap *map, struct player *cur_pla
 		/* Is there a ground on the map? */
 		item = *(*(map->ground+y)+x);
 		/* Try to stash the ground and take off map if stash is successful */
-		if (stash_item(cur_player, item, 1) == SDL_TRUE) {
+		if (stash_item(cur_game, cur_player, item, 1) == SDL_TRUE) {
 			/* Take ground off map */
 			*(*(map->ground+y)+x) = 0;
 		}
@@ -169,7 +169,7 @@ harvest_item(struct game *cur_game, struct worldmap *map, struct player *cur_pla
 			finished = harvest_loop(cur_game, map, cur_player);
 			if (finished == SDL_TRUE) {
 				quantity = get_quantity(biome, tile, item);
-				if (stash_item(cur_player, item, quantity) == SDL_FALSE) {
+				if (stash_item(cur_game, cur_player, item, quantity) == SDL_FALSE) {
 					drop_item(map, x, y, item, quantity);
 					finished = SDL_FALSE;
 				}
@@ -256,7 +256,7 @@ make_unharvestable(struct worldmap *map, int x, int y, short int biome, short in
 }
 
 static SDL_bool
-stash_item(struct player *cur_player, short int item_id, unsigned char quantity)
+stash_item(struct game *cur_game, struct player *cur_player, short int item_id, unsigned char quantity)
 {
 	int i;
 	
@@ -267,8 +267,12 @@ stash_item(struct player *cur_player, short int item_id, unsigned char quantity)
 				if ((int) quantity + (int) cur_player->quantity[i] > MAX_STACK) {
 					quantity -= MAX_STACK - cur_player->quantity[i];
 					cur_player->quantity[i] = MAX_STACK;
+					cur_game->cursor = i;
+					if (i > 7 && cur_game->inventory == SDL_FALSE) toggle_inv(cur_game);
 				} else {
 					cur_player->quantity[i] += quantity;
+					cur_game->cursor = i;
+					if (i > 7 && cur_game->inventory == SDL_FALSE) toggle_inv(cur_game);
 					return SDL_TRUE;
 				}		
 			}
@@ -280,6 +284,8 @@ stash_item(struct player *cur_player, short int item_id, unsigned char quantity)
 			if (cur_player->loot[i] == 0) {
 				cur_player->loot[i] = item_id;
 				cur_player->quantity[i] = quantity;
+				cur_game->cursor = i;
+				if (i > 7 && cur_game->inventory == SDL_FALSE) toggle_inv(cur_game);
 				return SDL_TRUE;
 			}
 		}

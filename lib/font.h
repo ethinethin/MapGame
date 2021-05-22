@@ -3,6 +3,7 @@
 
 #include "main.h"
 
+extern void	set_font_alpha(int alpha);
 extern void	draw_sentence(struct game *cur_game, int x, int y, const char *sentence);
 extern void	draw_small_sentence(struct game *cur_game, int x, int y, const char *sentence);
 extern void	load_font(struct game *cur_game);

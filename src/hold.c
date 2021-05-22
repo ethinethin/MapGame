@@ -51,7 +51,7 @@ static void		 handle_hold_swap(struct game *cur_game, struct player *cur_player,
 static void		 swap_usints(unsigned short int *usint1, unsigned short int *usint2);
 static void		 draw_chest(struct game *cur_game, struct worldmap *map, int x, int y, struct holder *cur_holder);
 static struct holder	*get_holder(int x, int y);
-static void		 drag_item(struct game *cur_game, short int loot);
+static void		 drag_item(struct game *cur_game, short int loot, unsigned short int quantity);
 static void		 place_in_hold(struct game *cur_game, struct worldmap *map, struct player *cur_player, int x, int y, struct item_clicked *item_click);
 static void		 update_quantity(struct item_clicked *item_click, struct player *cur_player);
 
@@ -209,7 +209,7 @@ open_chest(struct game *cur_game, struct worldmap *map, struct player *cur_playe
 		draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
 		draw_chest(cur_game, map, x, y, item_click.holder);
 		if (MOUSE.mdown == SDL_TRUE && item_click.loot != 0) {
-			drag_item(cur_game, item_click.loot);
+			drag_item(cur_game, item_click.loot, item_click.quantity);
 		}
 		render_present(cur_game);
 		SDL_Delay(10);
@@ -512,10 +512,19 @@ get_holder(int x, int y)
 }
 
 static void
-drag_item(struct game *cur_game, short int loot)
+drag_item(struct game *cur_game, short int loot, unsigned short int quantity)
 {
+	char quantity_f[4];
+	/* Draw sprite */
 	draw_tile(cur_game, MOUSE.x - MOUSE.offset_x, MOUSE.y - MOUSE.offset_y, SPRITE_W * WIN_SCALE, SPRITE_H * WIN_SCALE,
 	          get_loot_sprite(loot), 192);
+	/* Draw quantity */
+	if (is_loot_stackable(loot) == UNSTACKABLE) return;
+	set_font_alpha(192);
+	sprintf(quantity_f, "%3d", quantity);
+	draw_small_sentence(cur_game, MOUSE.x - MOUSE.offset_x + 30, MOUSE.y - MOUSE.offset_y + SPRITE_H * WIN_SCALE + 2, quantity_f);
+	set_font_alpha(255);
+
 }
 
 static void
@@ -535,7 +544,7 @@ place_in_hold(struct game *cur_game, struct worldmap *map, struct player *cur_pl
 		draw_game(cur_game, map, cur_player);
 		draw_rect(cur_game, GAME_X, GAME_Y, GAME_W, GAME_H, SDL_FALSE, white, SDL_FALSE, NULL);
 		draw_chest(cur_game, map, x, y, item_click->holder);
-		drag_item(cur_game, item_click->loot);
+		drag_item(cur_game, item_click->loot, item_click->quantity);
 		render_present(cur_game);
 		SDL_Delay(10);
 		

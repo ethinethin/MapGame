@@ -557,6 +557,8 @@ opts_screen(struct game *cur_game)
 			changed = SDL_FALSE;
 			setup_tiles(cur_game);
 			save_opts(cur_game);
+			/* signal that display settings have changed */
+			cur_game->screen.display_reloaded = SDL_TRUE;
 		}
 	}
 }
@@ -657,7 +659,6 @@ draw_opts_screen(struct game *cur_game)
 	/* draw resolution options */
 	draw_small_sentence(cur_game, 420, 160, "RESOLUTIONS");
 	draw_small_sentence(cur_game, 420, 180, "    DEFAULT");
-	if (cur_game->screen.displaymode == 0) draw_small_sentence(cur_game, 420, 180, "  >");
 	draw_small_sentence(cur_game, 420, 200, "    1280x720");
 	if (cur_game->screen.w == 1280 && cur_game->screen.h == 720) draw_small_sentence(cur_game, 420, 200, "  >");
 	draw_small_sentence(cur_game, 420, 220, "    1360x768");

@@ -1,6 +1,16 @@
 Changelog
 -
 
+2021-05-21
+-
+
+- Changed font loading from surface (CPU rendering) to texture (GPU rendering)
+- Worldmap texture is now reloaded when display mode is switched
+- Added loading bar for loading and reloading map texture, but removed it because of performance issues I still need to figure out
+- Changed font rendering to allow alpha/transparency changes
+- Item quantity appears when dragging and dropping items
+- When picking up or harvesting items, the cursor changes to the last placed stack in inventory
+
 2021-05-20
 -
 

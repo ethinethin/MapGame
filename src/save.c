@@ -304,6 +304,9 @@ load_player(struct game *cur_game, struct worldmap *map, struct player *cur_play
 	int recipe;
 	int i, j;
 	int row_size, col_size;
+	#ifdef LOADBAR
+	int perc;
+	#endif
 	FILE *fp = NULL;
 	char filename[32];
 	
@@ -329,19 +332,23 @@ load_player(struct game *cur_game, struct worldmap *map, struct player *cur_play
 	/* Load map dimensions */
 	fscanf(fp, "\n%d %d\n", &row_size, &col_size);
 	/* Allocate memory and load seen, then update map texture as needed */
-	SDL_SetRenderTarget(cur_game->screen.renderer, cur_game->map_texture);
 	cur_player->seen = malloc(sizeof(*cur_player->seen)*row_size);
-	for (i = 0; i < row_size; i++) {
+	for (i = 0, j = 0; i < row_size; i++) {
+		#ifdef LOADBAR
+		perc = 100 * ((i*map->col_size)+j) / (map->col_size * map->row_size);
+		loading_bar(cur_game, "Loading map texture", perc);
+		#endif
 		*(cur_player->seen+i) = malloc(sizeof(**cur_player->seen)*col_size);
 		for (j = 0; j < col_size; j++) {
 			*(*(cur_player->seen+i)+j) = fgetc(fp) - '0';
 			if (*(*(cur_player->seen+i)+j) == 1) {
+				SDL_SetRenderTarget(cur_game->screen.renderer, cur_game->map_texture);
 				tile_col = get_color(*(*(map->tile+i)+j), *(*(map->biome+i)+j));
 				draw_point(cur_game, j, i, tile_col);
 			}
 		}
 	}
-	SDL_SetRenderTarget(cur_game->screen.renderer, NULL);
+	SDL_SetRenderTarget(cur_game->screen.renderer, cur_game->screen.output);
 	/* Close file */
 	fclose(fp);
 	/* Allocate memory for screenview */

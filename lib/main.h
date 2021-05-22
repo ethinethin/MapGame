@@ -1,6 +1,8 @@
 #ifndef MAIN_H
 #define MAIN_H
 
+#define LOADBAR // turn on loading bar
+
 #include <SDL2/SDL.h>
 #include "maps.h"
 
@@ -15,12 +17,13 @@ struct game {
 		SDL_bool vsync;
 		int displaymode;
 		SDL_bool scanlines_on;
+		SDL_bool display_reloaded;
 		const char *name;
 		SDL_Window *window;
 		SDL_Renderer *renderer;
 		SDL_Texture *output;
 	} screen;
-	SDL_Surface **font;
+	SDL_Texture **font;
 	SDL_Texture **sprite_textures;
 	SDL_Texture *map_texture;
 	SDL_Texture *scanlines;

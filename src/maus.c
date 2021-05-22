@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <SDL2/SDL.h>
 #include "disp.h"
+#include "font.h"
 #include "harv.h"
 #include "loot.h"
 #include "main.h"
@@ -175,8 +176,17 @@ move_cursor_inv(struct game *cur_game, int x, int y)
 static void
 drag_item(struct game *cur_game, struct player *cur_player)
 {
+	char quantity[4];
+
+	/* Draw item sprite */
 	draw_tile(cur_game, MOUSE.x - MOUSE.offset_x, MOUSE.y - MOUSE.offset_y, SPRITE_W * WIN_SCALE, SPRITE_H * WIN_SCALE,
 	          get_loot_sprite(cur_player->loot[(short int) cur_game->cursor]), 192);
+	/* Draw quantity if item is stackable */
+	if (is_loot_stackable(cur_player->loot[(short int) cur_game->cursor]) == UNSTACKABLE) return;
+	set_font_alpha(192);
+	sprintf(quantity, "%3d", cur_player->quantity[(short int) cur_game->cursor]);
+	draw_small_sentence(cur_game, MOUSE.x - MOUSE.offset_x + 30, MOUSE.y - MOUSE.offset_y + SPRITE_H * WIN_SCALE + 2, quantity);
+	set_font_alpha(255);
 }
 
 static struct coords

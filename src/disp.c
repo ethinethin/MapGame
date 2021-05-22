@@ -673,10 +673,9 @@ loading_bar(struct game *cur_game, char *title, int percentage)
 	if (percentage == LAST) return;
 	/* Yes */
 	LAST = percentage;
-	
+	if (percentage % 3 != 0) return;
 	/* Clear screen */
-	SDL_SetRenderDrawColor(cur_game->screen.renderer, 0, 0, 0, 255);
-	SDL_RenderClear(cur_game->screen.renderer);
+	render_clear(cur_game);
 	/* Write title to screen */
 	draw_sentence(cur_game, 0, 0, title);
 	/* Draw percentage bar */

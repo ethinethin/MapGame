@@ -4,13 +4,19 @@
 
 static void	draw_char(struct game *cur_game, int x, int y, int letter, float scale);
 
+int FONT_ALPHA = 255;
+void
+set_font_alpha(int alpha)
+{
+	FONT_ALPHA = alpha;
+}
+
 static void
 draw_char(struct game *cur_game, int x, int y, int letter, float scale)
 {
+	SDL_SetTextureAlphaMod(cur_game->font[letter], FONT_ALPHA);
 	SDL_Rect rect = {x, y, 16 * scale, 18 * scale};
-	SDL_Texture* texture = SDL_CreateTextureFromSurface(cur_game->screen.renderer, cur_game->font[letter]);
-	SDL_RenderCopyEx(cur_game->screen.renderer, texture, NULL, &rect, 0, NULL, 0);
-	SDL_DestroyTexture(texture);
+	SDL_RenderCopyEx(cur_game->screen.renderer, cur_game->font[letter], NULL, &rect, 0, NULL, 0);
 }
 
 void
@@ -56,26 +62,29 @@ void
 load_font(struct game *cur_game)
 {
 	int i, j;
-	SDL_Surface* surface;
+	SDL_Surface *image;
+	SDL_Surface *tmp;
 	SDL_Rect rect = {0, 0, 16, 18};
 
 	/* Allocate memory for 96 font characters */
-	cur_game->font = (SDL_Surface**) malloc(sizeof(SDL_Surface*)*95);
+	cur_game->font = malloc(sizeof(*cur_game->font)*95);
 	/* Load sprite sheet */
-	surface = SDL_LoadBMP("art/font.bmp");
+	image = SDL_LoadBMP("art/font.bmp");
 	/* Load all sprites */
 	for (i = 0; i < 10; i++) {
 		for (j = 0; j < 10; j++) {
 			if (i*10+j == 95) break;
 			rect.x = j*16;
 			rect.y = i*18;
-			cur_game->font[i*10+j] = SDL_CreateRGBSurface(0, 16, 18, 24, 0, 0, 0, 0);
-			SDL_SetColorKey(cur_game->font[i*10+j], 1, 0xFF00FF);
-			SDL_FillRect(cur_game->font[i*10+j], 0, 0xFF00FF);
-			SDL_BlitSurface(surface, &rect, cur_game->font[i*10+j], NULL);
+			tmp = SDL_CreateRGBSurface(0, 16, 18, 24, 0x00, 0x00, 0x00, 0x00);
+			SDL_SetColorKey(tmp, 1, 0xFF00FF);
+			SDL_BlitSurface(image, &rect, tmp, NULL);
+			cur_game->font[i*10+j] = SDL_CreateTextureFromSurface(cur_game->screen.renderer, tmp);
+			SDL_SetTextureBlendMode(cur_game->font[i*10+j], SDL_BLENDMODE_BLEND);
+			SDL_FreeSurface(tmp);		
 		}
 	}
-	SDL_FreeSurface(surface);
+	SDL_FreeSurface(image);
 }
 
 void
@@ -85,7 +94,7 @@ unload_font(struct game *cur_game)
 
 	/* Free all font characters */
 	for (i = 0; i < 95; i++) {
-		SDL_FreeSurface(cur_game->font[i]);
+		SDL_DestroyTexture(cur_game->font[i]);
 	}
 	free(cur_game->font);
 }

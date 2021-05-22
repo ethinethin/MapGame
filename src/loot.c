@@ -192,6 +192,8 @@ handle_pickup(struct game *cur_game, struct worldmap *map, struct player *cur_pl
 				if ((int) cur_quantity + (int) cur_player->quantity[i] > MAX_STACK) {
 					cur_quantity -= MAX_STACK - cur_player->quantity[i];
 					cur_player->quantity[i] = MAX_STACK;
+					cur_game->cursor = i;
+					if (i > 7 && cur_game->inventory == SDL_FALSE) toggle_inv(cur_game);
 					if (loot_type != ROOF && loot_type != GROUND) {
 						*(*(map->quantity+new_y)+new_x) -= MAX_STACK - cur_player->quantity[i];
 					}
@@ -201,6 +203,8 @@ handle_pickup(struct game *cur_game, struct worldmap *map, struct player *cur_pl
 					if (loot_type != ROOF && loot_type != GROUND) {
 						*(*(map->quantity+new_y)+new_x) = 0;
 					}
+					cur_game->cursor = i;
+					if (i > 7 && cur_game->inventory == SDL_FALSE) toggle_inv(cur_game);
 					return SDL_TRUE;
 				}		
 			}
@@ -216,6 +220,8 @@ handle_pickup(struct game *cur_game, struct worldmap *map, struct player *cur_pl
 				if (loot_type != ROOF && loot_type != GROUND) {
 					*(*(map->quantity+new_y)+new_x) = 0;
 				}
+				cur_game->cursor = i;
+				if (i > 7 && cur_game->inventory == SDL_FALSE) toggle_inv(cur_game);
 				return SDL_TRUE;
 			}
 		}
