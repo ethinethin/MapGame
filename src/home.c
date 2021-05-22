@@ -132,6 +132,8 @@ title_screen(struct game *cur_game, struct worldmap *map, struct player *cur_pla
 		/* Set up NPCs */
 		setup_npcs();
 		populate_npcs(map);
+		/* In case display settings have changes */
+		cur_game->screen.display_reloaded = SDL_FALSE;
 	} else if (new_game == QUITTING_GAME) {
 		cur_game->running = SDL_FALSE;
 	}

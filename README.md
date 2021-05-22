@@ -1,14 +1,12 @@
 MapGame
 -
 
-A procedurally-generated map game written in C and SDL2. I am writing this as part of my "Twitch Game Jam" (rules below), with development being streamed at: https://twitch.tv/ethinethin
+A procedurally-generated map game written in C (with SDL2). The majority of development has been streamed at: https://twitch.tv/ethinethin
 
 Installation
 -
 
-Want to try out the game? It should compile no problem on Linux or macOS with the instructions below. It will also probably compile on Windows (and the *BSDs if you can install SDL2), but I don't know how (...yet!).
-
-Download and install SDL2 from here: https://libsdl.org/download-2.0.php
+Compiling on MacOS, Linux, or *BSD is straightforward. First download and install the SDL2 libraries from here: https://libsdl.org/download-2.0.php
 
 Then clone, compile and run with:
 
@@ -17,70 +15,70 @@ Then clone, compile and run with:
     make
     ./mapgame
 
-For the first you run, you need to create a save directory (this will be fixed soon):
-
-    mkdir save
-    mkdir save/save00
-
-Piece of cake!
+Instructions for compiling on Windows are yet to be determined.
 
 Starting a Game
 -
 
-On the title screen, use the keyboard to do the following:
+On the title screen, use the mouse or `[keyboard]` to access:
 
-- N: new game
-- C: continue (load game)
-- Q: quit
+- `[N]` start a new game
+- `[C]` load game or continue game in-progress
+- `[O]` options
+- `[Q]` quit
 
-Controls
+Display Options
 -
 
-In-game keys are:
+Several resolutions are provided to fit most display configurations. The game can either be run in a window or fullscreen. Fullscreen —> Default is the recommended fullscreen option, which uses the native desktop resolution.
 
-- ESC: open title screen
-- S (on title screen): Save game
-- Arrow keys and WASD: move around
-- M: show world [M]ap
-- R: pickup ([R]etrieve) item
-- T: drop ([T]hrow) item
-- F: swap item in inventory
-- I: toggle [I]nventory on/off
-- Q and E: move cursor in quickbar/inventory
-- Z: harvest from tiles
-- C: open crafting window
-- L: toggle scan[L]ines
+If your preferred, non-desktop resolution is not on the list, you can try changing the resolution in `save/opts.mg` by opening it in a text editor.
 
-Mouse controls:
+In-game Controls
+-
 
-- Click on nearby item: pickup item
-- Click in inventory: move cursor in quickbar/inventory
-- Drag and drop in inventory/quickbar: swap item in inventory
-- Drag and drop on map: throw item
-- Right click to harvest
-- Right click on item stacks to enter place item mode
-	- Left click to place a single
-	- Right click to exit place item mode
-- Left click doors and holders to open
-- Right click doors and holders to pick up (holders must be empty to pick up)
-
-That's all there is so far!
+- Movement:
+    - `WASD keys` move up/left/down/right
+    - `Arrow keys` also move
+- Title screen:
+    - `Escape` brings up the title screen
+    - Pressing `Escape` again or `[C]` will continue the game
+    - From title screen, you can click with `Left mouse button` or press `[S]` to save game
+- Picking up items on ground:
+    - `Left click` with mouse
+    - `[R]` retrieves item with keyboard
+- Dropping items:
+    - Drag and drop with `Left mouse button`
+    - `[T]` throws item with keyboard
+- Swap items in inventory
+    - Drag and drop with `Left mouse button`
+    - `[F]` swaps items
+    - `[Q]` and `[E]` moves the inventory cursor
+    - `[I]` toggles inventory window
+- Harvesting items
+    - `Right click` harvests items from adjacent world tiles
+    - `[Z]` also harvests items
+- Crafting items
+    - `[C]` opens crafting interface
+    - `Left mouse button` interacts with crafting interface
+- World Map
+    - `[M]` displays world map
+- Special items
+    - `Right clicking` an item stack enters placement mode, which allows the dropping of single items. In placement mode, `left click` places the item and `right click` exits placement mode.
+    - If a single wall, floor, roof, holder, or door is placed on the ground, it is placed as a functional item.
+    - `Left click` interacts with doors and chests.
+    - Placed items can be picked up with `right click`. Chests can only be picked up if they are empty.
 
 Feedback and/or Support
 -
 
-Feel free to reach out to me on any platform for feedback and/or support. I am particularly interested in comments from users who have compiled (or tried to compile) MapGame for Windows or Linux. I read Twitch chat during streams and have directly implemented user suggestions in both debugging and adding game features. My gmail, Twitch, and Youtube usernames are the same as my GitHub.
+Reach out to me on any platform for feedback and/or support.
 
-Game Jam Rules
--
-
-I am programming this as part of a challenge, with the following conditions:
-
-- Only doing major coding on-stream
-- Debugging and administrative stuff (like writing this README) allowed off stream
-- Only streaming in limited capacity (2 to 4 hours per stream, 2 to 4 days per week)
-
-You can check out my stream at: https://twitch.tv/ethinethin
+- Github: https://github.com/ethinethin
+- Twitch: https://twitch.tv/ethinethin
+- Youtube: https://youtube.com/user/ethinethin
+- Twitter: https://twitter.com/ethinethingames
+- Email: ethinethin@gmail.com
 
 Thanks
 -

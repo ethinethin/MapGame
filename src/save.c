@@ -359,6 +359,8 @@ load_player(struct game *cur_game, struct worldmap *map, struct player *cur_play
 			*(*(cur_player->screen_view+i)+j) = 0;
 		}
 	}
+	/* In case display settings have changed */
+	cur_game->screen.display_reloaded = SDL_FALSE;
 }
 
 static void
