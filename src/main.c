@@ -16,6 +16,7 @@
 #include "play.h"
 #include "rand.h"
 #include "save.h"
+#include "town.h"
 
 /* Function prototypes */
 static void	game_init(void);

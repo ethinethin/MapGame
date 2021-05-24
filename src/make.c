@@ -18,7 +18,7 @@ struct craft_par {
 
 /* Structure for recipe table */
 struct r_data {
-	unsigned short int item_id;
+	short int item_id;
 	unsigned short int mat1;
 	unsigned short int mat2;
 	unsigned short int need1;
@@ -292,11 +292,12 @@ static unsigned short int
 determine_max(struct player *cur_player, struct craft_par *cur_craft)
 {
 	int i;
-	unsigned short int item_id;
+	short int item_id;
 	unsigned short int mat1, mat2;
 	unsigned short int need1, need2;
 	int have1 = 0, have2 = 0;
 	unsigned short int max_quantity;
+	unsigned short int unstack_count;
 	
 	/* Get recipe from recipe table */
 	item_id = R_TABLE[cur_craft->current - 1].item_id;
@@ -328,6 +329,15 @@ determine_max(struct player *cur_player, struct craft_par *cur_craft)
 	}
 	/* Is it over MAX_STACK? */
 	if (max_quantity > MAX_STACK) max_quantity = MAX_STACK;
+	/* Is it unstackable? */
+	if (is_loot_stackable((signed short int) item_id) == UNSTACKABLE) {
+		/* Count number of empty in inventory */
+		for (i = 0, unstack_count = 0; i < MAX_INV; i++) {
+			if (cur_player->loot[i] == 0) unstack_count++;
+		}
+		if (max_quantity > unstack_count) max_quantity = unstack_count;
+	}
+
 	return max_quantity;
 }
 
@@ -335,7 +345,7 @@ static void
 craft_it(struct player *cur_player, struct craft_par *cur_craft)
 {
 	int i;
-	unsigned short int item_id;
+	short int item_id;
 	unsigned short int mat1, mat2;
 	unsigned short int need1, need2;
 	unsigned short int made;
@@ -356,7 +366,7 @@ craft_it(struct player *cur_player, struct craft_par *cur_craft)
 	/* Place items in inventory */
 	/* Looking for existing stacks and trying to put them in */
 	for (made = 0, i = 0; i < MAX_INV; i++) {
-		if (cur_player->loot[i] == item_id) {
+		if (cur_player->loot[i] == item_id && is_loot_stackable(item_id) == STACKABLE) {
 			if (cur_player->quantity[i] + cur_craft->quantity - made <= MAX_STACK) {
 				cur_player->quantity[i] += cur_craft->quantity - made;
 				made = cur_craft->quantity;
@@ -367,15 +377,21 @@ craft_it(struct player *cur_player, struct craft_par *cur_craft)
 			}
 		}
 	}
-	/* Do I have any left to put in empty spaces? */
+	/* Do I have any left, or is item UNSTACKABLE? to put in empty spaces? */
 	if (made < cur_craft->quantity) {
 		/* Try to put it in empty spots */
-		for (i = 0; i < MAX_INV; i++) {
+		for (i = 0; i < MAX_INV && cur_craft->quantity > 0; i++) {
 			if (cur_player->loot[i] == 0) {
 				cur_player->loot[i] = item_id;
-				cur_player->quantity[i] = cur_craft->quantity - made;
-				made = cur_craft->quantity;
-				break;
+				if (is_loot_stackable(item_id) == STACKABLE) {
+					cur_player->quantity[i] = cur_craft->quantity - made;
+					made = cur_craft->quantity;
+					break;
+				} else {
+					cur_player->quantity[i] = 1;
+					made += 1;
+					cur_craft->quantity -= 1;
+				}
 			}
 		}
 	}
@@ -428,7 +444,7 @@ check_recipes(struct player *cur_player) {
 	struct craft_par test_craft;
 	
 	/* Loop through every possible recipe and check the max */
-	for (i = 1; i < MAX_RECIPE + 1; i++) {
+	for (i = 0; R_TABLE[i].item_id != -1; i++) {
 		test_craft.current = i;
 		if (cur_player->recipe[i - 1] == 0) {
 			max = determine_max(cur_player, &test_craft);

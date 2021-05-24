@@ -25,7 +25,7 @@ struct loot LOOT[] = {
 	{"nuthin3", 0, STACKABLE, PASSABLE, ITEM},
 	{"nuthin4", 0, STACKABLE, PASSABLE, ITEM},
 	/* grassland sprites */
-	{"grass weeds", 560, STACKABLE, PASSABLE, ITEM},//14
+	{"GRASS WEEDS", 560, STACKABLE, PASSABLE, ITEM},//14
 	{"grass seeds", 561, STACKABLE, PASSABLE, ITEM},
 	{"BEETLE HUSK", 562, STACKABLE, PASSABLE, ITEM},
 	{"live beetle", 563, STACKABLE, PASSABLE, ITEM},

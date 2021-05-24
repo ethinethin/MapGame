@@ -1,6 +1,14 @@
 Changelog
 -
 
+2021-05-23
+-
+
+- Crafting now recognizes item stackability
+- Fixed a hiding bug in check_recipes
+- Added random house generator
+- Added the ability to place a house onto the map
+
 2021-05-21
 -
 
