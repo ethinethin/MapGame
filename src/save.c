@@ -239,7 +239,7 @@ save_opts(struct game *cur_game)
 	
 	fp = fopen("save/opts.mg", "w");
 	if (fp == NULL) {
-		printf("Coult not open save/opts.mg\n");
+		printf("Could not open save/opts.mg\n");
 		exit(1);
 	}
 	
